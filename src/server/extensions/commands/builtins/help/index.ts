@@ -19,6 +19,7 @@ function _escapeHtml(s: string): string {
 
 export const helpCommand: BangCommand = {
   name: "Help",
+  isClientExposed: false,
   get description(): string {
     return this.t!("help.description");
   },

@@ -9,6 +9,7 @@ const MAX_UUID_COUNT = 100;
 
 export const uuidCommand: BangCommand = {
   name: "UUID Generator",
+  isClientExposed: false,
   get description(): string {
     return this.t!("uuid.description");
   },
@@ -21,9 +22,9 @@ export const uuidCommand: BangCommand = {
     const raw = args.trim();
     const count = raw
       ? Math.min(
-          MAX_UUID_COUNT,
-          Math.max(1, Math.floor(Number(raw)) || DEFAULT_UUID_COUNT),
-        )
+        MAX_UUID_COUNT,
+        Math.max(1, Math.floor(Number(raw)) || DEFAULT_UUID_COUNT),
+      )
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
     const copyLabel = this.t!("uuid.copy");
