@@ -39,6 +39,8 @@
       "engine-performance-aria": "הצג ביצועי מנוע",
       "related-queries": "הצג שאילתות חיפוש קשורות",
       "related-queries-aria": "הצג שאילתות חיפוש קשורות",
+      "inline-gif-playback": "הפעל GIF בתוצאות התמונות עצמן",
+      "inline-gif-playback-aria": "הפעל GIF בתוצאות התמונות עצמן",
       "post-method": "השתמש בשיטת POST לבקשות חיפוש (לא יעבוד עם תוצאות מוזרמות)",
       "post-method-aria": "השתמש בשיטת POST לבקשות חיפוש (לא יעבוד עם תוצאות מוזרמות)",
       "post-method-tooltip": "שיטת POST אינה תואמת לתוצאות מוזרמות"

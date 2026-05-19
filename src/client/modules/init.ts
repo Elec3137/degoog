@@ -2,6 +2,7 @@ import { initLuckyAnimation } from "../animations/lucky-animation";
 import {
   DISPLAY_ENGINE_PERFORMANCE,
   DISPLAY_SEARCH_SUGGESTIONS,
+  INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
 } from "../constants";
@@ -162,6 +163,9 @@ export function init(): void {
   });
   void idbGet<boolean>(POST_METHOD_ENABLED).then((v) => {
     if (v !== null) state.postMethodEnabled = v;
+  });
+  void idbGet<boolean>(INLINE_GIF_PLAYBACK).then((v) => {
+    if (v !== null) state.inlineGifPlayback = v;
   });
 
   document.body.addEventListener("click", (e) => {

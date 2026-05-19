@@ -23,6 +23,7 @@ export interface AppState {
   displayEnginePerformance: boolean;
   displaySearchSuggestions: boolean;
   postMethodEnabled: boolean;
+  inlineGifPlayback: boolean;
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
 }

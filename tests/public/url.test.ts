@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { buildSearchUrl, proxyImageUrl, faviconUrl } from "../../src/client/utils/url";
+import { buildSearchUrl, faviconUrl, isGifImageUrl, proxyImageUrl } from "../../src/client/utils/url";
 import { state } from "../../src/client/state";
 
 describe("public/url", () => {
@@ -28,6 +28,12 @@ describe("public/url", () => {
     expect(out).toContain("/api/proxy/favicon");
     expect(out).toContain("domain=");
     expect(out).toContain("example.com");
+  });
+
+  test("isGifImageUrl detects gif URLs", () => {
+    expect(isGifImageUrl("https://example.com/image.gif?size=large")).toBe(true);
+    expect(isGifImageUrl("https://example.com/image.webp")).toBe(false);
+    expect(isGifImageUrl("https://example.gif/gif.webp")).toBe(false);
   });
 
   test("buildSearchUrl includes query and engine params", () => {

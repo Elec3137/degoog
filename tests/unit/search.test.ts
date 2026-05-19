@@ -43,6 +43,35 @@ describe("search", () => {
       const out = mergeNewResults(existing, newResults);
       expect(out[0].url).toBe("https://a.com");
     });
+
+    test("prefers gif image urls when merging duplicates", () => {
+      const cases = [
+        ["https://cdn.example.com/a.gif", "https://cdn.example.com/a.gif"],
+        ["https://cdn.example.com/a.jpg", "https://cdn.example.com/a.webp"],
+      ];
+
+      for (const [newImageUrl, expected] of cases) {
+        const existing = [
+          scored(
+            {
+              ...result("https://a.com", "E1"),
+              imageUrl: "https://cdn.example.com/a.webp",
+            },
+            5,
+            ["E1"],
+          ),
+        ];
+        const newResults = [
+          {
+            ...result("https://a.com", "E2"),
+            imageUrl: newImageUrl,
+          },
+        ];
+
+        const out = mergeNewResults(existing, newResults);
+        expect(out[0].imageUrl).toBe(expected);
+      }
+    });
   });
 
   describe("scoreResults", () => {

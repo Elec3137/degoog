@@ -2,6 +2,7 @@ import pkg from "../../../package.json";
 import {
   DISPLAY_ENGINE_PERFORMANCE,
   DISPLAY_SEARCH_SUGGESTIONS,
+  INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
   THEME_KEY,
@@ -102,6 +103,17 @@ export async function initAppearanceSettings(): Promise<void> {
         DISPLAY_SEARCH_SUGGESTIONS,
         displaySearchSuggestions.checked,
       );
+    });
+  }
+
+  const inlineGifPlayback = document.getElementById(
+    "settings-inline-gif-playback",
+  ) as HTMLInputElement | null;
+  if (inlineGifPlayback) {
+    const saved = await idbGet<boolean>(INLINE_GIF_PLAYBACK);
+    inlineGifPlayback.checked = saved || false;
+    inlineGifPlayback.addEventListener("change", async () => {
+      await idbSet(INLINE_GIF_PLAYBACK, inlineGifPlayback.checked);
     });
   }
 

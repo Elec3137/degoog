@@ -34,6 +34,18 @@ export const proxyImageUrl = (url: string): string => {
   return `${getBase()}/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
+const _unwrapProxyImageUrl = (url: string): string => {
+  if (!url.includes("/api/proxy/image?")) return url;
+  const query = url.split("?", 2)[1]?.split("#", 1)[0];
+  return query ? new URLSearchParams(query).get("url") || url : url;
+};
+
+export const isGifImageUrl = (url: string): boolean => {
+  if (!url) return false;
+  const target = _unwrapProxyImageUrl(url);
+  return target.split(/[?#]/, 1)[0].toLowerCase().endsWith(".gif");
+};
+
 export const faviconHostname = (url: string): string => {
   try {
     return new URL(url).hostname;

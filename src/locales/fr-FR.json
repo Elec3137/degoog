@@ -39,6 +39,8 @@
       "engine-performance-aria": "Afficher les performances des moteurs",
       "related-queries": "Afficher les requêtes de recherche connexes",
       "related-queries-aria": "Afficher les requêtes de recherche connexes",
+      "inline-gif-playback": "Lire les GIF dans les résultats d'images",
+      "inline-gif-playback-aria": "Lire les GIF dans les résultats d'images",
       "post-method": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-aria": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux"

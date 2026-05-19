@@ -35,5 +35,6 @@ describe("public/state", () => {
     expect(state).toHaveProperty("currentType", "web");
     expect(state).toHaveProperty("currentPage", 1);
     expect(state).toHaveProperty("currentTimeFilter", "any");
+    expect(state).toHaveProperty("inlineGifPlayback", false);
   });
 });

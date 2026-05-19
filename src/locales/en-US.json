@@ -40,6 +40,8 @@
       "engine-performance-aria": "Display engine performance",
       "related-queries": "Display related search queries",
       "related-queries-aria": "Display related search queries",
+      "inline-gif-playback": "Play GIF image results inline",
+      "inline-gif-playback-aria": "Play GIF image results inline",
       "post-method": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-tooltip": "POST method is not compatible with streaming results"
