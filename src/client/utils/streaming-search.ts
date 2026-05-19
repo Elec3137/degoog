@@ -24,7 +24,7 @@ import {
   SearchResponse,
   SlotPanelPosition,
 } from "../types";
-import { hideAcDropdown } from "./autocomplete";
+import { abortAcReq, hideAcDropdown } from "./autocomplete";
 import { getEngines } from "./engines";
 import { setActiveTab } from "./navigation";
 import {
@@ -96,6 +96,7 @@ export async function performStreamingSearch(
 
   setActiveTab(type);
   closeMediaPreview();
+  abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
   (document.activeElement as HTMLElement | null)?.blur();

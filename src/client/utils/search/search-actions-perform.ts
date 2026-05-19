@@ -22,7 +22,7 @@ import {
   type ScoredResult,
   type SearchResponse,
 } from "../../types";
-import { hideAcDropdown } from "../autocomplete";
+import { abortAcReq, hideAcDropdown } from "../autocomplete";
 import { triggerUovadipasqua } from "../uovadipasqua";
 import { getEngines } from "../engines";
 import { setActiveTab, setTabsForBang, showAllTabs } from "../navigation";
@@ -151,6 +151,7 @@ export async function performSearch(
   showAllTabs();
   setActiveTab(resolvedType);
   closeMediaPreview();
+  abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
   (document.activeElement as HTMLElement | null)?.blur();
@@ -364,6 +365,7 @@ async function _performBangCommand(
   isInit = false,
 ): Promise<void> {
   closeMediaPreview();
+  abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
   (document.activeElement as HTMLElement | null)?.blur();

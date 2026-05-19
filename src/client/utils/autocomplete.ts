@@ -16,8 +16,14 @@ function _updateAcHighlight(items: NodeListOf<HTMLElement>): void {
   });
 }
 
+export const abortAcReq = (): void => {
+  if (acTimeout) { clearTimeout(acTimeout); acTimeout = null; }
+  if (acController) { acController.abort(); acController = null; }
+};
+
 export function hideAcDropdown(dropdown: HTMLElement | null): void {
   if (!dropdown) return;
+  dropdown.innerHTML = "";
   dropdown.style.display = "none";
   dropdown.parentElement?.classList.remove("ac-open");
   acSelectedIdx = -1;
