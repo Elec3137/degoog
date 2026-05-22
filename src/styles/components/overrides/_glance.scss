@@ -16,6 +16,16 @@
 .glance-sources {
   margin: 0;
   padding: 0;
+
+  p {
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }
 
 .glance-ai-footer {
@@ -69,4 +79,95 @@
   margin-top: $space-3;
   font-size: $font-size-small;
   color: var(--text-secondary);
+}
+
+.glance-ai-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-1 0;
+
+  .skeleton-line--snippet {
+    width: 100%;
+  }
+
+  .skeleton-line--snippet-short {
+    width: 55%;
+  }
+}
+
+.glance-ai-writing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: $space-1 0;
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.4;
+    animation: glance-ai-pulse 1.2s ease-in-out infinite;
+  }
+
+  span:nth-child(2) { animation-delay: 0.2s; }
+  span:nth-child(3) { animation-delay: 0.4s; }
+}
+
+@keyframes glance-ai-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.glance-ai-thinking-label {
+  font-size: $font-size-xs;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: $space-1;
+  margin-bottom: $space-1;
+  opacity: 0.7;
+}
+
+.glance-ai-thinking-stream {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  font-style: italic;
+  opacity: 0.75;
+  white-space: pre-wrap;
+  max-height: 12em;
+  overflow-y: auto;
+  border-left: 2px solid var(--text-secondary);
+  padding: $space-1 $space-2;
+  margin-bottom: $space-2;
+  line-height: 1.4;
+}
+
+.glance-ai-cite {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: baseline;
+  margin: 0 2px;
+  text-decoration: none;
+  line-height: 1.2;
+
+  &:hover {
+    text-decoration: none;
+    background: var(--bg-hover);
+  }
+
+  .glance-ai-cite-favicon {
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .glance-ai-cite-host {
+    color: var(--text-secondary);
+    font-size: $font-size-xs;
+  }
 }

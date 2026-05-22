@@ -1,7 +1,7 @@
 {
   "ai-summary": {
     "name": "Riassunto IA",
-    "description": "Sostituisce “A colpo d’occhio” con un breve riassunto generato da IA tramite qualsiasi provider compatibile con OpenAI",
+    "description": "Riassunto IA in streaming con citazioni inline. Funziona con API compatibili OpenAI (incl. Ollama), Google Gemini e Anthropic Claude.",
     "badge": "Riassunto IA",
     "dive-deeper": "Approfondisci",
     "follow-up-placeholder": "Fai un seguito…",

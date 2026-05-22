@@ -1,7 +1,7 @@
 {
     "ai-summary": {
         "name": "Résumé IA",
-        "description": "Remplace le résumé rapide par un résumé généré par IA via un fournisseur compatible OpenAI",
+        "description": "Résumé IA en streaming avec citations inline. Compatible avec les API OpenAI (dont Ollama), Google Gemini et Anthropic Claude.",
         "badge": "Résumé IA",
         "dive-deeper": "Approfondir",
         "follow-up-placeholder": "Posez une question\u2026",

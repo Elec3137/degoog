@@ -11,36 +11,91 @@ import {
   SHORT_TTL_MS,
   type AsyncTtlCache,
 } from "../../../../utils/cache";
-import { logger } from "../../../../utils/logger";
 import { asBoolean, asString, getSettings } from "../../../../utils/plugin-settings";
+import { ProviderId } from "./providers";
 
-export const AI_SUMMARY_ID = "ai-summary";
+export const AI_SUMMARY_ID = "ai-summary-slot";
+export const SUMMARY_NAMESPACE = "ext:ai-summary:summary";
+export const MAX_SOURCES = 6;
+export const DEFAULT_TIMEOUT_S = 180;
+export const DEFAULT_MAX_TOKENS = 2048;
+export const FOLLOWUP_MIN_TOKENS = 512;
+
+export const DEFAULT_SYSTEM_PROMPT = [
+  "<identity>",
+  "You are a Search Synthesis Engine. Your sole purpose is to deliver an accurate, useful, highly structured, and deeply cited answer to the user's query, drawing strictly from the numbered search results provided.",
+  "</identity>",
+  "",
+  "<context_integration>",
+  "Context arrives as numbered results: [N] Title (host)\\nSnippet.",
+  "Your answer must be entirely informed by that context. If the context does not fully answer the query, state plainly what is missing, summarize what is available, and suggest one or two follow-up searches the user could try. Do not assume or extrapolate.",
+  "Never refer to your training cutoff, your model architecture, or your lack of real-time access. The provided context IS your real-time access.",
+  "</context_integration>",
+  "",
+  "<citation_protocol>",
+  "1. CRITICAL: Every single factual claim, statement, list item, or table row MUST be cited inline as [N] immediately after the claim, with no space between the last word and the bracket.",
+  "2. Multiple sources on one claim look like [1][3]. If several results corroborate a claim, cite all of them.",
+  "3. Cite only results you actually used. Do not invent citations or pad with irrelevant ones.",
+  "4. Never include a References, Sources, or Bibliography section. Never write URLs or full source titles in the prose. The engine renders the [N] markers as links.",
+  "</citation_protocol>",
+  "",
+  "<formatting_and_ux>",
+  "- STRUCTURED & CITED: Scale the depth of the answer to match the complexity of the query. For factual lookups, a single cited sentence is fine. For multi-faceted queries, provide a comprehensive, multi-paragraph layout using headers, lists, or tables, but EVERY section, list item, or table cell containing factual data must carry its respective [N] citation.",
+  "- SCANNABILITY IS KING: Break up dense walls of text. Use Level-2 headers (##) to separate distinct aspects of the answer. Use **bolding** for critical terms, dates, and names to guide the user's eye.",
+  "- LISTS & TABLES: Whenever comparing data, listing steps, or aggregating distinct points, aggressively prefer structured Markdown lists (bulleted or numbered) or Markdown tables over prose paragraphs. Ensure inline citations [N] are embedded within these lists/tables.",
+  "- Begin directly with the answer (or a one-sentence high-level overview for multi-part queries). Never start with a markdown heading, a preamble, or filler like 'Sure', 'Here is', 'Based on the search results', or 'According to the sources'.",
+  "- Match the language of the user's query.",
+  "- If code is required, emit the fully functional code block first, then a short explanation beneath.",
+  "</formatting_and_ux>",
+  "",
+  "<tone_and_guardrails>",
+  "- Unbiased, journalistic, authoritative. Avoid opinionated adjectives.",
+  "- No hedging or moralizing. Cut phrases like 'It is important to', 'It is worth noting', 'It is subjective', 'Some might argue', 'it seems', 'it might be', unless the sources themselves disagree, in which case briefly note the disagreement and prefer the most recent or most authoritative-looking source.",
+  "- Copyright: do not reproduce long verbatim passages (lyrics, poems, full articles, full recipes). Summarize and rewrite in your own words.",
+  "</tone_and_guardrails>",
+  "",
+  "<execution_workflow>",
+  "CRITICAL FOR SPEED: Do not deliberate, plan, or analyze. Do not generate a hidden reasoning chain or draft. Treat this as a direct stream-to-output task. Read the context and immediately begin writing the final synthesized answer in a single pass, adhering strictly to the formatting and inline citation rules above.",
+  "</execution_workflow>",
+].join("\n");
 
 export const aiSummarySettingsSchema: SettingField[] = [
   {
     key: "questionMarkOnly",
     label: "Only trigger on questions (?)",
     type: "toggle",
+    description: "Only show summaries when the query ends with `?`.",
+  },
+  {
+    key: "provider",
+    label: "Provider",
+    type: "select",
+    options: [ProviderId.OpenAICompat, ProviderId.Gemini, ProviderId.Anthropic],
+    optionLabels: [
+      "OpenAI compatible (OpenAI, Ollama, vLLM, ...)",
+      "Google Gemini (native)",
+      "Anthropic Claude (native)",
+    ],
+    default: ProviderId.OpenAICompat,
     description:
-      "When enabled, AI summaries only appear when the query ends with a question mark.",
+      "**OpenAI-compatible** covers OpenAI, [Ollama](https://ollama.com), vLLM. **Gemini** and **Anthropic** use their native streaming APIs.",
   },
   {
     key: "baseUrl",
     label: "API Base URL",
     type: "url",
-    required: true,
     placeholder: "https://api.openai.com/v1",
     description:
-      "OpenAI-compatible base URL. Use http://localhost:11434/v1 for Ollama",
+      "Include the version path for OpenAI-compatible providers (`https://api.openai.com/v1`, or `http://localhost:11434/v1` for [Ollama](https://ollama.com)). Leave blank for Gemini and Anthropic; if you set a host-only override, the version path is filled in automatically.",
   },
   {
     key: "model",
     label: "Model",
     type: "text",
     required: true,
-    placeholder: "gpt-4o-mini",
+    placeholder: "gpt-4o-mini / gemini-2.5-flash / claude-haiku-4-5",
     description:
-      "Model name (e.g. gpt-4o-mini, llama3, mistral). Note: reasoning/thinking models (e.g. qwen3, deepseek-r1) may not work well here as their chain-of-thought consumes the token budget before producing a summary. Increase Max Tokens if you must use one.",
+      "Model id. Lists: [OpenAI](https://platform.openai.com/docs/models), [Gemini](https://ai.google.dev/gemini-api/docs/models), [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models). For Ollama/vLLM use whatever you have served. Reasoning models work; their thoughts stream live and clear when the answer starts.",
   },
   {
     key: "apiKey",
@@ -48,36 +103,42 @@ export const aiSummarySettingsSchema: SettingField[] = [
     type: "password",
     secret: true,
     placeholder: "Leave blank for local models (Ollama)",
-    description: "API key for the provider. Not required for local Ollama.",
+    description:
+      "Get one from [OpenAI](https://platform.openai.com/api-keys), [Google AI Studio](https://aistudio.google.com/apikey), or [Anthropic](https://console.anthropic.com/settings/keys). Not needed for local Ollama.",
+  },
+  {
+    key: "enableThinking",
+    label: "Let reasoning models think",
+    type: "toggle",
+    description:
+      "Off by default. When off: Gemini budget `0`, Anthropic thinking disabled, Qwen models get `/no_think` appended. On is slower and costlier.",
   },
   {
     key: "timeoutSeconds",
     label: "Timeout (seconds)",
     type: "text",
-    placeholder: "30",
-    description:
-      "Max seconds to wait for an AI response before falling back to the standard result.",
+    placeholder: "180",
+    description: "Max seconds before giving up. Default `180`.",
   },
   {
     key: "maxTokens",
     label: "Max Tokens",
     type: "text",
-    placeholder: "256",
+    placeholder: "2048",
     description:
-      "Maximum tokens for the AI response. Bump this up (e.g. 1024+) if you use reasoning/thinking models.",
+      "Max tokens for the response. Default `2048`. Reasoning models need budget for thinking *and* answer; bump to `4096`+ for deep models.",
   },
   {
     key: "systemPrompt",
     label: "Custom System Prompt",
     type: "textarea",
-    placeholder:
-      "You are a helpful assistant that summarises web search results. Write a concise 2–3 sentence summary answering the query based on the provided snippets. Do not invent facts. Do not include citations.",
-    description:
-      "Override the default system prompt sent to the AI. Leave blank to use the default.",
+    placeholder: DEFAULT_SYSTEM_PROMPT,
+    description: "Override the default system prompt. Blank uses the default.",
   },
 ];
 
 export interface AISummarySettings {
+  provider: ProviderId;
   baseUrl: string;
   model: string;
   apiKey: string;
@@ -85,14 +146,22 @@ export interface AISummarySettings {
   systemPrompt: string;
   maxTokens: number;
   questionMarkOnly: boolean;
+  enableThinking: boolean;
 }
 
-export async function getAISummarySettings(): Promise<AISummarySettings> {
+const _normaliseProvider = (raw: string): ProviderId => {
+  const all = Object.values(ProviderId) as string[];
+  return all.includes(raw) ? (raw as ProviderId) : ProviderId.OpenAICompat;
+};
+
+export const getAISummarySettings = async (): Promise<AISummarySettings> => {
   const stored = await getSettings(AI_SUMMARY_ID);
   const timeoutSeconds =
-    parseFloat(asString(stored["timeoutSeconds"]) || "") || 30;
-  const maxTokens = parseInt(asString(stored["maxTokens"]) || "", 10) || 256;
+    parseFloat(asString(stored["timeoutSeconds"]) || "") || DEFAULT_TIMEOUT_S;
+  const maxTokens =
+    parseInt(asString(stored["maxTokens"]) || "", 10) || DEFAULT_MAX_TOKENS;
   return {
+    provider: _normaliseProvider(asString(stored["provider"])),
     baseUrl: asString(stored["baseUrl"]),
     model: asString(stored["model"]),
     apiKey: asString(stored["apiKey"]),
@@ -100,121 +169,103 @@ export async function getAISummarySettings(): Promise<AISummarySettings> {
     systemPrompt: asString(stored["systemPrompt"]),
     maxTokens: Math.max(16, maxTokens),
     questionMarkOnly: asBoolean(stored["questionMarkOnly"]),
+    enableThinking: asBoolean(stored["enableThinking"]),
   };
-}
+};
 
-interface OpenAIMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
+export const summaryCache: AsyncTtlCache<string> = useCache<string>(
+  SUMMARY_NAMESPACE,
+  SHORT_TTL_MS,
+);
 
-interface OpenAIChatResponse {
-  choices?: {
-    message?: { content?: string; reasoning_content?: string };
-    finish_reason?: string;
-  }[];
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-const DEFAULT_SYSTEM_PROMPT =
-  "You are a helpful assistant that summarises web search results. Write a concise 2–3 sentence summary answering the query based on the provided snippets. Do not invent facts. Do not include citations.";
-
-const SUMMARY_NAMESPACE = "ext:ai-summary:summary";
-const _summaryCache: AsyncTtlCache<string> = useCache<string>(SUMMARY_NAMESPACE, SHORT_TTL_MS);
-
-function _summaryCacheKey(query: string, results: ScoredResult[]): string {
+export const summaryCacheKey = (
+  query: string,
+  results: { url: string; snippet: string }[],
+): string => {
   const fp = results
-    .slice(0, 6)
+    .slice(0, MAX_SOURCES)
     .map((r) => `${r.url}\n${r.snippet}`)
     .join("\n\n");
   const hash = createHash("sha256").update(fp).digest("hex").slice(0, 24);
   return `${query.trim().toLowerCase()}|${hash}`;
-}
+};
 
-async function chatComplete(
-  settings: AISummarySettings,
-  messages: OpenAIMessage[],
-  maxTokens?: number,
-): Promise<string | null> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  if (settings.apiKey) headers["Authorization"] = `Bearer ${settings.apiKey}`;
-
+const _hostname = (url: string): string => {
   try {
-    const res = await fetch(`${settings.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: settings.model,
-        messages,
-        max_tokens: maxTokens ?? settings.maxTokens,
-      }),
-      signal: AbortSignal.timeout(settings.timeoutMs),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as OpenAIChatResponse;
-    const choice = data.choices?.[0];
-    const content = choice?.message?.content?.trim();
-    const reasoning = choice?.message?.reasoning_content?.trim();
-    if (content) return content;
-    if (reasoning) {
-      logger.debug(
-        AI_SUMMARY_ID,
-        `empty content, falling back to reasoning_content (finish_reason=${choice?.finish_reason}). Consider increasing Max Tokens.`,
-      );
-      return reasoning;
-    }
-    logger.debug(
-      AI_SUMMARY_ID,
-      `model returned empty content and reasoning_content (finish_reason=${choice?.finish_reason}).`,
-    );
-    return null;
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return null;
+    return "";
   }
+};
+
+export interface SourceContext {
+  index: number;
+  title: string;
+  url: string;
+  snippet: string;
+  host: string;
 }
 
-export async function generateAISummary(
+export const buildSources = (results: ScoredResult[]): SourceContext[] =>
+  results.slice(0, MAX_SOURCES).map((r, i) => ({
+    index: i + 1,
+    title: r.title || "",
+    url: r.url,
+    snippet: r.snippet || "",
+    host: _hostname(r.url),
+  }));
+
+export const buildUserPrompt = (
   query: string,
-  results: { title: string; url: string; snippet: string }[],
-): Promise<string | null> {
-  const settings = await getAISummarySettings();
-  if (!settings.baseUrl || !settings.model) return null;
-
-  const context = results
-    .slice(0, 6)
-    .map((r, i) => `[${i + 1}] ${r.title}\n${r.snippet}`)
+  sources: SourceContext[],
+): string => {
+  const block = sources
+    .map(
+      (s) =>
+        `[${s.index}] ${s.title}${s.host ? ` (${s.host})` : ""}\n${s.snippet}`,
+    )
     .join("\n\n");
+  return `Query: ${query.trim()}\n\nSearch results:\n${block}`;
+};
 
-  const messages: OpenAIMessage[] = [
-    {
-      role: "system",
-      content: settings.systemPrompt || DEFAULT_SYSTEM_PROMPT,
-    },
-    {
-      role: "user",
-      content: `Query: ${query}\n\nSearch results:\n${context}`,
-    },
-  ];
+const _escapeHtml = (s: string): string =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
-  return chatComplete(settings, messages);
-}
-
-export async function chatFollowUp(
-  history: OpenAIMessage[],
-): Promise<string | null> {
-  const settings = await getAISummarySettings();
-  if (!settings.baseUrl || !settings.model) return null;
-  return chatComplete(settings, history, Math.max(settings.maxTokens, 512));
-}
+const buildPanelHtml = (
+  t: typeof TranslateFunction,
+  query: string,
+  sources: SourceContext[],
+): string => {
+  const sourcesJson = JSON.stringify(
+    sources.map((s) => ({ i: s.index, u: s.url, t: s.title, h: s.host })),
+  );
+  return (
+    '<div class="glance-ai degoog-panel degoog-panel--slot degoog-panel--slot-body-padded degoog-vstack"' +
+    ` data-stream="1" data-query="${_escapeHtml(query)}"` +
+    ` data-sources="${_escapeHtml(sourcesJson)}">` +
+    '<div class="glance-ai-messages">' +
+    '<div class="glance-snippet glance-ai-stream degoog-text degoog-text--md" data-state="pending">' +
+    '<div class="skeleton-glance glance-ai-skeleton" aria-hidden="true">' +
+    '<div class="skeleton-line skeleton-line--snippet"></div>' +
+    '<div class="skeleton-line skeleton-line--snippet"></div>' +
+    '<div class="skeleton-line skeleton-line--snippet-short"></div>' +
+    "</div>" +
+    "</div>" +
+    "</div>" +
+    '<div class="glance-ai-footer">' +
+    `<span class="glance-ai-badge degoog-badge">${t("ai-summary.badge")}</span>` +
+    `<button class="glance-ai-dive degoog-link-btn" type="button" hidden>${t("ai-summary.dive-deeper")}</button>` +
+    "</div>" +
+    '<div class="glance-ai-chat" hidden>' +
+    `<textarea class="glance-ai-input degoog-input degoog-input--chat" placeholder="${t("ai-summary.follow-up-placeholder")}" rows="1"></textarea>` +
+    "</div>" +
+    "</div>"
+  );
+};
 
 const aiSummarySlot: SlotPlugin = {
   id: AI_SUMMARY_ID,
@@ -231,38 +282,25 @@ const aiSummarySlot: SlotPlugin = {
 
   async trigger(query: string): Promise<boolean> {
     const settings = await getAISummarySettings();
-    if (!settings.baseUrl || !settings.model) return false;
+    if (!settings.model) return false;
+    if (
+      settings.provider === ProviderId.OpenAICompat &&
+      !settings.baseUrl
+    ) {
+      return false;
+    }
+    if (settings.provider !== ProviderId.OpenAICompat && !settings.apiKey) {
+      return false;
+    }
     if (settings.questionMarkOnly && !query.trim().endsWith("?")) return false;
     return true;
   },
+
   async execute(query, context): Promise<{ title?: string; html: string }> {
     const results = context?.results ?? [];
     if (results.length === 0) return { html: "" };
-    const key = _summaryCacheKey(query, results);
-    let summary = await _summaryCache.get(key);
-    if (summary === null) {
-      const generated = await generateAISummary(query, results);
-      if (!generated) return { html: "" };
-      await _summaryCache.set(key, generated);
-      summary = generated;
-    }
-    return {
-      html:
-        '<div class="glance-ai degoog-panel degoog-panel--slot degoog-panel--slot-body-padded degoog-vstack">' +
-        '<div class="glance-ai-messages">' +
-        '<div class="glance-snippet degoog-text degoog-text--md">' +
-        escapeHtml(summary) +
-        "</div>" +
-        "</div>" +
-        '<div class="glance-ai-footer">' +
-        `<span class="glance-ai-badge degoog-badge">${this.t!("ai-summary.badge")}</span>` +
-        `<button class="glance-ai-dive degoog-link-btn" type="button">${this.t!("ai-summary.dive-deeper")}</button>` +
-        "</div>" +
-        '<div class="glance-ai-chat" hidden>' +
-        `<textarea class="glance-ai-input degoog-input degoog-input--chat" placeholder="${this.t!("ai-summary.follow-up-placeholder")}" rows="1"></textarea>` +
-        "</div>" +
-        "</div>",
-    };
+    const sources = buildSources(results);
+    return { html: buildPanelHtml(this.t!, query.trim(), sources) };
   },
   settingsSchema: aiSummarySettingsSchema,
 };

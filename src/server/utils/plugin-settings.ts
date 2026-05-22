@@ -7,8 +7,6 @@ import {
   publishInvalidate,
 } from "./cache-valkey";
 
-const SETTINGS_PATH = pluginSettingsFile();
-
 type PluginSettingsStore = Record<string, Record<string, SettingValue>>;
 export type SettingValue = string | string[] | boolean;
 
@@ -42,7 +40,7 @@ onInvalidate((payload) => {
 const load = async (): Promise<PluginSettingsStore> => {
   if (cache) return cache;
   try {
-    const raw = await readFile(SETTINGS_PATH, "utf-8");
+    const raw = await readFile(pluginSettingsFile(), "utf-8");
     cache = JSON.parse(raw) as PluginSettingsStore;
     loadFailed = false;
   } catch (e: unknown) {
@@ -55,8 +53,9 @@ const load = async (): Promise<PluginSettingsStore> => {
 export const didSettingsLoadFail = (): boolean => loadFailed;
 
 async function persist(store: PluginSettingsStore): Promise<void> {
-  await mkdir(dirname(SETTINGS_PATH), { recursive: true });
-  await writeFile(SETTINGS_PATH, JSON.stringify(store, null, 2), "utf-8");
+  const path = pluginSettingsFile();
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, JSON.stringify(store, null, 2), "utf-8");
 }
 
 export const getSettings = async (

@@ -1,7 +1,7 @@
 {
   "ai-summary": {
     "name": "סיכום AI",
-    "description": "מחליף את 'במבט חטוף' בסיכום קצר שנוצר על ידי AI באמצעות כל ספק התואם ל-OpenAI",
+    "description": "סיכום AI בזרימה עם ציטוטים מקוריים. פועל עם ממשקי API תואמי OpenAI (כולל Ollama), Google Gemini ו-Anthropic Claude.",
     "badge": "סיכום AI",
     "dive-deeper": "צלילה לעומק",
     "follow-up-placeholder": "שאל שאלת המשך…",

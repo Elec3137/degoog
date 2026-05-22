@@ -1,4 +1,5 @@
 import { escapeHtml } from "../../../utils/dom";
+import { renderMdInline } from "../../../utils/md";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
@@ -111,7 +112,7 @@ const _renderUrlListField = (
     defaultUrls,
   );
   const descHtml = field.description
-    ? `<p class="ext-field-desc">${escapeHtml(field.description)}</p>`
+    ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
     : "";
   const listItems = urls
     .map(
@@ -241,7 +242,7 @@ export const renderField = (
     isSecret && isSet ? " ext-field-input--configured" : "";
   const placeholder = isSecret && isSet ? "••••••••" : field.placeholder || "";
   const descHtml = field.description
-    ? `<p class="ext-field-desc">${escapeHtml(field.description)}</p>`
+    ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
     : "";
 
   if (field.type === "urllist") {
