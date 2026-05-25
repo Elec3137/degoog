@@ -6,7 +6,7 @@ import { asBoolean, asString } from "../utils/plugin-settings";
 import { getRandomUserAgent } from "../utils/user-agents";
 import { DEFAULT_LANGUAGES } from "../utils/search";
 import { getServerKeyHex, regenerateServerKey } from "../utils/server-key";
-import { syncBlocklist } from "../utils/bot-trap";
+import { resolveBanHours, syncBlocklist } from "../utils/bot-trap";
 import { addEntry, listActive, removeEntry } from "../utils/blocklist";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
 import { getInstanceSettings, setInstanceSettings } from "../utils/server-settings";
@@ -313,8 +313,7 @@ router.get("/api/settings/honeypot/blocklist", async (c) => {
   const denied = await guardSettingsRoute(c, "GET /api/settings/honeypot/blocklist");
   if (denied) return denied;
   const settings = await getInstanceSettings();
-  const raw = parseInt(asString(settings.honeypotBanDuration ?? ""), 10);
-  const banHours = Number.isFinite(raw) && raw >= 0 ? raw : 0;
+  const banHours = resolveBanHours(settings.honeypotBanDuration);
   const entries = await listActive(banHours);
   return c.json({ entries, banHours });
 });
