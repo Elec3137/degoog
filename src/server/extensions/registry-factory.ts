@@ -10,8 +10,14 @@ import { pathToFileURL } from "url";
 import { logger } from "../utils/logger";
 import { createMutex } from "../utils/mutex";
 import { makeExtID, dedupeExtID, type ExtensionKind } from "./extension-id";
-
 export type RegistrySource = "plugin" | "builtin";
+
+let _pluginReloadGeneration = 0;
+
+export const bumpPluginRegistryReload = (): number => ++_pluginReloadGeneration;
+
+export const getPluginRegistryReloadGeneration = (): number =>
+  _pluginReloadGeneration;
 
 /**
  * A directory to scan for extensions.
@@ -179,13 +185,14 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
 } {
   let _items: T[] = [];
   const _canonicalIds = new Set<string>();
-  let _loadCount = 0;
   const _loadMutex = createMutex();
 
   async function loadFromDir(registryDir: RegistryDir, bust: boolean): Promise<void> {
     let entries: string[];
     try {
-      entries = await readdir(registryDir.dir);
+      entries = (await readdir(registryDir.dir)).sort((a, b) =>
+        a.localeCompare(b),
+      );
     } catch {
       return;
     }
@@ -201,7 +208,9 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
         if (!r) return null;
         try {
           const base = pathToFileURL(r.fullPath).href;
-          const url = bust ? `${base}?r=${_loadCount}` : base;
+          const url = bust
+            ? `${base}?r=${_pluginReloadGeneration}`
+            : base;
           const mod = (await import(url)) as Record<string, unknown>;
           const extracted = opts.match(mod);
           return extracted != null ? { extracted, r } : null;
@@ -267,7 +276,6 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
   }
 
   async function _load(bust: boolean): Promise<void> {
-    if (bust) _loadCount++;
     _items = [];
     _canonicalIds.clear();
     const dirs = typeof opts.dirs === "function" ? opts.dirs() : opts.dirs;

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { findPluginRoute } from "../extensions/plugin-routes/registry";
+import { findPluginRoute, resolvePluginFolderId } from "../extensions/plugin-routes/registry";
 import { logger } from "../utils/logger";
 import { getPluginSettingsIds } from "../utils/plugin-assets";
 import { isDisabled } from "../utils/plugin-settings";
@@ -7,7 +7,7 @@ import { isDisabled } from "../utils/plugin-settings";
 const router = new Hono();
 
 router.all("/api/plugin/:pluginId/*", async (c) => {
-  const pluginId = c.req.param("pluginId");
+  const pluginId = resolvePluginFolderId(c.req.param("pluginId"));
   const settingsIds = getPluginSettingsIds(pluginId);
   for (const sid of settingsIds) {
     if (await isDisabled(sid)) {

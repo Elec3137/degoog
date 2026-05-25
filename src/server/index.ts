@@ -90,21 +90,34 @@ ${ANSI_GRAY}██████████████████████�
 await runMigrations();
 await initValkey(await getInstanceId());
 
-Promise.all([
-  initServerKey(),
-  initTransports(),
-  initEngines(),
-  initPlugins(),
-  initSlotPlugins(),
-  initInterceptors(),
-  initSearchResultTabs(),
-  initSearchBarActions(),
-  initPluginRoutes(),
-  initMiddlewareRegistry(),
-  initThemes(),
-  initUovadipasquas(),
-  initAutocomplete(),
-])
+const initExtensionRegistries = async (): Promise<void> => {
+  await Promise.all([
+    initTransports(),
+    initEngines(),
+    initSlotPlugins(),
+    initInterceptors(),
+    initSearchResultTabs(),
+    initSearchBarActions(),
+    initMiddlewareRegistry(),
+    initThemes(),
+    initUovadipasquas(),
+    initAutocomplete(),
+  ]);
+
+  /**
+   * @fccview here, if you are wondering why these are loaded outside of that big
+   * Promise.all it's because the plugin api routes MUST be initialised after the plugins are loaded
+   * and promise.all is not gonna give a reliable order of execution 100% of the time.
+   * 
+   * This ensures your lovely extremely dangerous api routes from thied party plugins you are installing
+   * from dubious sources that you are MOST DEFINITELY NOT code checking are running nicely in the background 
+   * and installing all sort of viruses and exploits reliably <3 happy far westing!
+   */
+  await initPlugins();
+  await initPluginRoutes();
+};
+
+Promise.all([initServerKey(), initExtensionRegistries()])
   .then(() => {
     Bun.serve({ port, fetch: app.fetch, idleTimeout: 120 });
     markReady();

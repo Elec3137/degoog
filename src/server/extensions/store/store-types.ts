@@ -13,7 +13,11 @@ import { reloadSlotPlugins } from "../slots/registry";
 import { reloadInterceptors } from "../interceptors/registry";
 import { reloadSearchResultTabs } from "../search-result-tabs/registry";
 import { reloadSearchBarActions } from "../search-bar/registry";
-import { reloadPluginRoutes } from "../plugin-routes/registry";
+import {
+  clearPluginRoutes,
+  initPluginRoutes,
+} from "../plugin-routes/registry";
+import { bumpPluginRegistryReload } from "../registry-factory";
 import { reloadMiddlewareRegistry } from "../middleware/registry";
 import { reloadThemes } from "../themes/registry";
 import { reloadEngines } from "../engines/registry";
@@ -35,13 +39,15 @@ interface StoreTypeSpec {
 }
 
 const reloadPluginBundle = async (bust: boolean): Promise<void> => {
+  if (bust) bumpPluginRegistryReload();
+  clearPluginRoutes();
   await reloadSlotPlugins(bust);
   await reloadInterceptors(bust);
   await reloadSearchResultTabs(bust);
   await reloadCommands(bust);
   await reloadSearchBarActions(bust);
-  await reloadPluginRoutes(bust);
   await reloadMiddlewareRegistry(bust);
+  await initPluginRoutes(bust);
 };
 
 const pluginSettingsIds = (installedAs: string): string[] => {
