@@ -4,38 +4,38 @@ import {
   getKnownTypes,
   queryIndex,
 } from "../../../../indexer/store";
-import { listEngines } from "../../registry";
 import { asBoolean } from "../../../../utils/plugin-settings";
 import { getInstanceSettings } from "../../../../utils/server-settings";
 
-const isEnabled = async (): Promise<boolean> => {
+export const DEGOOG_ENGINE_ID = "degoog-engine";
+
+const isIndexerOn = async (): Promise<boolean> => {
   const settings = await getInstanceSettings();
   return asBoolean(settings.degoogIndexerEnabled);
 };
 
-export const name = DEGOOG_ENGINE_NAME;
-export const description =
-  "Re-surfaces results from your local Degoog index. Toggle on in Settings > Degoog Indexer.";
-export const bangShortcut = "degoog";
-
 export const type = async (): Promise<string[]> => {
-  const seen = new Set<string>();
-  const engines = await listEngines();
-  for (const e of engines) {
-    for (const t of e.searchTypes) seen.add(t);
-  }
+  const { getInstalledSearchTypes } = await import("../../registry");
+  const seen = new Set(await getInstalledSearchTypes(DEGOOG_ENGINE_ID));
   for (const t of getKnownTypes()) seen.add(t);
   return [...seen];
 };
 
-export const executeSearch = async (
-  query: string,
-  _page?: number,
-  _timeFilter?: string,
-  context?: EngineContext,
-): Promise<SearchResult[]> => {
-  if (!(await isEnabled())) return [];
-  const engineType = context?.searchType;
-  if (!engineType) return [];
-  return queryIndex(query, engineType);
-};
+class DegoogEngine {
+  name = DEGOOG_ENGINE_NAME;
+  bangShortcut = "degoog";
+
+  async executeSearch(
+    query: string,
+    _page?: number,
+    _timeFilter?: string,
+    context?: EngineContext,
+  ): Promise<SearchResult[]> {
+    if (!(await isIndexerOn())) return [];
+    const engineType = context?.searchType;
+    if (!engineType) return [];
+    return queryIndex(query, engineType);
+  }
+}
+
+export default DegoogEngine;

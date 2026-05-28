@@ -34,11 +34,11 @@ export const initIndexerPublic = async (): Promise<void> => {
     stats = null;
   }
   if (!stats) {
-    section.style.display = "none";
+    section.hidden = true;
     return;
   }
 
-  section.style.display = "";
+  section.hidden = false;
 
   const statsWrap = document.getElementById("indexer-public-stats");
   if (statsWrap) {

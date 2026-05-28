@@ -17,7 +17,7 @@
       "autocomplete": "Autocomplete",
       "themes": "Themes",
       "store": "Store",
-      "indexer": "Degoog Indexer"
+      "indexer": "Indexer"
     },
     "tab-search": {
       "placeholder": "Search settings...",
@@ -171,8 +171,8 @@
       "indexer-heading": "Degoog Indexer",
       "indexer-desc": "Record results you actually see and re-surface them as a Degoog engine on later searches.",
       "indexer-enable": "Enable the indexer",
-      "indexer-enable-desc": "When on, search results are stored locally and the Degoog Indexer tab appears in settings.",
-      "indexer-enable-aria": "Enable Degoog indexer"
+      "indexer-enable-desc": "When on, search results are stored locally.",
+      "indexer-enable-aria": "Enable Degoog indexer",
       "saved": "Saved",
       "save-failed-network": "Save failed. Please try again."
     },

@@ -59,67 +59,97 @@ const formatBytes = (bytes: number): string => {
 
 const renderShell = (container: HTMLElement): void => {
   container.innerHTML = `
-    <section class="settings-section degoog-panel">
-      <h2 class="settings-section-heading">${tr("heading")}</h2>
-      <p class="settings-section-desc">${tr("desc")}</p>
-
-      <fieldset class="settings-fieldset settings-fieldset-inverse" id="indexer-public-wrap">
-        <label class="settings-toggle-wrap degoog-toggle-wrap">
-          <input type="checkbox" id="indexer-public-export" />
-          <span class="toggle-slider degoog-toggle"></span>
-          <span class="settings-toggle-label">${tr("public-export")}</span>
-        </label>
-        <p class="settings-field-desc">${tr("public-export-desc")}</p>
-      </fieldset>
-
-      <fieldset class="settings-fieldset settings-fieldset-inverse" id="indexer-incoming-wrap">
-        <label class="settings-toggle-wrap degoog-toggle-wrap">
-          <input type="checkbox" id="indexer-accept-incoming" />
-          <span class="toggle-slider degoog-toggle"></span>
-          <span class="settings-toggle-label">${tr("accept-incoming")}</span>
-        </label>
-        <p class="settings-field-desc">${tr("accept-incoming-desc")}</p>
-      </fieldset>
-
-      <div id="indexer-disabled-note" class="settings-field-desc" style="display: none">
-        ${tr("disabled")}
-      </div>
-
-      <div id="indexer-stats-wrap" style="display: none">
-        <h3 class="settings-subheading">${tr("stats-heading")}</h3>
-        <dl class="settings-stat-grid degoog-stat-grid">
-          <div><dt>${tr("total-results")}</dt><dd id="indexer-stat-total">0</dd></div>
-          <div><dt>${tr("total-queries")}</dt><dd id="indexer-stat-queries">0</dd></div>
-          <div><dt>${tr("db-size")}</dt><dd id="indexer-stat-size">0 B</dd></div>
-        </dl>
-        <div id="indexer-by-type" class="settings-stat-grid degoog-stat-grid"></div>
-
-        <fieldset class="settings-fieldset">
-          <label class="settings-field-label" for="indexer-push-url">${tr("push-label")}</label>
-          <div class="settings-action-row">
-            <input
-              type="url"
-              id="indexer-push-url"
-              class="degoog-input"
-              placeholder="${tr("push-placeholder")}"
-            />
-            <button type="button" class="btn btn--secondary degoog-btn degoog-btn--secondary" id="indexer-push-btn">
-              ${tr("push-btn")}
-            </button>
-          </div>
-          <p class="settings-field-desc">${tr("push-desc")}</p>
-          <p id="indexer-push-status" class="settings-field-desc"></p>
-        </fieldset>
-
-        <div class="settings-action-row">
-          <button type="button" class="btn btn--secondary degoog-btn degoog-btn--secondary" id="indexer-export-btn">
-            ${tr("export-btn")}
-          </button>
-          <button type="button" class="btn btn--secondary degoog-btn degoog-btn--secondary" id="indexer-clear-btn">
-            ${tr("clear-btn")}
-          </button>
+    <section
+      class="settings-section ext-card degoog-panel degoog-panel--ext-card"
+      id="indexer-tab-section"
+    >
+      <div class="setting-section-heading-wrapper">
+        <h2 class="settings-section-heading">${tr("heading")}</h2>
+        <div class="floating-section-icon">
+          <i class="fa-solid fa-database"></i>
         </div>
       </div>
+      <p class="settings-desc">${tr("desc")}</p>
+
+      <p id="indexer-disabled-note" class="settings-desc degoog-indexer-disabled-note" hidden>
+        ${tr("disabled")}
+      </p>
+
+      <fieldset class="settings-fieldset">
+        <fieldset
+          class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+          id="indexer-public-wrap"
+        >
+          <label class="settings-toggle-wrap degoog-toggle-wrap">
+            <input type="checkbox" id="indexer-public-export" class="settings-toggle" />
+            <span class="toggle-slider degoog-toggle"></span>
+            <span class="settings-toggle-label">${tr("public-export")}</span>
+          </label>
+          <p class="settings-desc">${tr("public-export-desc")}</p>
+        </fieldset>
+
+        <fieldset
+          class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+          id="indexer-incoming-wrap"
+        >
+          <label class="settings-toggle-wrap degoog-toggle-wrap">
+            <input type="checkbox" id="indexer-accept-incoming" class="settings-toggle" />
+            <span class="toggle-slider degoog-toggle"></span>
+            <span class="settings-toggle-label">${tr("accept-incoming")}</span>
+          </label>
+          <p class="settings-desc">${tr("accept-incoming-desc")}</p>
+        </fieldset>
+
+        <div id="indexer-stats-wrap" class="degoog-indexer-stats" hidden>
+          <p class="settings-rate-limit-defaults">${tr("stats-heading")}</p>
+          <dl class="degoog-stat-grid">
+            <div><dt>${tr("total-results")}</dt><dd id="indexer-stat-total">0</dd></div>
+            <div><dt>${tr("total-queries")}</dt><dd id="indexer-stat-queries">0</dd></div>
+            <div><dt>${tr("db-size")}</dt><dd id="indexer-stat-size">0 B</dd></div>
+          </dl>
+          <div id="indexer-by-type" class="degoog-stat-grid degoog-stat-grid--types"></div>
+
+          <fieldset
+            class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+          >
+            <label class="settings-proxy-urls-label" for="indexer-push-url">${tr("push-label")}</label>
+            <div class="degoog-action-row">
+              <input
+                type="url"
+                id="indexer-push-url"
+                class="degoog-input"
+                placeholder="${tr("push-placeholder")}"
+              />
+              <button
+                type="button"
+                class="btn btn--secondary degoog-btn degoog-btn--secondary"
+                id="indexer-push-btn"
+              >
+                ${tr("push-btn")}
+              </button>
+            </div>
+            <p class="settings-desc">${tr("push-desc")}</p>
+            <p id="indexer-push-status" class="settings-desc"></p>
+          </fieldset>
+
+          <div class="degoog-action-row degoog-action-row--buttons">
+            <button
+              type="button"
+              class="btn btn--secondary degoog-btn degoog-btn--secondary"
+              id="indexer-export-btn"
+            >
+              ${tr("export-btn")}
+            </button>
+            <button
+              type="button"
+              class="btn btn--secondary degoog-btn degoog-btn--secondary"
+              id="indexer-clear-btn"
+            >
+              ${tr("clear-btn")}
+            </button>
+          </div>
+        </div>
+      </fieldset>
     </section>
   `;
 };
@@ -249,10 +279,11 @@ const wireToggles = async (
 
   const applyVisibility = (isEnabled: boolean): void => {
     setIndexerNavVisible(isEnabled);
-    if (statsWrap) statsWrap.style.display = isEnabled ? "" : "none";
-    if (disabledNote) disabledNote.style.display = isEnabled ? "none" : "";
-    if (publicWrap) publicWrap.style.opacity = isEnabled ? "1" : "0.5";
-    if (incomingWrap) incomingWrap.style.opacity = isEnabled ? "1" : "0.5";
+    if (statsWrap) statsWrap.hidden = !isEnabled;
+    if (disabledNote) disabledNote.hidden = isEnabled;
+    for (const wrap of [publicWrap, incomingWrap]) {
+      wrap?.classList.toggle("degoog-fieldset--disabled", !isEnabled);
+    }
     if (publicEl) publicEl.disabled = !isEnabled;
     if (incomingEl) incomingEl.disabled = !isEnabled;
   };

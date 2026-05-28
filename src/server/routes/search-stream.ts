@@ -192,6 +192,7 @@ router.get("/api/search/stream", async (c) => {
               dateTo,
               imageFilter,
               cancelController.signal,
+              type,
             );
             lastTiming = timing;
 
@@ -256,8 +257,8 @@ router.get("/api/search/stream", async (c) => {
           : undefined;
         await cache.set(key, response, ttl);
 
-        const settings = await getInstanceSettings();
-        if (asBoolean(settings.degoogIndexerEnabled)) {
+        const indexerSettings = await getInstanceSettings();
+        if (asBoolean(indexerSettings.degoogIndexerEnabled)) {
           const toIndex = rawScoredResults.filter(
             (r) =>
               r.source !== DEGOOG_ENGINE_NAME &&

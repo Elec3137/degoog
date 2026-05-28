@@ -293,6 +293,7 @@ async function _performBangCommand(
 
   try {
     const apiParams = new URLSearchParams({ q: query });
+    apiParams.set("type", _type);
     if (page > 1) apiParams.set("page", String(page));
     if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
       apiParams.set("time", state.currentTimeFilter);

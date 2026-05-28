@@ -12,6 +12,7 @@ import {
   getTypeOverride,
   isDisabled,
   maskSecrets,
+  asBoolean,
   mergeDefaults,
 } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
@@ -25,6 +26,7 @@ import { join } from "path";
 import { createRegistry } from "../registry-factory";
 import { extensionReadmeExists } from "../../utils/extension-docs";
 import { logger } from "../../utils/logger";
+import { getInstanceSettings } from "../../utils/server-settings";
 
 const builtinsDir = join(
   process.cwd(),
@@ -133,11 +135,15 @@ const engineRegistry = createRegistry<PluginEntry>({
   canonicalIdKind: "engine",
   match: (mod) => {
     const Export = mod.default ?? mod.engine ?? mod.Engine;
-    const instance: SearchEngine =
-      typeof Export === "function"
-        ? new (Export as new () => SearchEngine)()
-        : (Export as SearchEngine);
-    if (!isSearchEngine(instance)) return null;
+    let instance: SearchEngine | null = null;
+    if (typeof Export === "function") {
+      instance = new (Export as new () => SearchEngine)();
+    } else if (Export && isSearchEngine(Export)) {
+      instance = Export as SearchEngine;
+    } else if (isSearchEngine(mod)) {
+      instance = mod as SearchEngine;
+    }
+    if (!instance) return null;
     const isFn = typeof mod.type === "function";
     (instance as SearchEngine & { __typeFn?: TypeFn }).__typeFn = isFn
       ? (mod.type as TypeFn)
@@ -191,8 +197,12 @@ export const getEnginesForCustomType = async (
   config?: EngineConfig,
 ): Promise<{ id: string; instance: SearchEngine }[]> => {
   const results: { id: string; instance: SearchEngine }[] = [];
+  const settings = await getInstanceSettings();
+  const indexerOn = asBoolean(settings.degoogIndexerEnabled);
   for (const e of engineRegistry.items()) {
-    if (config && !config[e.id]) continue;
+    const enabled =
+      !config || config[e.id] || (indexerOn && e.id === "degoog-engine");
+    if (!enabled) continue;
     if (await isDisabled(e.id)) continue;
     const types = await resolveEngineTypes(e);
     if (types.includes(engineType))
@@ -208,6 +218,17 @@ export const getCustomEngineTypes = async (): Promise<string[]> => {
     for (const t of await resolveEngineTypes(e)) {
       if (t !== "web") types.add(t);
     }
+  }
+  return [...types];
+};
+
+export const getInstalledSearchTypes = async (
+  excludeId?: string,
+): Promise<string[]> => {
+  const types = new Set<string>();
+  for (const e of engineRegistry.items()) {
+    if (excludeId && e.id === excludeId) continue;
+    for (const t of await resolveEngineTypes(e)) types.add(t);
   }
   return [...types];
 };
@@ -245,9 +266,12 @@ const hasRequiredConfig = async (
 export const getActiveWebEngines = async (
   config: EngineConfig,
 ): Promise<{ id: string; instance: SearchEngine; score: number }[]> => {
+  const settings = await getInstanceSettings();
+  const indexerOn = asBoolean(settings.degoogIndexerEnabled);
   const active: { id: string; instance: SearchEngine; score: number }[] = [];
   for (const e of engineRegistry.items()) {
-    if (!config[e.id]) continue;
+    const enabled = config[e.id] || (indexerOn && e.id === "degoog-engine");
+    if (!enabled) continue;
     const types = await resolveEngineTypes(e);
     if (!types.includes("web")) continue;
     if (
@@ -367,24 +391,24 @@ export const getEngineExtensionMeta = async (
 
   const baseScoreField = coreT
     ? {
-        ...SCORE_FIELD,
-        label: coreT("settings-page.schema.score.label") || SCORE_FIELD.label,
-        description:
-          coreT("settings-page.schema.score.description") ||
-          SCORE_FIELD.description,
-      }
+      ...SCORE_FIELD,
+      label: coreT("settings-page.schema.score.label") || SCORE_FIELD.label,
+      description:
+        coreT("settings-page.schema.score.description") ||
+        SCORE_FIELD.description,
+    }
     : SCORE_FIELD;
 
   const baseTransportField = coreT
     ? {
-        ...OUTGOING_TRANSPORT_FIELD,
-        label:
-          coreT("settings-page.schema.outgoing-transport.label") ||
-          OUTGOING_TRANSPORT_FIELD.label,
-        description:
-          coreT("settings-page.schema.outgoing-transport.description") ||
-          OUTGOING_TRANSPORT_FIELD.description,
-      }
+      ...OUTGOING_TRANSPORT_FIELD,
+      label:
+        coreT("settings-page.schema.outgoing-transport.label") ||
+        OUTGOING_TRANSPORT_FIELD.label,
+      description:
+        coreT("settings-page.schema.outgoing-transport.description") ||
+        OUTGOING_TRANSPORT_FIELD.description,
+    }
     : OUTGOING_TRANSPORT_FIELD;
 
   const defaults = getDefaultEngineConfig();
@@ -409,9 +433,9 @@ export const getEngineExtensionMeta = async (
 
     const scoreField: SettingField = engineScoreField
       ? {
-          ...baseScoreField,
-          default: engineScoreField.default ?? baseScoreField.default,
-        }
+        ...baseScoreField,
+        default: engineScoreField.default ?? baseScoreField.default,
+      }
       : baseScoreField;
 
     const pluginT = entry.instance.t;
@@ -423,28 +447,28 @@ export const getEngineExtensionMeta = async (
     );
     const translatedEngineSchema = pluginT
       ? engineSchemaFiltered.map((field) => {
-          const base = `${entry.id}.settings.${field.key}`;
-          const label = pluginT(`${base}.label`);
-          const desc =
-            field.description !== undefined
-              ? pluginT(`${base}.description`)
-              : undefined;
-          const placeholder =
-            field.placeholder !== undefined
-              ? pluginT(`${base}.placeholder`)
-              : undefined;
-          return {
-            ...field,
-            label: label !== `${base}.label` ? label : field.label,
-            ...(desc !== undefined && desc !== `${base}.description`
-              ? { description: desc }
-              : {}),
-            ...(placeholder !== undefined &&
+        const base = `${entry.id}.settings.${field.key}`;
+        const label = pluginT(`${base}.label`);
+        const desc =
+          field.description !== undefined
+            ? pluginT(`${base}.description`)
+            : undefined;
+        const placeholder =
+          field.placeholder !== undefined
+            ? pluginT(`${base}.placeholder`)
+            : undefined;
+        return {
+          ...field,
+          label: label !== `${base}.label` ? label : field.label,
+          ...(desc !== undefined && desc !== `${base}.description`
+            ? { description: desc }
+            : {}),
+          ...(placeholder !== undefined &&
             placeholder !== `${base}.placeholder`
-              ? { placeholder }
-              : {}),
-          };
-        })
+            ? { placeholder }
+            : {}),
+        };
+      })
       : engineSchemaFiltered;
 
     const override = await getTypeOverride(entry.id);
