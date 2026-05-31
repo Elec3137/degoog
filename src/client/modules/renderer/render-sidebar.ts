@@ -18,7 +18,9 @@ export const setupRetryLinks = (container: HTMLElement): void => {
         link.textContent = "retrying...";
         try {
           await retryEngine(engineName);
-        } catch {}
+        } catch (err) {
+          console.warn("[sidebar] engine retry failed", err);
+        }
         link.classList.remove("retrying");
         link.textContent = "retry";
       });

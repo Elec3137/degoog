@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 const _baseUrl = (process.env.DEGOOG_BASE_URL ?? "").trim().replace(/\/+$/, "");
 
 const _basePath = (() => {
@@ -7,7 +9,8 @@ const _basePath = (() => {
     const u = new URL(_baseUrl);
     const p = u.pathname.replace(/\/+$/, "");
     return p === "/" ? "" : p;
-  } catch {
+  } catch (err) {
+    logger.debug("base-url", `invalid DEGOOG_BASE_URL "${_baseUrl}"`, err);
     return _baseUrl;
   }
 })();

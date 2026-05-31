@@ -14,7 +14,6 @@ import {
   asString,
   getSettings,
   isDisabled,
-  maskSecrets,
 } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import {
@@ -23,8 +22,9 @@ import {
 } from "../engines/registry";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { makeExtID, folderFromExtID } from "../extension-id";
-import { extensionReadmeExists } from "../../utils/extension-docs";
+import { makeExtID, folderFromExtID } from "../../utils/extension-id";
+import { buildExtensionMeta } from "../extension-meta";
+import { logger } from "../../utils/logger";
 
 const builtinsDir = join(
   process.cwd(),
@@ -120,7 +120,8 @@ async function loadAliases(): Promise<void> {
     ) {
       userAliases = parsed as Record<string, string>;
     }
-  } catch {
+  } catch (err) {
+    logger.debug("commands", "command aliases file read failed", err);
     userAliases = {};
   }
 }
@@ -325,9 +326,6 @@ export async function getPluginExtensionMeta(
         rawSettings = { ...rawSettings, useAsSettingsGate: "true" };
       }
     }
-    const maskedSettings = maskSecrets(rawSettings, schema);
-    if (rawSettings["disabled"])
-      maskedSettings["disabled"] = rawSettings["disabled"];
     const t = entry.instance.t;
     const nameKey = `${entry.id}.name`;
     const descKey = `${entry.id}.description`;
@@ -358,7 +356,7 @@ export async function getPluginExtensionMeta(
           };
         })
       : schema;
-    const meta: ExtensionMeta = {
+    const meta = await buildExtensionMeta({
       id: entry.id,
       displayName:
         translatedName !== nameKey ? translatedName : entry.displayName,
@@ -367,15 +365,14 @@ export async function getPluginExtensionMeta(
           ? translatedDesc
           : entry.instance.description,
       type: "command",
-      trigger: entry.trigger,
-      configurable: schema.length > 0,
-      settingsSchema: translatedSchema,
-      settings: maskedSettings,
-      source: commandSourceMap.get(entry.id) ?? "plugin",
-      isClientExposed: entry.instance.isClientExposed,
-    };
-    const { exists } = await extensionReadmeExists(entry.id);
-    meta.extensionDocsAvailable = exists;
+      schema: translatedSchema,
+      rawSettings,
+      extra: {
+        trigger: entry.trigger,
+        source: commandSourceMap.get(entry.id) ?? "plugin",
+        isClientExposed: entry.instance.isClientExposed,
+      },
+    });
     const inst = entry.instance as unknown as Record<string, unknown>;
     if (Array.isArray(inst.defaultFeedUrls)) {
       meta.defaultFeedUrls = inst.defaultFeedUrls as string[];

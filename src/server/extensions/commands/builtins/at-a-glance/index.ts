@@ -15,6 +15,7 @@ import {
 import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
 import { looksLikeProse, stripSnippetPrefix } from "../../../../utils/text";
 import { getRandomUserAgent } from "../../../../utils/user-agents";
+import { logger } from "../../../../utils/logger";
 
 const SETTINGS_ID = "slot-at-a-glance";
 const WIKIPEDIA_SETTINGS_ID = "wikipedia-slot";
@@ -41,7 +42,8 @@ const _isWikipediaUrl = (url: string): boolean => {
     return (
       host === WIKIPEDIA_HOSTNAME || host.endsWith(`.${WIKIPEDIA_HOSTNAME}`)
     );
-  } catch {
+  } catch (err) {
+    logger.debug("at-a-glance", `invalid URL "${url}"`, err);
     return false;
   }
 };
@@ -196,7 +198,8 @@ const _fetchExtract = async (
     );
     if (extracted) await _extractCache.set(cacheKey, extracted);
     return extracted;
-  } catch {
+  } catch (err) {
+    logger.debug("at-a-glance", "extract fetch failed", err);
     clearTimeout(timer);
     return null;
   }

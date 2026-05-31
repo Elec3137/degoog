@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import type { TransportFetchOptions } from "../../../../types";
+import { logger } from "../../../../utils/logger";
 
 const DEFAULT_TIMEOUT_SEC = 60;
 const DELIMITER = randomUUID();
@@ -74,7 +75,8 @@ export async function fetchViaCurl(
         proc.stdin.write(options.body);
       }
       proc.stdin.end();
-    } catch {
+    } catch (err) {
+      logger.debug("transport:curl", "stdin write failed, killing process", err);
       proc.kill();
     }
   };

@@ -14,7 +14,8 @@ const load = async (): Promise<BlockEntry[]> => {
   try {
     const raw = await readFile(blocklistFile(), "utf-8");
     _cache = JSON.parse(raw) as BlockEntry[];
-  } catch {
+  } catch (err) {
+    logger.debug("blocklist", "blocklist file read failed", err);
     _cache = [];
   }
   return _cache;

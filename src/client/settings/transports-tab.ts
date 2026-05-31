@@ -1,4 +1,5 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
+import { escapeHtml } from "../utils/dom";
+import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "./ext-card";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../types";
 import { getBase } from "../utils/base-url";
@@ -11,19 +12,9 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
   const desc = transport.description
     ? `<span class="ext-card-desc">${renderMdInline(transport.description)}</span>`
     : "";
-  const versionWarning = transport.requiresNewerVersion
-    ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
-    : "";
-  const status = transport.configurable ? getConfigStatus(transport) : null;
-  const badge =
-    status === "configured"
-      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
-      : status === "needs-config"
-        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
-        : "";
-  const configureBtn = transport.configurable
-    ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(transport.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
-    : "";
+  const versionWarning = extCardVersionWarning(transport);
+  const badge = extCardBadge(transport);
+  const configureBtn = extCardConfigureBtn(transport);
   const toggle = transport.configurable
     ? `<label class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
         <input type="checkbox" class="transport-toggle-input" id="transport-toggle-${escapeHtml(transport.id)}" data-id="${escapeHtml(transport.id)}" ${isEnabled ? "checked" : ""}>

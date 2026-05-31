@@ -161,7 +161,9 @@ export async function performTabSearch(
         (q) => void performTabSearch(q, tabId),
         kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
       );
-    } catch {}
+    } catch (err) {
+      console.warn("[tab-search] sidebar render failed", err);
+    }
   })();
 }
 

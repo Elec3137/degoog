@@ -1,6 +1,7 @@
 import type { ScoredResult } from "../types";
 import { asBoolean, asString } from "./plugin-settings";
 import { getInstanceSettings } from "./server-settings";
+import { logger } from "./logger";
 
 
 const _matchesDomain = (hostname: string, pattern: string): boolean => {
@@ -42,7 +43,8 @@ export const filterBlockedDomains = async (
     try {
       const hostname = new URL(result.url).hostname;
       return !patterns.some((pattern) => _matchesDomain(hostname, pattern));
-    } catch {
+    } catch (err) {
+      logger.debug("domain-filter", `invalid result URL "${result.url}"`, err);
       return true;
     }
   });
@@ -67,7 +69,8 @@ export const applyDomainReplacements = async (
         }
       }
       return result;
-    } catch {
+    } catch (err) {
+      logger.debug("domain-filter", `domain replace skipped for "${result.url}"`, err);
       return result;
     }
   });
@@ -102,7 +105,8 @@ export const applyDomainScores = async (
         .reduce((sum, entry) => sum + entry.score, 0);
       if (boost === 0) return result;
       return { ...result, score: result.score + boost };
-    } catch {
+    } catch (err) {
+      logger.debug("domain-filter", `domain score skipped for "${result.url}"`, err);
       return result;
     }
   });

@@ -126,7 +126,8 @@ router.post("/api/indexer/rows/delete", async (c) => {
   let body: { items?: unknown };
   try {
     body = await c.req.json<{ items?: unknown }>();
-  } catch {
+  } catch (err) {
+    logger.debug("indexer", "invalid JSON body on delete", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
 
@@ -206,7 +207,8 @@ router.post("/api/indexer/clear", async (c) => {
   let body: { confirm?: boolean };
   try {
     body = await c.req.json<{ confirm?: boolean }>();
-  } catch {
+  } catch (err) {
+    logger.debug("indexer", "invalid JSON body on clear", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
   if (body.confirm !== true) return c.json({ error: "Confirmation required" }, 400);

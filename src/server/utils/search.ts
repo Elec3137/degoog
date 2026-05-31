@@ -8,7 +8,7 @@ import {
   SearchType,
   SLOT_POSITION_SETTING_KEY,
   SlotPanelPosition,
-  SlotPanelResult,
+  SlotPanel,
   SlotPluginContext,
   TimeFilter,
 } from "../types";
@@ -161,9 +161,9 @@ export async function runSlotPlugins(
   clientIp?: string,
   results?: ScoredResult[],
   options?: { excludePosition?: SlotPanelPosition; locale?: string },
-): Promise<SlotPanelResult[]> {
+): Promise<SlotPanel[]> {
   const plugins = getSlotPlugins();
-  const panels: SlotPanelResult[] = [];
+  const panels: SlotPanel[] = [];
   const exclude = options?.excludePosition;
   const locale = options?.locale;
   for (const plugin of plugins) {

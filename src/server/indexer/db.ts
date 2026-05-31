@@ -97,7 +97,8 @@ export const discoverTypes = (): string[] => {
     return readdirSync(indexerDir())
       .filter((f) => f.startsWith("index-") && f.endsWith(".db"))
       .map((f) => f.slice(6, -3));
-  } catch {
+  } catch (err) {
+    logger.debug("indexer", "indexer dir discovery failed", err);
     return [];
   }
 };

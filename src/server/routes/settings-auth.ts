@@ -227,7 +227,8 @@ router.post("/api/settings/auth", async (c) => {
   let body: { password?: string };
   try {
     body = await c.req.json<{ password?: string }>();
-  } catch {
+  } catch (err) {
+    logger.debug("settings-auth", "invalid JSON body on auth", err);
     recordAuthFailure(ip);
     return c.json({ ok: false }, 400);
   }

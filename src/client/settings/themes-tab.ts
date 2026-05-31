@@ -1,4 +1,5 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
+import { escapeHtml } from "../utils/dom";
+import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "./ext-card";
 import { getBase } from "../utils/base-url";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta } from "../types";
@@ -12,22 +13,12 @@ const _renderThemeCard = (
 ): string => {
   const themeId = themeExt.id;
   const isActive = activeId === themeId;
-  const status = themeExt.configurable ? getConfigStatus(themeExt) : null;
-  const badge =
-    status === "configured"
-      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
-      : status === "needs-config"
-        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
-        : "";
-  const configureBtn = themeExt.configurable
-    ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(themeExt.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
-    : "";
+  const badge = extCardBadge(themeExt);
+  const configureBtn = extCardConfigureBtn(themeExt);
   const activeLabel = isActive
     ? `<span class="ext-card-active">${escapeHtml(t("settings-page.extensions.active"))}</span>`
     : "";
-  const versionWarning = themeExt.requiresNewerVersion
-    ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
-    : "";
+  const versionWarning = extCardVersionWarning(themeExt);
   return `
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-theme-id="${escapeHtml(themeId)}">
       <div class="ext-card-main">

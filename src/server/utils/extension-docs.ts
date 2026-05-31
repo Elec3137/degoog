@@ -1,6 +1,7 @@
 import { access } from "fs/promises";
 import { join } from "path";
 import { enginesDir, pluginsDir, themesDir, transportsDir } from "./paths";
+import { logger } from "./logger";
 
 type ExtensionDocsPath = { readmePath: string; exists: boolean };
 
@@ -43,7 +44,8 @@ export const extensionReadmeExists = async (
   try {
     await access(readmePath);
     return { readmePath, exists: true };
-  } catch {
+  } catch (err) {
+    logger.debug("extension-docs", `readme not found at ${readmePath}`, err);
     return { readmePath, exists: false };
   }
 };

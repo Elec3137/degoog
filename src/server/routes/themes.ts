@@ -6,6 +6,7 @@ import {
   setActiveTheme,
 } from "../extensions/themes/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
 
@@ -30,7 +31,8 @@ router.post("/api/theme/active", async (c) => {
   let body: { id: string | null };
   try {
     body = await c.req.json<{ id: string | null }>();
-  } catch {
+  } catch (err) {
+    logger.debug("themes", "invalid JSON body on theme active", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
   const ok = await setActiveTheme(body.id ?? null);

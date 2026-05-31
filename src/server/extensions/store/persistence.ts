@@ -2,6 +2,7 @@ import { readFile, mkdir } from "fs/promises";
 import { join } from "path";
 import type { RepoInfo, ReposData } from "../../types";
 import { writeJsonAtomic } from "../../utils/atomic-json";
+import { logger } from "../../utils/logger";
 
 function getDataDir(): string {
   return process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
@@ -27,7 +28,8 @@ export async function ensureReposStructure(): Promise<void> {
   const reposPath = getReposPath();
   try {
     await readFile(reposPath, "utf-8");
-  } catch {
+  } catch (err) {
+    logger.debug("store:persistence", "repos.json missing, creating initial file", err);
     const initial: ReposData = { repos: [], installed: [] };
     await writeJsonAtomic(reposPath, initial);
   }
@@ -46,7 +48,8 @@ export async function readReposData(): Promise<ReposData> {
       if (!Array.isArray(parsed.repos)) parsed.repos = [];
       if (!Array.isArray(parsed.installed)) parsed.installed = [];
     }
-  } catch {
+  } catch (err) {
+    logger.warn("store:persistence", "repos.json parse failed, resetting", err);
     parsed = { repos: [], installed: [] };
   }
   return parsed;

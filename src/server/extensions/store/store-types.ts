@@ -7,7 +7,7 @@ import {
   autocompleteDir,
 } from "../../utils/paths";
 import { getPluginSettingsIds } from "../../utils/plugin-assets";
-import { makeExtID } from "../extension-id";
+import { makeExtID } from "../../utils/extension-id";
 import { reloadCommands } from "../commands/registry";
 import { reloadSlotPlugins } from "../slots/registry";
 import { reloadInterceptors } from "../interceptors/registry";

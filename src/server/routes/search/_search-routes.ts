@@ -12,8 +12,9 @@ import {
   parseEngineConfig,
 } from "../../utils/search";
 import { guardApiKey } from "../../utils/api-key-guard";
-import { parseEnginesFromBody, parseImageFilter, parsePage } from "./_parsers";
+import { parseEnginesFromBody, parseImageFilter, parsePage, parseSearchRequest } from "./_parsers";
 import { handleRetry, handleSearch } from "./_search-handlers";
+import { logger } from "../../utils/logger";
 
 /**
  * @todo Remove this once openwebui merges my future pull request to add degoog specific search support.
@@ -30,27 +31,11 @@ export function registerSearchRoutes(router: Hono): void {
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
     if (authRes) return authRes;
 
-    const query = c.req.query("q") ?? "";
+    const { origQ: query, ...params } = parseSearchRequest(c);
     if (!isValidQuery(query))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
 
-    const result = await handleSearch({
-      query,
-      engines: parseEngineConfig(new URL(c.req.url).searchParams),
-      searchType: (c.req.query("type") || "web") as SearchType,
-      page: parsePage(c.req.query("page")),
-      timeFilter: (c.req.query("time") || "any") as TimeFilter,
-      lang: c.req.query("lang") || "",
-      dateFrom: c.req.query("dateFrom") || "",
-      dateTo: c.req.query("dateTo") || "",
-      imageFilter: parseImageFilter(
-        c.req.query("imgColor"),
-        c.req.query("imgSize"),
-        c.req.query("imgType"),
-        c.req.query("imgLayout"),
-        c.req.query("imgNsfw"),
-      ),
-    });
+    const result = await handleSearch({ query, ...params });
 
     return c.json(openWebUIFix(result));
   });
@@ -67,7 +52,8 @@ export function registerSearchRoutes(router: Hono): void {
       let form: FormData;
       try {
         form = await c.req.formData();
-      } catch {
+      } catch (err) {
+        logger.debug("search", "invalid form data", err);
         return c.json({ error: "Invalid form data" }, 400);
       }
       const query = (form.get("q") as string | null) ?? "";
@@ -98,7 +84,8 @@ export function registerSearchRoutes(router: Hono): void {
     let body: SearchBody;
     try {
       body = await c.req.json<SearchBody>();
-    } catch {
+    } catch (err) {
+      logger.debug("search", "invalid JSON body", err);
       return c.json({ error: "Invalid JSON" }, 400);
     }
     const query = body.query ?? "";
@@ -162,7 +149,8 @@ export function registerSearchRoutes(router: Hono): void {
     let body: RetryPostBody;
     try {
       body = await c.req.json<RetryPostBody>();
-    } catch {
+    } catch (err) {
+      logger.debug("search", "invalid JSON body on retry", err);
       return c.json({ error: "Invalid JSON" }, 400);
     }
     const query = body.query ?? "";

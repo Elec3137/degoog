@@ -66,13 +66,17 @@ const _loadBlocklist = async (getToken: () => string | null): Promise<void> => {
           if (!wrap.querySelector(".settings-honeypot-ban-entry")) {
             _appendEmpty(wrap);
           }
-        } catch {}
+        } catch (err) {
+          console.warn("[settings] honeypot unban failed", err);
+        }
       });
 
       row.append(info, unbanBtn);
       wrap.appendChild(row);
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[settings] honeypot blocklist load failed", err);
+  }
 };
 
 export const initHoneypot = (getToken: () => string | null): void => {
@@ -99,6 +103,8 @@ export const initHoneypot = (getToken: () => string | null): void => {
           if (input) input.value = "";
           await _loadBlocklist(getToken);
         }
-      } catch {}
+      } catch (err) {
+        console.warn("[settings] honeypot ban failed", err);
+      }
     });
 };

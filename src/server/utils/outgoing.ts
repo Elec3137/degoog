@@ -79,7 +79,8 @@ export function isUrlAllowedForOutgoing(url: string): boolean {
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
       return false;
-  } catch {
+  } catch (err) {
+    logger.debug("outgoing", `invalid outgoing URL "${url}"`, err);
     return false;
   }
   if (!allowedHosts) return true;

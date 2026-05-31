@@ -308,7 +308,8 @@ const _loadDefaultEngineOverrides = (): Record<string, boolean> => {
   try {
     const raw = readFileSync(defaultEnginesFile(), "utf-8");
     return JSON.parse(raw) as Record<string, boolean>;
-  } catch {
+  } catch (err) {
+    logger.debug("engines", "default engine overrides read failed", err);
     return {};
   }
 };

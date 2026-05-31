@@ -55,7 +55,9 @@ const _loadPersistedTokens = async (): Promise<void> => {
     if (loaded > 0) {
       logger.debug("settings-auth", `restored ${loaded} persisted token(s)`);
     }
-  } catch {}
+  } catch (err) {
+    logger.debug("settings-auth", "no persisted tokens to restore", err);
+  }
 };
 
 void _loadPersistedTokens();

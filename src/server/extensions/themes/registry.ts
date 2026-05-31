@@ -47,8 +47,7 @@ export interface LoadedTheme {
 import { themesDir } from "../../utils/paths";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { buildExtensionMeta } from "../extension-meta";
-import { makeExtID } from "../extension-id";
-import { rewriteThemePaths } from "../../utils/extension-id";
+import { makeExtID, rewriteThemePaths } from "../../utils/extension-id";
 
 const THEMES_DIR = themesDir();
 
@@ -179,7 +178,8 @@ export async function getThemeHtml(
       await readFile(join(theme.dir, htmlFile), "utf-8"),
       theme.id,
     );
-  } catch {
+  } catch (err) {
+    logger.debug("themes", `Failed to read theme HTML for page ${page}`, err);
     return null;
   }
 }
@@ -247,10 +247,11 @@ export async function getThemeTemplatesHtml(): Promise<string> {
         theme.id,
       );
       parts.push(`<template id="degoog-${id}">${content}</template>`);
-    } catch {
+    } catch (err) {
       logger.debug(
         "themes",
         `Failed to read template file: ${filePath} for theme ${theme.id}`,
+        err,
       );
     }
   }

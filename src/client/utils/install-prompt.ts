@@ -21,12 +21,16 @@ const _hasRequestedInstall = (): boolean => {
 function _clearRequestedInstall(): void {
   try {
     localStorage.removeItem(REQUEST_KEY);
-  } catch {}
+  } catch (err) {
+    console.debug("[install] localStorage clear failed", err);
+  }
 }
 
 export function initInstallPrompt(): void {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register(`${getBase()}/sw.js`, { scope: `${getBase()}/` }).catch(() => {});
+  navigator.serviceWorker.register(`${getBase()}/sw.js`, { scope: `${getBase()}/` }).catch((err) => {
+    console.debug("[install] service worker registration failed", err);
+  });
 
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -56,7 +60,9 @@ export function requestInstallPrompt(): void {
   }
   try {
     localStorage.setItem(REQUEST_KEY, "1");
-  } catch {}
+  } catch (err) {
+    console.debug("[install] localStorage write failed", err);
+  }
   clearSettingsReturn();
   window.location.href = `${getBase()}/`;
 }

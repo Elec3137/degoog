@@ -107,7 +107,10 @@ async function _fetchSuggestions(
         performSearch(text);
       });
     });
-  } catch {}
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return;
+    console.debug("[autocomplete] suggest request failed", err);
+  }
 }
 
 export function initAutocomplete(

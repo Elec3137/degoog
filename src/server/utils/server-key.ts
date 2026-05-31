@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { getInstanceSettings, updateInstanceSettings } from "./server-settings";
+import { logger } from "./logger";
 
 export const API_SECRET_FIELD = "apiSecretKey";
 const KEY_HEX_LEN = 64;
@@ -38,7 +39,8 @@ export function verifyServerKeyHex(provided: string): boolean {
     const a = Buffer.from(provided, "hex");
     if (a.length !== _key.length) return false;
     return timingSafeEqual(a, _key);
-  } catch {
+  } catch (err) {
+    logger.debug("server-key", "verifyServerKeyHex failed", err);
     return false;
   }
 }
@@ -56,7 +58,8 @@ export function verifyData(data: string, sig: string): boolean {
     const provided = Buffer.from(sig, "hex");
     if (expected.length !== provided.length) return false;
     return timingSafeEqual(expected, provided);
-  } catch {
+  } catch (err) {
+    logger.debug("server-key", "verifyData failed", err);
     return false;
   }
 }

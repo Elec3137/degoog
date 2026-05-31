@@ -75,5 +75,7 @@ export async function retryEngine(engineName: string): Promise<void> {
     } else if (state.currentData) {
       renderSidebar(state.currentData, (q) => void performSearch(q));
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[search] engine retry failed", err);
+  }
 }

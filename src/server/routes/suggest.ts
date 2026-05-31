@@ -6,6 +6,7 @@ import { checkRateLimit } from "../utils/rate-limit";
 import { getClientIp } from "../utils/request";
 import { getSuggestionsFromProviders } from "../extensions/autocomplete/registry";
 import { getInstanceSettings } from "../utils/server-settings";
+import { logger } from "../utils/logger";
 
 async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   const settings = await getInstanceSettings();
@@ -56,7 +57,8 @@ router.post("/api/suggest", async (c) => {
   let body: SuggestPostBody;
   try {
     body = await c.req.json<SuggestPostBody>();
-  } catch {
+  } catch (err) {
+    logger.debug("suggest", "invalid JSON body", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
   const query = body.query ?? "";

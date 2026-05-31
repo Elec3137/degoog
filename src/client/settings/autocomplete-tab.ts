@@ -1,4 +1,5 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
+import { escapeHtml } from "../utils/dom";
+import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "./ext-card";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../types";
 import { getBase } from "../utils/base-url";
@@ -7,19 +8,9 @@ const t = window.scopedT("core");
 
 const _renderAutocompleteCard = (provider: ExtensionMeta): string => {
   const isEnabled = provider.settings["disabled"] !== "true";
-  const versionWarning = provider.requiresNewerVersion
-    ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
-    : "";
-  const status = provider.configurable ? getConfigStatus(provider) : null;
-  const badge =
-    status === "configured"
-      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
-      : status === "needs-config"
-        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
-        : "";
-  const configureBtn = provider.configurable
-    ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(provider.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
-    : "";
+  const versionWarning = extCardVersionWarning(provider);
+  const badge = extCardBadge(provider);
+  const configureBtn = extCardConfigureBtn(provider);
   return `
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-id="${escapeHtml(provider.id)}">
       <div class="ext-card-main">

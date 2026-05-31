@@ -123,7 +123,9 @@ async function _loadServerSettings(getToken: () => string | null): Promise<void>
     setIndexerNavVisible(
       data.degoogIndexerEnabled === true || data.degoogIndexerEnabled === "true",
     );
-  } catch {}
+  } catch (err) {
+    console.warn("[settings] server settings load failed", err);
+  }
 }
 
 const _bindToggles = (): void => {
@@ -237,7 +239,9 @@ export async function initServerTab(
       _apiKey = apiKeyData.key;
       _renderApiKey();
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[settings] api key load failed", err);
+  }
 
   initHoneypot(getToken);
 

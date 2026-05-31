@@ -9,8 +9,7 @@ import {
   themesDir,
   transportsDir,
 } from "../utils/paths";
-import { folderNameForItem } from "../utils/extension-id";
-import { makeExtID, type ExtensionKind } from "../extensions/extension-id";
+import { folderNameForItem, makeExtID, type ExtensionKind } from "../utils/extension-id";
 import {
   getReposPath,
   getStoreDir,
@@ -230,7 +229,8 @@ const exists = async (path: string): Promise<boolean> => {
   try {
     await stat(path);
     return true;
-  } catch {
+  } catch (err) {
+    logger.debug(TAG, `path does not exist ${path}`, err);
     return false;
   }
 };
@@ -239,7 +239,8 @@ const listDirs = async (path: string): Promise<string[]> => {
   try {
     const entries = await readdir(path, { withFileTypes: true });
     return entries.filter((e) => e.isDirectory()).map((e) => e.name);
-  } catch {
+  } catch (err) {
+    logger.debug(TAG, `failed to list dirs ${path}`, err);
     return [];
   }
 };
@@ -352,7 +353,8 @@ const renameItemDirs = async (repoPkgs: RepoPkg[]): Promise<void> => {
     let folders: string[];
     try {
       folders = await readdir(targetDir);
-    } catch {
+    } catch (err) {
+      logger.debug(TAG, `failed to read ${group} dir ${targetDir}`, err);
       continue;
     }
     for (const folder of folders) {
@@ -435,7 +437,8 @@ const detectBuiltinKinds = async (
   let src = "";
   try {
     src = await readFile(indexPath, "utf-8");
-  } catch {
+  } catch (err) {
+    logger.debug(TAG, `failed to read builtin index ${indexPath}`, err);
     return { command: false, slot: false };
   }
   const slot = /export\s+const\s+slot\s*=|export\s+const\s+slotPlugin\s*=/.test(src);

@@ -9,7 +9,7 @@ import { join } from "path";
 import { pathToFileURL } from "url";
 import { logger } from "../utils/logger";
 import { createMutex } from "../utils/mutex";
-import { makeExtID, dedupeExtID, type ExtensionKind } from "./extension-id";
+import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-id";
 export type RegistrySource = "plugin" | "builtin";
 
 let _pluginReloadGeneration = 0;
@@ -193,7 +193,8 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
       entries = (await readdir(registryDir.dir)).sort((a, b) =>
         a.localeCompare(b),
       );
-    } catch {
+    } catch (err) {
+      logger.debug(opts.debugTag, `Failed to read registry dir ${registryDir.dir}`, err);
       return;
     }
 

@@ -1,3 +1,4 @@
+import { state } from "../state";
 import { getBase } from "./base-url";
 
 const SETTINGS_RETURN_KEY = "degoog-settings-return";
@@ -92,3 +93,22 @@ export function setTabTypeDisabled(type: string, disabled: boolean): void {
     }
   });
 }
+
+export const navigateToSearch = (
+  query: string,
+  type?: string,
+  page?: number,
+): void => {
+  if (state.postMethodEnabled) {
+    sessionStorage.setItem("degoog-post-query", query);
+    if (type && type !== "web") sessionStorage.setItem("degoog-post-type", type);
+    if (page && page > 1) sessionStorage.setItem("degoog-post-page", String(page));
+    window.location.href = `${getBase()}/search`;
+    return;
+  }
+
+  const params = new URLSearchParams({ q: query });
+  if (type && type !== "web") params.set("type", type);
+  if (page && page > 1) params.set("page", String(page));
+  window.location.href = `${getBase()}/search?${params.toString()}`;
+};

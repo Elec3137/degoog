@@ -29,7 +29,9 @@ export async function initTheme(): Promise<void> {
   if (saved) {
     try {
       localStorage.setItem(THEME_KEY, saved);
-    } catch {}
+    } catch (err) {
+      console.debug("[theme] localStorage sync failed", err);
+    }
     applyTheme(saved);
     return;
   }
@@ -39,5 +41,7 @@ export async function initTheme(): Promise<void> {
     if (data.theme && data.theme !== "system") {
       applyTheme(data.theme);
     }
-  } catch {}
+  } catch (err) {
+    console.debug("[theme] appearance settings fetch failed", err);
+  }
 }

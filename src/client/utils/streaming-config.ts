@@ -16,6 +16,8 @@ export const fetchStreamingConfig = async (): Promise<boolean> => {
       _config = (await res.json()) as { enabled: boolean };
       return _config.enabled;
     }
-  } catch {}
+  } catch (err) {
+    console.debug("[streaming] config fetch failed", err);
+  }
   return false;
 };

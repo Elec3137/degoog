@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { logger } from "./logger";
 
 interface BunEnv {
   requestIP?: (req: Request) => { address: string } | null;
@@ -28,7 +29,8 @@ export function isHttpsRequest(c: Context): boolean {
   }
   try {
     return new URL(c.req.url).protocol === "https:";
-  } catch {
+  } catch (err) {
+    logger.debug("request", "isHttpsRequest URL parse failed", err);
     return false;
   }
 }

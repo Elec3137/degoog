@@ -1,5 +1,6 @@
 import type { Cheerio } from "cheerio";
 import type { Element } from "domhandler";
+import { logger } from "./logger";
 
 const IMG_ATTR_CANDIDATES = [
   "data-src-hq",
@@ -30,7 +31,8 @@ const _resolve = (url: string, baseUrl?: string): string => {
   if (!baseUrl) return url;
   try {
     return new URL(url, baseUrl).toString();
-  } catch {
+  } catch (err) {
+    logger.debug("extract-image", `URL resolve failed for "${url}"`, err);
     return url;
   }
 };

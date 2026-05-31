@@ -9,11 +9,13 @@ import { getServerKeyHex, regenerateServerKey } from "../utils/server-key";
 import { resolveBanHours, syncBlocklist } from "../utils/bot-trap";
 import { addEntry, listActive, removeEntry } from "../utils/blocklist";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
+import { readObjectBody } from "../utils/hono";
 import {
   getInstanceSettings,
   setInstanceSettings,
   updateInstanceSettings,
 } from "../utils/server-settings";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
 
@@ -155,7 +157,8 @@ const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
     if (!res.ok) return null;
     const data = (await res.json()) as { ip?: string };
     return data.ip ?? null;
-  } catch {
+  } catch (err) {
+    logger.debug("settings", "public IP lookup failed", err);
     return null;
   }
 };
@@ -192,12 +195,8 @@ router.get("/api/settings/general", async (c) => {
 router.post("/api/settings/general", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/general");
   if (denied) return denied;
-  let body: Record<string, string>;
-  try {
-    body = await c.req.json<Record<string, string>>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<Record<string, string>>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const existing = await getInstanceSettings();
   const updates: Record<string, string | boolean> = {};
   for (const key of GENERAL_ALLOWED_KEYS) {
@@ -219,17 +218,9 @@ router.post("/api/settings/domain-action", async (c) => {
   );
   if (denied) return denied;
 
-  let body: {
-    kind?: string;
-    source?: string;
-    target?: string;
-    score?: number;
-  };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  type DomainActionBody = { kind?: string; source?: string; target?: string; score?: number };
+  const body = await readObjectBody<DomainActionBody>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const kind = body.kind;
   const source = _normalizeHostname(body.source ?? "");
@@ -345,12 +336,8 @@ router.get("/api/settings/honeypot/blocklist", async (c) => {
 router.post("/api/settings/honeypot/ban", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/honeypot/ban");
   if (denied) return denied;
-  let body: { ip?: string };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ ip?: string }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const ip = (body.ip ?? "").trim();
   if (!ip) return c.json({ error: "Missing ip" }, 400);
   await addEntry(ip);
@@ -363,12 +350,8 @@ router.post("/api/settings/honeypot/unban", async (c) => {
     "POST /api/settings/honeypot/unban",
   );
   if (denied) return denied;
-  let body: { ip?: string };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ ip?: string }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const ip = (body.ip ?? "").trim();
   if (!ip) return c.json({ error: "Missing ip" }, 400);
   await removeEntry(ip);
@@ -391,12 +374,8 @@ router.get("/api/settings/tab-order", async (c) => {
 router.post("/api/settings/tab-order", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/tab-order");
   if (denied) return denied;
-  let body: { engineTabsOrder?: unknown };
-  try {
-    body = await c.req.json<{ engineTabsOrder?: unknown }>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ engineTabsOrder?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (
     !Array.isArray(body.engineTabsOrder) ||
     !body.engineTabsOrder.every((v) => typeof v === "string")
@@ -418,7 +397,8 @@ router.get("/api/settings/default-engines", async (c) => {
   try {
     const raw = await readFile(defaultEnginesFile(), "utf-8");
     return c.json(JSON.parse(raw));
-  } catch {
+  } catch (err) {
+    logger.debug("settings", "default engines file read failed", err);
     return c.json({});
   }
 });
@@ -429,12 +409,8 @@ router.post("/api/settings/default-engines", async (c) => {
     "POST /api/settings/default-engines",
   );
   if (denied) return denied;
-  let body: Record<string, boolean>;
-  try {
-    body = await c.req.json<Record<string, boolean>>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<Record<string, boolean>>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   await writeFile(defaultEnginesFile(), JSON.stringify(body, null, 2), "utf-8");
   return c.json({ ok: true });
 });

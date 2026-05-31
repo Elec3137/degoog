@@ -15,7 +15,8 @@ export class CurlTransport implements Transport {
     try {
       Bun.spawnSync(["curl", "--version"]);
       return true;
-    } catch {
+    } catch (err) {
+      logger.debug("transport:curl", "curl binary probe failed", err);
       return false;
     }
   }

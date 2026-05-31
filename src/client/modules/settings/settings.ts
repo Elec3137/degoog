@@ -249,7 +249,9 @@ window.addEventListener("extensions-saved", async () => {
     initTransportsTab(allExtensions);
     initAutocompleteTab(allExtensions);
     await initThemesTab(themesData, allExtensions.themes ?? []);
-  } catch {}
+  } catch (err) {
+    console.warn("[settings] extension tabs refresh failed", err);
+  }
 });
 
 async function _initPublicSettings(): Promise<void> {

@@ -56,7 +56,9 @@ const _fetchCommands = async (): Promise<Command[]> => {
       commandsCache = body.commands || [];
       return commandsCache;
     }
-  } catch {}
+  } catch (err) {
+    console.debug("[search] commands fetch failed", err);
+  }
   return [];
 };
 

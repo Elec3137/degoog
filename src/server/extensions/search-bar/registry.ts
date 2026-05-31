@@ -12,7 +12,7 @@ import {
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { makeExtID } from "../extension-id";
+import { makeExtID } from "../../utils/extension-id";
 import { buildExtensionMeta } from "../extension-meta";
 
 interface PluginActions {

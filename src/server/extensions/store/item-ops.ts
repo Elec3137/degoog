@@ -20,7 +20,8 @@ import { addRepo } from "./repo-ops";
 import { STORE_TYPE_SPECS } from "./store-types";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { createMutex } from "../../utils/mutex";
-import { makeExtID } from "../extension-id";
+import { makeExtID } from "../../utils/extension-id";
+import { logger } from "../../utils/logger";
 
 const _storeMutex = createMutex();
 
@@ -41,7 +42,8 @@ function repoAuthorAndName(repoUrl: string): { author: string; name: string } {
     const authorRaw = parts[0] ?? "unknown";
     const repoRaw = (parts[1] ?? "repo").replace(/\.git$/, "");
     return { author: slugifyIdPart(authorRaw), name: slugifyIdPart(repoRaw) };
-  } catch {
+  } catch (err) {
+    logger.debug("store:item", `invalid repo URL "${repoUrl}"`, err);
     return { author: "unknown", name: "repo" };
   }
 }
@@ -51,7 +53,8 @@ async function readAuthorJson(dir: string): Promise<AuthorJson | null> {
     const raw = await readFile(join(dir, "author.json"), "utf-8");
     const parsed = JSON.parse(raw) as AuthorJson;
     return parsed?.name ? parsed : null;
-  } catch {
+  } catch (err) {
+    logger.debug("store:item", "author.json read failed", err);
     return null;
   }
 }
@@ -61,7 +64,8 @@ async function listScreenshots(dir: string): Promise<string[]> {
   try {
     const files = await readdir(screenshotsDir);
     return files.filter((f) => /\.(png|jpg|jpeg|gif|webp)$/i.test(f)).sort();
-  } catch {
+  } catch (err) {
+    logger.debug("store:item", "screenshots dir read failed", err);
     return [];
   }
 }
@@ -182,14 +186,15 @@ async function installDependencies(dependencies: string[]): Promise<void> {
     if (!repo) {
       try {
         repo = await addRepo(parsed.repoUrl);
-      } catch {
+      } catch (err) {
+        logger.warn("store:item", `failed to add repo ${parsed.repoUrl}`, err);
         continue;
       }
     }
     try {
       await _installItem(parsed.repoUrl, parsed.itemPath, parsed.type);
-    } catch {
-      //
+    } catch (err) {
+      logger.warn("store:item", `install failed for ${parsed.itemPath}`, err);
     }
   }
 }
@@ -222,7 +227,8 @@ const readEngineTypes = async (dir: string): Promise<string[] | null> => {
       const src = await readFile(join(dir, file), "utf-8");
       result = parseEngineTypesFromSource(src);
       if (result) break;
-    } catch {
+    } catch (err) {
+      logger.debug("store:item", `engine type file ${file} read failed in ${dir}`, err);
       continue;
     }
   }
@@ -254,7 +260,8 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
     try {
       const raw = await readFile(join(repoPath, "package.json"), "utf-8");
       pkg = JSON.parse(raw) as RepoPackageJson;
-    } catch {
+    } catch (err) {
+      logger.warn("store:item", `package.json read failed for ${repo.localPath}`, err);
       continue;
     }
     const topAuthor =
@@ -279,7 +286,8 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
         try {
           const st = await stat(fullPath);
           if (!st.isDirectory()) continue;
-        } catch {
+        } catch (err) {
+          logger.debug("store:item", `item path stat failed ${fullPath}`, err);
           continue;
         }
         const author = await readAuthorJson(fullPath);
@@ -386,7 +394,8 @@ async function _installItem(
       throw new Error("Invalid item path.");
     try {
       await stat(srcDir);
-    } catch {
+    } catch (err) {
+      logger.debug("store:item", `item path not found ${srcDir}`, err);
       throw new Error("Item path not found in repository.");
     }
     const pkg = JSON.parse(
@@ -495,7 +504,8 @@ async function _updateItem(
   const srcDir = join(storeDir, repo.localPath, normalizedPath);
   try {
     await stat(srcDir);
-  } catch {
+  } catch (err) {
+    logger.debug("store:item", `item path not found ${srcDir}`, err);
     throw new Error("Item path not found in repository.");
   }
   const pkg = JSON.parse(

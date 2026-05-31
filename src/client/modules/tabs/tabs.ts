@@ -94,7 +94,9 @@ const _loadPluginTabs = async (): Promise<void> => {
 
     _renderPluginTabs();
     _reorderDomTabs(savedOrder);
-  } catch {}
+  } catch (err) {
+    console.debug("[tabs] plugin tabs load failed", err);
+  }
 };
 
 function _renderPluginTabs(): void {

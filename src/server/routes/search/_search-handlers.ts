@@ -8,7 +8,7 @@ import { applyDomainRules } from "./_domain-rules";
 import { runIntercepts } from "../../utils/run-interceptors";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { asBoolean } from "../../utils/plugin-settings";
-import { DEGOOG_ENGINE_NAME, recordResults } from "../../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex } from "../../indexer/store";
 
 export async function handleSearch(params: SearchParams) {
   const {
@@ -70,25 +70,23 @@ export async function handleSearch(params: SearchParams) {
   const settings = await getInstanceSettings();
   let finalResponse = response;
 
-  if (asBoolean(settings.degoogIndexerEnabled)) {
-    const toIndex = response.results.filter(
-      (r) =>
-        r.source !== DEGOOG_ENGINE_NAME &&
-        !(r.sources ?? []).includes(DEGOOG_ENGINE_NAME),
+  const indexed = maybeIndex(
+    asBoolean(settings.degoogIndexerEnabled),
+    query,
+    type,
+    response.results,
+  );
+  if (indexed) {
+    const degoogTiming = response.engineTimings.find(
+      (et) => et.name === DEGOOG_ENGINE_NAME,
     );
-    if (toIndex.length > 0) {
-      const degoogTiming = response.engineTimings.find(
-        (et) => et.name === DEGOOG_ENGINE_NAME,
-      );
-      if (degoogTiming?.resultCount === 0) {
-        finalResponse = {
-          ...response,
-          engineTimings: response.engineTimings.map((et) =>
-            et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
-          ),
-        };
-      }
-      queueMicrotask(() => void recordResults(query, type, toIndex));
+    if (degoogTiming?.resultCount === 0) {
+      finalResponse = {
+        ...response,
+        engineTimings: response.engineTimings.map((et) =>
+          et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
+        ),
+      };
     }
   }
 
@@ -165,16 +163,7 @@ export async function handleRetry(
     );
 
     const settings = await getInstanceSettings();
-    if (asBoolean(settings.degoogIndexerEnabled)) {
-      const toIndex = merged.filter(
-        (r) =>
-          r.source !== DEGOOG_ENGINE_NAME &&
-          !(r.sources ?? []).includes(DEGOOG_ENGINE_NAME),
-      );
-      if (toIndex.length > 0) {
-        queueMicrotask(() => void recordResults(query, type, toIndex));
-      }
-    }
+    maybeIndex(asBoolean(settings.degoogIndexerEnabled), query, type, merged);
 
     return {
       ...updated,

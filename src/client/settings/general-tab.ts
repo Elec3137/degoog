@@ -33,7 +33,9 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(THEME_KEY, value);
       try {
         localStorage.setItem(THEME_KEY, value);
-      } catch {}
+      } catch (err) {
+        console.debug("[settings] theme localStorage sync failed", err);
+      }
       applyTheme(value);
       if (saveDefaultBtn) saveDefaultBtn.style.display = "";
     });

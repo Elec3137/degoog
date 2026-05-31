@@ -19,15 +19,14 @@ import {
   _applyRateLimit,
   cacheKey,
   isValidQuery,
-  parseEngineConfig,
 } from "../utils/search";
 import { guardApiKey } from "../utils/api-key-guard";
 import { applyDomainRules } from "./search/_domain-rules";
 import { signResultThumbnails } from "../utils/proxy-sign";
-import { parseImageFilter, parsePage } from "./search/_parsers";
+import { parseSearchRequest } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 import { getInstanceSettings } from "../utils/server-settings";
-import { DEGOOG_ENGINE_NAME, recordResults } from "../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex } from "../indexer/store";
 
 const router = new Hono();
 
@@ -37,25 +36,12 @@ router.get("/api/search/stream", async (c) => {
   const authRes = await guardApiKey(c, "apiKeySearchEnabled");
   if (authRes) return authRes;
 
-  const origQ = c.req.query("q") ?? "";
+  const { origQ, ...params } = parseSearchRequest(c);
 
   if (!isValidQuery(origQ))
     return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
 
-  const searchType = (c.req.query("type") || "web") as SearchType;
-  const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-  const page = parsePage(c.req.query("page"));
-  const timeFilter = (c.req.query("time") || "any") as TimeFilter;
-  const lang = c.req.query("lang") || "";
-  const dateFrom = c.req.query("dateFrom") || "";
-  const dateTo = c.req.query("dateTo") || "";
-  const imageFilter = parseImageFilter(
-    c.req.query("imgColor"),
-    c.req.query("imgSize"),
-    c.req.query("imgType"),
-    c.req.query("imgLayout"),
-    c.req.query("imgNsfw"),
-  );
+  const { engines, searchType, page, timeFilter, lang, dateFrom, dateTo, imageFilter } = params;
 
   const { query, overrides } = await runIntercepts(origQ, lang);
   const type = (overrides.searchType ?? searchType) as SearchType;
@@ -165,7 +151,8 @@ router.get("/api/search/stream", async (c) => {
               `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
             ),
           );
-        } catch {
+        } catch (err) {
+          logger.debug("search-stream", "stream client disconnected", err);
           closed = true;
         }
       }
@@ -253,21 +240,19 @@ router.get("/api/search/stream", async (c) => {
         };
 
         const indexerSettings = await getInstanceSettings();
-        if (asBoolean(indexerSettings.degoogIndexerEnabled)) {
-          const toIndex = rawScoredResults.filter(
-            (r) =>
-              r.source !== DEGOOG_ENGINE_NAME &&
-              !(r.sources ?? []).includes(DEGOOG_ENGINE_NAME),
+        const indexed = maybeIndex(
+          asBoolean(indexerSettings.degoogIndexerEnabled),
+          query,
+          type,
+          rawScoredResults,
+        );
+        if (indexed) {
+          const degoogTiming = allTimings.find(
+            (et) => et.name === DEGOOG_ENGINE_NAME,
           );
-          if (toIndex.length > 0) {
-            const degoogTiming = allTimings.find(
-              (et) => et.name === DEGOOG_ENGINE_NAME,
-            );
-            if (degoogTiming?.resultCount === 0) {
-              const idx = allTimings.indexOf(degoogTiming);
-              allTimings[idx] = { ...degoogTiming, indexed: true };
-            }
-            queueMicrotask(() => void recordResults(query, type, toIndex));
+          if (degoogTiming?.resultCount === 0) {
+            const idx = allTimings.indexOf(degoogTiming);
+            allTimings[idx] = { ...degoogTiming, indexed: true };
           }
         }
 

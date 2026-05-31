@@ -6,6 +6,7 @@ import {
 } from "../../../../types";
 import { getBaseUrl } from "../../../../utils/base-url";
 import { outgoingFetch } from "../../../../utils/outgoing";
+import { logger } from "../../../../utils/logger";
 
 export const ipCommand: BangCommand = {
   name: "IP Lookup",
@@ -71,7 +72,8 @@ export const ipCommand: BangCommand = {
         title: this.t!("ip.title-result", { ip: data.query }),
         html: `<div class="command-ip-info">${rows}</div>`,
       };
-    } catch {
+    } catch (err) {
+      logger.warn("commands:ip", `lookup failed for ${ip}`, err);
       return {
         title: this.t!("ip.title"),
         html: `<div><p>${this.t!("ip.fetch-failed")}</p></div>`,

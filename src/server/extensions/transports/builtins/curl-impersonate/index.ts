@@ -23,7 +23,9 @@ const STRIP_HEADERS = new Set(["user-agent", "accept-encoding", "accept"]);
 
 try {
   mkdirSync(COOKIE_JAR_DIR, { recursive: true });
-} catch { }
+} catch (err) {
+  logger.debug("transport:curl-impersonate", "cookie jar dir setup skipped", err);
+}
 
 const _warmedHosts = new Set<string>();
 
@@ -36,7 +38,8 @@ function _resolveBinary(): string | null {
     try {
       const result = Bun.spawnSync([bin, "--version"]);
       if (result.exitCode === 0) return bin;
-    } catch {
+    } catch (err) {
+      logger.debug("transport:curl-impersonate", `binary probe failed for ${bin}`, err);
       continue;
     }
   }
@@ -99,7 +102,8 @@ async function _run(
       try {
         stdin.write(body);
         stdin.end();
-      } catch {
+      } catch (err) {
+        logger.debug("transport:curl-impersonate", "stdin write failed, killing process", err);
         proc.kill();
       }
     }

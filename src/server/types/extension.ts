@@ -6,6 +6,7 @@ import type {
   TimeFilter,
   EngineContext,
 } from "./search";
+import { SlotPanelPosition } from "../../shared/search-types";
 
 export type TranslationVars = string | number | boolean;
 export type TranslationRecord = {
@@ -150,24 +151,7 @@ export interface AutocompleteProvider {
   ): Promise<AutocompleteSuggestion[]>;
 }
 
-export enum SlotPanelPosition {
-  AboveResults = "above-results",
-  BelowResults = "below-results",
-  AboveSidebar = "above-sidebar",
-  BelowSidebar = "below-sidebar",
-  KnowledgePanel = "knowledge-panel",
-  AtAGlance = "at-a-glance",
-}
-
 export const SLOT_POSITION_SETTING_KEY = "slotPosition";
-
-export interface SlotPanelResult {
-  id: string;
-  title?: string;
-  html: string;
-  position: SlotPanelPosition;
-  gridSize?: 1 | 2 | 3 | 4;
-}
 
 export interface SlotPluginContext {
   clientIp?: string;

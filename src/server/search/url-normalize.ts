@@ -19,6 +19,8 @@ const TRACKING_PARAMS = new Set([
   "wt_mc",
 ]);
 
+import { logger } from "../utils/logger";
+
 export const cleanUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
@@ -32,7 +34,8 @@ export const cleanUrl = (url: string): string => {
       }
     }
     return parsed.href.replace(/\/+$/, "");
-  } catch {
+  } catch (err) {
+    logger.debug("search", `cleanUrl failed for "${url}"`, err);
     return url;
   }
 };
@@ -43,7 +46,8 @@ export const normalizeUrl = (url: string): string => {
     const parsed = new URL(cleaned);
     parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
     return parsed.href.replace(/\/+$/, "");
-  } catch {
+  } catch (err) {
+    logger.debug("search", `normalizeUrl failed for "${url}"`, err);
     return url;
   }
 };

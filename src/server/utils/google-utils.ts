@@ -1,4 +1,5 @@
 import type { TimeFilter } from "../types";
+import { logger } from "./logger";
 
 const TBS_MAP: Record<string, string> = {
   hour: "qdr:h",
@@ -32,7 +33,8 @@ export const resolveGoogleHref = (href: string): string => {
   try {
     const parsed = new URL(href, "https://www.google.com");
     return parsed.searchParams.get("q") || parsed.searchParams.get("url") || href;
-  } catch {
+  } catch (err) {
+    logger.debug("google-utils", `resolveGoogleHref failed for "${href}"`, err);
     return href;
   }
 };

@@ -1,4 +1,4 @@
-import type { SearchResult } from "../types";
+import type { SearchResult, ScoredResult } from "../types";
 import type { Statement } from "bun:sqlite";
 import { statSync } from "fs";
 import { getIndexerConfig } from "./config";
@@ -185,6 +185,23 @@ export const recordResults = async (
   if (rows.length > 0) enqueue(rows);
 };
 
+export const maybeIndex = (
+  enabled: boolean,
+  query: string,
+  engineType: string,
+  results: ScoredResult[],
+): boolean => {
+  if (!enabled) return false;
+  const toIndex = results.filter(
+    (r) =>
+      r.source !== DEGOOG_ENGINE_NAME &&
+      !(r.sources ?? []).includes(DEGOOG_ENGINE_NAME),
+  );
+  if (toIndex.length === 0) return false;
+  queueMicrotask(() => void recordResults(query, engineType, toIndex));
+  return true;
+};
+
 export const queryIndex = async (
   query: string,
   engineType: string,
@@ -250,8 +267,8 @@ export const getStats = (): IndexerStats => {
       byType[type] = hits;
       try {
         dbSizeBytes += statSync(indexerDbForType(type)).size;
-      } catch {
-        // file not yet flushed to disk
+      } catch (err) {
+        logger.debug("indexer", "stats file not yet flushed to disk", err);
       }
     } catch (err) {
       logger.warn("indexer", `getStats failed for type=${type}`, err);

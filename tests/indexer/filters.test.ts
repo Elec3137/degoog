@@ -11,6 +11,7 @@ const baseCfg: IndexerConfig = {
   fuzzyEnabled: true,
   queryLimit: 30,
   domainAllowlist: [],
+  maxAgeDays: 0,
   domainBlocklist: [],
   wordBlocklist: [],
 };

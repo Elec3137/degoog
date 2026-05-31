@@ -16,7 +16,7 @@ import { autocompleteDir } from "../../utils/paths";
 import { autocompleteCache } from "../../utils/cache";
 import { getTransportNames, getTransportDisplayNames } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
-import { makeExtID } from "../extension-id";
+import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
 import { signSuggestionThumbnails } from "../../utils/proxy-sign";
 import { buildProviderContext } from "./context";

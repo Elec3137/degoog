@@ -5,6 +5,7 @@ import { getRandomUserAgent } from "../utils/user-agents";
 import { isSafeHost, type LocalImageAccess } from "../utils/ssrf";
 import { asBoolean, asString } from "../utils/plugin-settings";
 import { getInstanceSettings } from "../utils/server-settings";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
 
@@ -25,7 +26,8 @@ const getProxyFilename = (originalUrl: string, contentType: string): string => {
     if (basename && /\.\w{2,5}$/.test(basename)) return basename;
     const ext = CONTENT_TYPE_EXT[contentType] ?? ".jpg";
     return basename ? basename + ext : "image" + ext;
-  } catch {
+  } catch (err) {
+    logger.debug("proxy", `invalid URL for filename ${originalUrl}`, err);
     return "image" + (CONTENT_TYPE_EXT[contentType] ?? ".jpg");
   }
 };
@@ -98,7 +100,8 @@ const followRedirects = async (
       const parsed = new URL(target);
       if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
       if (!(await isSafeHost(parsed.hostname, init.access))) return null;
-    } catch {
+    } catch (err) {
+      logger.debug("proxy", `invalid redirect URL ${target}`, err);
       return null;
     }
     const res = await outgoingFetch(target, {
@@ -111,7 +114,8 @@ const followRedirects = async (
     if (!loc) return res;
     try {
       target = new URL(loc, target).toString();
-    } catch {
+    } catch (err) {
+      logger.debug("proxy", `invalid redirect location ${loc}`, err);
       return null;
     }
   }
@@ -125,7 +129,8 @@ router.get("/api/proxy/image", async (c) => {
   let parsed: URL;
   try {
     parsed = new URL(url);
-  } catch {
+  } catch (err) {
+    logger.debug("proxy", `invalid proxy URL ${url}`, err);
     return c.body("Invalid URL", 400);
   }
 
@@ -182,7 +187,8 @@ router.get("/api/proxy/image", async (c) => {
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": `inline; filename="${getProxyFilename(url, contentType)}"`,
     });
-  } catch {
+  } catch (err) {
+    logger.warn("proxy", "image proxy fetch failed", err);
     clearTimeout(timeout);
     return c.body("Proxy failed", 502);
   }
@@ -223,7 +229,8 @@ router.get("/api/proxy/favicon", async (c) => {
         "Cache-Control": "public, max-age=86400",
         "X-Content-Type-Options": "nosniff",
       });
-    } catch {
+    } catch (err) {
+      logger.debug("proxy", "favicon fetch failed", err);
       clearTimeout(timeout);
     }
   }

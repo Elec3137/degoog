@@ -9,6 +9,7 @@ import { logger } from "../../utils/logger";
 import { isDisabled } from "../../utils/plugin-settings";
 import { getClientIp } from "../../utils/request";
 import { _applyRateLimit } from "../../utils/search";
+import { parsePage } from "./_parsers";
 
 export function registerTabSearchRoute(router: Hono): void {
   router.get("/api/tab-search", async (c) => {
@@ -19,10 +20,7 @@ export function registerTabSearchRoute(router: Hono): void {
     if (!tabId || !query?.trim())
       return c.json({ error: "Missing tab or q" }, 400);
 
-    const page = Math.max(
-      1,
-      Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
-    );
+    const page = parsePage(c.req.query("page"));
     const clientIp = getClientIp(c);
 
     let engineType: string | undefined;
@@ -62,7 +60,8 @@ export function registerTabSearchRoute(router: Hono): void {
                 resultCount: value.length,
                 results: value,
               };
-            } catch {
+            } catch (err) {
+              logger.warn("tab-search", `${e.name} engine failed`, err);
               return {
                 name: e.name,
                 time: Math.round(performance.now() - start),

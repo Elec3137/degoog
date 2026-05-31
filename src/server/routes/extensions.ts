@@ -12,12 +12,11 @@ import { getCoreTranslator } from "./pages";
 import {
   getSlotPlugins,
   getSlotPluginById,
-  getSlotSource,
+  getSlotExtensionMeta,
 } from "../extensions/slots/registry";
 import {
   getInterceptorMeta,
   getInterceptorBySettingsId,
-  getInterceptors,
 } from "../extensions/interceptors/registry";
 import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
@@ -26,16 +25,12 @@ import {
   isDisabled,
   setSettings,
   mergeSecrets,
-  maskSecrets,
   type SettingValue,
 } from "../utils/plugin-settings";
 import { getPluginCssIds, getPluginCssById } from "../utils/plugin-assets";
 import {
   ExtensionStoreType,
-  SLOT_POSITION_SETTING_KEY,
   type ExtensionMeta,
-  type SettingField,
-  type Translate,
 } from "../types";
 import {
   getTransportExtensionMeta,
@@ -49,83 +44,13 @@ import { outgoingFetch } from "../utils/outgoing";
 import { readFile } from "fs/promises";
 import { extensionReadmeExists } from "../utils/extension-docs";
 import { getInstalledItems, reloadAfterAction } from "../extensions/store/item-ops";
-import { makeExtID, folderFromExtID } from "../extensions/extension-id";
+import { makeExtID, folderFromExtID } from "../utils/extension-id";
+import { readObjectBody } from "../utils/hono";
 import { isVersionAtLeast, getAppVersion } from "../utils/version";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
 
-async function getSlotExtensionMeta(
-  coreT?: Translate,
-): Promise<ExtensionMeta[]> {
-  const slots = getSlotPlugins();
-  const out: ExtensionMeta[] = [];
-  for (const slot of slots) {
-    if (!slot.id) {
-      logger.warn(
-        "extensions",
-        `Skipping slot extension meta: missing id (name="${slot.name}")`,
-      );
-      continue;
-    }
-    const manifest = slot.pluginManifest;
-    const baseSchema = slot.settingsSchema ?? [];
-    const hasPositionChoice = (slot.slotPositions?.length ?? 0) > 0;
-
-    const linkedInterceptorSchema = manifest
-      ? getInterceptors()
-          .filter((i) => i.pluginManifest?.id === manifest.id)
-          .flatMap((i) => i.settingsSchema ?? [])
-      : [];
-
-    const fullSchema: SettingField[] = [
-      ...(manifest?.settingsSchema ?? []),
-      ...baseSchema,
-      ...linkedInterceptorSchema,
-    ];
-
-    if (hasPositionChoice) {
-      fullSchema.push({
-        key: SLOT_POSITION_SETTING_KEY,
-        label: coreT
-          ? coreT("settings-page.schema.slot-position.label") || "Position"
-          : "Position",
-        type: "select",
-        options: [...slot.slotPositions!],
-        description: coreT
-          ? coreT("settings-page.schema.slot-position.description") ||
-            "Where the slot content appears on the page."
-          : "Where the slot content appears on the page.",
-      });
-    }
-    const id = slot.settingsId ?? slot.id;
-    const raw = await getSettings(id);
-    const settings = maskSecrets(raw, fullSchema);
-    if (raw["disabled"]) settings["disabled"] = raw["disabled"];
-    if (hasPositionChoice) {
-      const stored = raw[SLOT_POSITION_SETTING_KEY];
-      const value =
-        (typeof stored === "string" ? stored : undefined) ?? slot.position;
-      settings[SLOT_POSITION_SETTING_KEY] = slot.slotPositions!.includes(
-        value as typeof slot.position,
-      )
-        ? value
-        : slot.position;
-    }
-    out.push({
-      id,
-      displayName: manifest?.name ?? slot.name,
-      description: manifest?.description ?? slot.description,
-      type: ExtensionStoreType.Plugin,
-      configurable: fullSchema.length > 0,
-      settingsSchema: fullSchema,
-      settings,
-      source: getSlotSource(slot.id),
-      isClientExposed: slot.isClientExposed,
-    });
-  }
-  return out;
-}
 
 router.get("/api/extensions", async (c) => {
   const coreT = await getCoreTranslator();
@@ -206,12 +131,8 @@ router.post("/api/extensions/:id/settings", async (c) => {
   if (!(await gandalf(token)))
     return c.json({ error: "You shall not pass!" }, 401);
   const id = c.req.param("id");
-  let body: Record<string, unknown>;
-  try {
-    body = await c.req.json<Record<string, unknown>>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<Record<string, unknown>>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const coreT = await getCoreTranslator();
   const [
@@ -371,7 +292,8 @@ router.get("/api/extensions/:id/readme", async (c) => {
   try {
     const markdown = await readFile(readmePath, "utf-8");
     return c.json({ markdown });
-  } catch {
+  } catch (err) {
+    logger.debug("extensions", `readme read failed for ${id}`, err);
     return c.json({ error: "Not found" }, 404);
   }
 });

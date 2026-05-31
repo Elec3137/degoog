@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { makeExtID } from "../../src/server/extensions/extension-id";
+import { makeExtID } from "../../src/server/utils/extension-id";
 import { getThemeSettingsId } from "../../src/server/extensions/themes/registry";
 import { getTransportSettingsId } from "../../src/server/extensions/transports/registry";
 

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { makeExtID } from "../../src/server/extensions/extension-id";
+import { makeExtID } from "../../src/server/utils/extension-id";
 import {
   getSlotPluginById,
   getSlotPlugins,

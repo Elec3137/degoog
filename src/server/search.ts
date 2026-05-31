@@ -32,6 +32,7 @@ import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { stripHtml, stripCssBlocks } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
 import { buildSignedProxyUrl } from "./utils/proxy-sign";
+import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 
 const MAX_PAGE = 10;
 const ENGINE_TIMEOUT_MS = 10_000;
@@ -54,58 +55,6 @@ const _getEngineTimeout = async (
   return ENGINE_TIMEOUT_MS;
 };
 
-const _TRACKING_PARAMS = new Set([
-  "gclid",
-  "dclid",
-  "gbraid",
-  "wbraid",
-  "fbclid",
-  "msclkid",
-  "yclid",
-  "ttclid",
-  "twclid",
-  "li_fat_id",
-  "mc_cid",
-  "mc_eid",
-  "igshid",
-  "_ga",
-  "_gl",
-  "vero_id",
-  "vero_conv",
-  "wt_mc",
-]);
-
-const _cleanUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    parsed.hash = "";
-    parsed.pathname = parsed.pathname.replace(/\/{2,}/g, "/");
-    const keys = Array.from(parsed.searchParams.keys());
-    for (const k of keys) {
-      const lk = k.toLowerCase();
-      if (lk.startsWith("utm_") || _TRACKING_PARAMS.has(lk)) {
-        parsed.searchParams.delete(k);
-      }
-    }
-    return parsed.href.replace(/\/+$/, "");
-  } catch {
-    return url;
-  }
-};
-
-const _normalizeUrl = (url: string): string => {
-  try {
-    const cleaned = _cleanUrl(url);
-    const parsed = new URL(cleaned);
-    parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
-    return parsed.href.replace(/\/+$/, "");
-  } catch {
-    return url;
-  }
-};
-
-const _urlIsGif = (url?: string): boolean =>
-  !!url && url.split(/[?#]/, 1)[0].toLowerCase().endsWith(".gif");
 
 const _mergeIntoMap = (
   urlMap: Map<string, ScoredResult>,
@@ -114,7 +63,7 @@ const _mergeIntoMap = (
 ): void => {
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
-    const normalized = _normalizeUrl(r.url);
+    const normalized = normalizeUrl(r.url);
     const insecure = normalized.startsWith("http://");
     const positionScore = Math.max(10 - i, 1) * multiplier;
 
@@ -131,9 +80,9 @@ const _mergeIntoMap = (
       if (r.thumbnail && !existing.thumbnail) {
         existing.thumbnail = r.thumbnail;
       }
-      if (r.imageUrl && (!existing.imageUrl || (!existing.isGif && _urlIsGif(r.imageUrl)))) {
+      if (r.imageUrl && (!existing.imageUrl || (!existing.isGif && urlIsGif(r.imageUrl)))) {
         existing.imageUrl = r.imageUrl;
-        existing.isGif = _urlIsGif(r.imageUrl);
+        existing.isGif = urlIsGif(r.imageUrl);
       }
       if (insecure) existing.insecure = true;
     } else {
@@ -141,11 +90,11 @@ const _mergeIntoMap = (
         ...r,
         title: stripCssBlocks(stripHtml(r.title)),
         snippet: stripCssBlocks(stripHtml(r.snippet)),
-        url: _cleanUrl(r.url),
+        url: cleanUrl(r.url),
         score: positionScore,
         sources: [r.source],
         insecure,
-        isGif: _urlIsGif(r.imageUrl),
+        isGif: urlIsGif(r.imageUrl),
       });
     }
   }
@@ -172,7 +121,8 @@ export const fetchRelatedSearches = async (
     return (data[1] || [])
       .filter((s: string) => s.toLowerCase() !== query.toLowerCase())
       .slice(0, 8);
-  } catch {
+  } catch (err) {
+    logger.debug("search", "related searches fetch failed", err);
     return [];
   }
 };
@@ -225,7 +175,7 @@ export const mergeNewResults = (
 ): ScoredResult[] => {
   const urlMap = new Map<string, ScoredResult>();
   for (const r of existing) {
-    urlMap.set(_normalizeUrl(r.url), { ...r, sources: [...r.sources] });
+    urlMap.set(normalizeUrl(r.url), { ...r, sources: [...r.sources] });
   }
   _mergeIntoMap(urlMap, newResults);
   return _sortedFromMap(urlMap);

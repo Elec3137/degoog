@@ -89,7 +89,8 @@ export async function initPluginRoutes(bust = false): Promise<void> {
   let entries: string[];
   try {
     entries = (await readdir(dir)).sort((a, b) => a.localeCompare(b));
-  } catch {
+  } catch (err) {
+    logger.debug("plugin-routes", `plugins dir read failed ${dir}`, err);
     return;
   }
   for (const entryName of entries) {

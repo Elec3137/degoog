@@ -5,6 +5,7 @@ import {
   type SlotPlugin,
 } from "../../../../types";
 import type { AsyncTtlCache } from "../../../../utils/cache";
+import { logger } from "../../../../utils/logger";
 
 const WIKI_NAMESPACE = "ext:wikipedia:page";
 const WIKI_TTL_MS = 60 * 60 * 1000;
@@ -79,7 +80,8 @@ async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
     )
       return null;
     return page;
-  } catch {
+  } catch (err) {
+    logger.debug("wikipedia", `fetch failed for "${query}"`, err);
     clearTimeout(timer);
     return null;
   }

@@ -101,7 +101,9 @@ function _applyReplaceToRow(row: HTMLElement, target: string): void {
       attachFaviconFallback(favicon);
     }
     if (wrap) wrap.dataset.host = target;
-  } catch {}
+  } catch (err) {
+    console.debug("[result-actions] URL replace failed", err);
+  }
 }
 
 const _handleClick = async (e: MouseEvent): Promise<void> => {

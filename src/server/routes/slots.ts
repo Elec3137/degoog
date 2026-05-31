@@ -3,7 +3,7 @@ import { getSlotPlugins } from "../extensions/slots/registry";
 import {
   ScoredResult,
   SlotPanelPosition,
-  SlotPanelResult,
+  SlotPanel,
   SlotPluginContext,
 } from "../types";
 import { createCache, useCache } from "../utils/cache";
@@ -24,7 +24,8 @@ router.post("/api/slots", async (c) => {
   let body: { query?: string; results?: ScoredResult[] };
   try {
     body = await c.req.json();
-  } catch {
+  } catch (err) {
+    logger.debug("slots", "invalid JSON body", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
   if (!body.query || !body.query.trim()) return c.json({ panels: [] });
@@ -47,7 +48,8 @@ router.post("/api/slots/glance", async (c) => {
   let body: { query?: string; results?: ScoredResult[] };
   try {
     body = await c.req.json();
-  } catch {
+  } catch (err) {
+    logger.debug("slots", "invalid JSON body", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
   if (!body.query || !Array.isArray(body.results)) {
@@ -58,7 +60,7 @@ router.post("/api/slots/glance", async (c) => {
   const glancePlugins = getSlotPlugins().filter(
     (p) => p.position === SlotPanelPosition.AtAGlance,
   );
-  const panels: SlotPanelResult[] = [];
+  const panels: SlotPanel[] = [];
   for (const plugin of glancePlugins) {
     if (!plugin.id) {
       logger.warn(
