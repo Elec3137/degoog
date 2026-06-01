@@ -1,4 +1,10 @@
-export type { SearchResult, ScoredResult, EngineTiming, SlotPanel, SearchResponse } from "../../shared/search-types";
+export type {
+  SearchResult,
+  ScoredResult,
+  EngineTiming,
+  SlotPanel,
+  SearchResponse,
+} from "../../shared/search-types";
 export { SlotPanelPosition } from "../../shared/search-types";
 
 export enum ImgColor {
@@ -92,7 +98,8 @@ export interface SearchParams {
   imageFilter?: ImageFilter;
 }
 
-export type SearchType = "web" | "images" | "videos" | "news";
+export type SearchType = string;
+
 export type TimeFilter =
   | "any"
   | "hour"
@@ -137,4 +144,3 @@ export interface EngineContext {
     opts?: { httpStatus?: number; engine?: string },
   ) => Error;
 }
-

@@ -55,7 +55,6 @@ const _getEngineTimeout = async (
   return ENGINE_TIMEOUT_MS;
 };
 
-
 const _mergeIntoMap = (
   urlMap: Map<string, ScoredResult>,
   results: SearchResult[],
@@ -80,7 +79,10 @@ const _mergeIntoMap = (
       if (r.thumbnail && !existing.thumbnail) {
         existing.thumbnail = r.thumbnail;
       }
-      if (r.imageUrl && (!existing.imageUrl || (!existing.isGif && urlIsGif(r.imageUrl)))) {
+      if (
+        r.imageUrl &&
+        (!existing.imageUrl || (!existing.isGif && urlIsGif(r.imageUrl)))
+      ) {
         existing.imageUrl = r.imageUrl;
         existing.isGif = urlIsGif(r.imageUrl);
       }
@@ -403,7 +405,8 @@ export const search = async (
       const classified = _classifyReject(result.reason);
       logger.warn(
         "search",
-        `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
+        `engine="${engineName}" status=${classified.status}${
+          classified.httpStatus ? ` http=${classified.httpStatus}` : ""
         } reason="${classified.reason}"`,
       );
       engineTimings.push({
