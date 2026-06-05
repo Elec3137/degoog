@@ -1,4 +1,5 @@
 import { getBase } from "../utils/base-url";
+import { saveField } from "../utils/settings-api";
 
 const t = window.scopedT("core");
 const TOKEN_KEY = "degoog-settings-token";
@@ -38,6 +39,9 @@ const authHeaders = (extra: Record<string, string> = {}): Record<string, string>
   if (token) headers["x-settings-token"] = token;
   return headers;
 };
+
+const _persistField = (key: string, value: string): Promise<boolean> =>
+  saveField(key, value, getToken);
 
 const tr = (key: string, vars?: Record<string, string>): string =>
   t(`settings-page.indexer.${key}`, vars);
@@ -262,34 +266,6 @@ const renderStats = (stats: IndexerStats): void => {
   }
 };
 
-const persistIndexerSettings = async (): Promise<boolean> => {
-  const val = (id: string): string =>
-    (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? "";
-  const checked = (id: string): boolean =>
-    (document.getElementById(id) as HTMLInputElement | null)?.checked ?? false;
-  try {
-    const res = await fetch(`${getBase()}/api/settings/general`, {
-      method: "POST",
-      headers: authHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        degoogIndexerPublicExport: String(checked("indexer-public-export")),
-        degoogIndexerMaxPerSearch: val("indexer-max-per-search") || "30",
-        degoogIndexerMaxUrls: val("indexer-max-urls") || "0",
-        degoogIndexerMaxHits: val("indexer-max-hits") || "0",
-        degoogIndexerMaxAgeDays: val("indexer-max-age-days") || "0",
-        degoogIndexerPruneEnabled: String(checked("indexer-prune-enabled")),
-        degoogIndexerFuzzyEnabled: String(checked("indexer-fuzzy-enabled")),
-        degoogIndexerQueryLimit: val("indexer-query-limit") || "30",
-        degoogIndexerDomainAllowlist: val("indexer-domain-allowlist"),
-        degoogIndexerDomainBlocklist: val("indexer-domain-blocklist"),
-        degoogIndexerWordBlocklist: val("indexer-word-blocklist"),
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-};
 
 const setActionStatus = (text: string): void => {
   const el = document.getElementById("indexer-action-status");
@@ -629,6 +605,37 @@ const openManageModal = (stats: IndexerStats | null, onChanged: () => void): voi
   void load();
 };
 
+const _mkIdxBtn = (): HTMLButtonElement => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "settings-field-save-btn";
+  btn.hidden = true;
+  btn.textContent = t("settings-page.actions.save");
+  return btn;
+};
+
+const _bindIdxSave = (btn: HTMLButtonElement, save: () => Promise<boolean>): void => {
+  btn.addEventListener("click", async () => {
+    const prev = btn.textContent ?? "";
+    btn.disabled = true;
+    const ok = await save();
+    if (ok) {
+      btn.textContent = t("settings-page.server.saved");
+      setTimeout(() => {
+        btn.hidden = true;
+        btn.textContent = prev;
+        btn.disabled = false;
+      }, 1200);
+    } else {
+      btn.textContent = t("settings-page.server.save-failed-network");
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.textContent = prev;
+      }, 1500);
+    }
+  });
+};
+
 const wireToggles = async (
   refreshStats: () => Promise<void>,
 ): Promise<(isEnabled: boolean) => void> => {
@@ -710,27 +717,38 @@ const wireToggles = async (
   applyVisibility(enabled);
   if (enabled) await refreshStats();
 
-  const saveAll = (): void => {
-    void persistIndexerSettings().then((ok) => {
-      setActionStatus(ok ? "" : tr("save-error"));
+  type FieldSpec = [HTMLInputElement | HTMLTextAreaElement | null, string, string];
+  const fieldSpecs: FieldSpec[] = [
+    [domainAllowEl, "degoogIndexerDomainAllowlist", ""],
+    [domainBlockEl, "degoogIndexerDomainBlocklist", ""],
+    [wordBlockEl, "degoogIndexerWordBlocklist", ""],
+    [maxPerSearchEl, "degoogIndexerMaxPerSearch", "30"],
+    [maxUrlsEl, "degoogIndexerMaxUrls", "0"],
+    [maxHitsEl, "degoogIndexerMaxHits", "0"],
+    [maxAgeDaysEl, "degoogIndexerMaxAgeDays", "0"],
+    [queryLimitEl, "degoogIndexerQueryLimit", "30"],
+  ];
+
+  for (const [field, key, fallback] of fieldSpecs) {
+    if (!field) continue;
+    const btn = _mkIdxBtn();
+    field.insertAdjacentElement("afterend", btn);
+    field.addEventListener("input", () => { btn.hidden = false; });
+    _bindIdxSave(btn, () => _persistField(key, field.value || fallback));
+  }
+
+  const wireToggle = (
+    checkEl: HTMLInputElement | null,
+    key: string,
+  ): void => {
+    checkEl?.addEventListener("change", () => {
+      void _persistField(key, String(checkEl.checked));
     });
   };
 
-  publicEl?.addEventListener("change", saveAll);
-  pruneEl?.addEventListener("change", saveAll);
-  fuzzyEl?.addEventListener("change", saveAll);
-  for (const el of [
-    maxPerSearchEl,
-    maxUrlsEl,
-    maxHitsEl,
-    maxAgeDaysEl,
-    queryLimitEl,
-    domainAllowEl,
-    domainBlockEl,
-    wordBlockEl,
-  ]) {
-    el?.addEventListener("change", saveAll);
-  }
+  wireToggle(publicEl, "degoogIndexerPublicExport");
+  wireToggle(pruneEl, "degoogIndexerPruneEnabled");
+  wireToggle(fuzzyEl, "degoogIndexerFuzzyEnabled");
 
   return applyVisibility;
 };

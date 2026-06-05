@@ -4,6 +4,7 @@ import { initInstallPrompt } from "../../utils/install-prompt";
 import {
   initGeneralTab,
   initAppearanceSettings,
+  renderPublicSettingsTop,
 } from "../../settings/general-tab";
 import { initEnginesTab } from "../../settings/engines-tab";
 import { initPluginsTab } from "../../settings/plugins-tab";
@@ -256,6 +257,8 @@ window.addEventListener("extensions-saved", async () => {
 
 async function _initPublicSettings(): Promise<void> {
   void initTheme();
+  const publicContent = document.getElementById("public-settings-content");
+  if (publicContent) publicContent.innerHTML = renderPublicSettingsTop();
   void initAppearanceSettings();
   try {
     const res = await fetch(`${getBase()}/api/extensions`);

@@ -15,85 +15,14 @@ import {
   setInstanceSettings,
   updateInstanceSettings,
 } from "../utils/server-settings";
+import {
+  SETTINGS_SCHEMA,
+  coerceSetting,
+  type SettingKey,
+} from "../utils/settings-schema";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
-
-const GENERAL_ALLOWED_KEYS = [
-  "proxyEnabled",
-  "proxyUrls",
-  "imageProxyAllowLocal",
-  "imageProxyAllowList",
-  "rateLimitEnabled",
-  "rateLimitBurstWindow",
-  "rateLimitBurstMax",
-  "rateLimitLongWindow",
-  "rateLimitLongMax",
-  "rateLimitSuggestEnabled",
-  "rateLimitSuggestBurstWindow",
-  "rateLimitSuggestBurstMax",
-  "rateLimitSuggestLongWindow",
-  "rateLimitSuggestLongMax",
-  "acDebounceMs",
-  "languagesEnabled",
-  "languages",
-  "streamingEnabled",
-  "streamingAutoRetry",
-  "streamingMaxRetries",
-  "postMethodEnabled",
-  "defaultTheme",
-  "domainBlockEnabled",
-  "domainBlockList",
-  "domainBlockUiEnabled",
-  "domainReplaceEnabled",
-  "domainReplaceList",
-  "domainReplaceUiEnabled",
-  "domainScoreEnabled",
-  "domainScoreList",
-  "domainScoreUiEnabled",
-  "customCss",
-  "apiKeySearchEnabled",
-  "apiKeySuggestEnabled",
-  "honeypotEnabled",
-  "honeypotCssCheck",
-  "honeypotBanDuration",
-  "degoogIndexerEnabled",
-  "degoogIndexerPublicExport",
-  "degoogIndexerMaxPerSearch",
-  "degoogIndexerMaxUrls",
-  "degoogIndexerMaxHits",
-  "degoogIndexerPruneEnabled",
-  "degoogIndexerFuzzyEnabled",
-  "degoogIndexerQueryLimit",
-  "degoogIndexerDomainAllowlist",
-  "degoogIndexerDomainBlocklist",
-  "degoogIndexerWordBlocklist",
-] as const;
-
-const BOOLEAN_SETTING_KEYS = new Set<(typeof GENERAL_ALLOWED_KEYS)[number]>([
-  "proxyEnabled",
-  "imageProxyAllowLocal",
-  "rateLimitEnabled",
-  "rateLimitSuggestEnabled",
-  "languagesEnabled",
-  "streamingEnabled",
-  "streamingAutoRetry",
-  "postMethodEnabled",
-  "domainBlockEnabled",
-  "domainBlockUiEnabled",
-  "domainReplaceEnabled",
-  "domainReplaceUiEnabled",
-  "domainScoreEnabled",
-  "domainScoreUiEnabled",
-  "apiKeySearchEnabled",
-  "apiKeySuggestEnabled",
-  "honeypotEnabled",
-  "honeypotCssCheck",
-  "degoogIndexerEnabled",
-  "degoogIndexerPublicExport",
-  "degoogIndexerPruneEnabled",
-  "degoogIndexerFuzzyEnabled",
-]);
 
 const _normalizeHostname = (raw: string): string =>
   raw
@@ -163,6 +92,18 @@ const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
   }
 };
 
+const _applySchemaUpdates = (
+  body: Record<string, string>,
+): Record<string, string | boolean> => {
+  const updates: Record<string, string | boolean> = {};
+  for (const [key, def] of Object.entries(SETTINGS_SCHEMA)) {
+    const raw = body[key];
+    if (raw === undefined || typeof raw !== "string") continue;
+    updates[key] = coerceSetting(def, raw);
+  }
+  return updates;
+};
+
 router.get("/api/settings/streaming", async (c) => {
   const settings = await getInstanceSettings();
   return c.json({
@@ -198,15 +139,26 @@ router.post("/api/settings/general", async (c) => {
   const body = await readObjectBody<Record<string, string>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const existing = await getInstanceSettings();
-  const updates: Record<string, string | boolean> = {};
-  for (const key of GENERAL_ALLOWED_KEYS) {
-    if (key in body && typeof body[key] === "string") {
-      updates[key] = BOOLEAN_SETTING_KEYS.has(key)
-        ? body[key] === "true"
-        : body[key];
-    }
-  }
+  const updates = _applySchemaUpdates(body);
   await setInstanceSettings({ ...existing, ...updates });
+  await syncBlocklist();
+  return c.json({ ok: true });
+});
+
+router.post("/api/settings/field", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/field");
+  if (denied) return denied;
+  const body = await readObjectBody<{ key?: string; value?: string }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  const { key, value } = body;
+  if (!key || typeof key !== "string" || !(key in SETTINGS_SCHEMA)) {
+    return c.json({ error: "Unknown setting" }, 400);
+  }
+  if (value === undefined || typeof value !== "string") {
+    return c.json({ error: "Invalid value" }, 400);
+  }
+  const coerced = coerceSetting(SETTINGS_SCHEMA[key as SettingKey], value);
+  await updateInstanceSettings({ [key]: coerced });
   await syncBlocklist();
   return c.json({ ok: true });
 });

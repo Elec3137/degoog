@@ -13,6 +13,7 @@ import { renderScoreRows, scoreRowTemplate } from "./server/domain-score";
 import { initHoneypot } from "./server/honeypot";
 import { bindToggleAutoSave, injectFieldSaveBtns } from "./server/auto-save";
 import { setIndexerNavVisible } from "./indexer-tab";
+import { renderServerContent } from "./server/render";
 
 const t = window.scopedT("core");
 
@@ -215,6 +216,9 @@ const _initApiKeyControls = (
 export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
+  const container = document.getElementById("server-content");
+  if (container) container.innerHTML = renderServerContent();
+
   _bindToggles();
 
   document
@@ -232,6 +236,8 @@ export async function initServerTab(
     const apiKeyRes = await fetch(`${getBase()}/api/settings/api-key`, {
       headers: authHeaders(getToken),
     });
+    const controls = document.getElementById("settings-api-key-controls");
+    const locked = document.getElementById("settings-api-key-locked");
     if (apiKeyRes.ok) {
       const apiKeyData = (await apiKeyRes.json()) as {
         key: string;
@@ -240,6 +246,9 @@ export async function initServerTab(
       };
       _apiKey = apiKeyData.key;
       _renderApiKey();
+      if (controls) controls.hidden = false;
+    } else if (apiKeyRes.status === 403) {
+      if (locked) locked.hidden = false;
     }
   } catch (err) {
     console.warn("[settings] api key load failed", err);

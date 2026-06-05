@@ -313,7 +313,7 @@
   display: block;
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 $space-2 0;
 }
 
 .settings-proxy-urls {
@@ -749,4 +749,19 @@
 
 .ext-modal--wide {
   width: min(56rem, 92vw);
+}
+
+.settings-api-wrapper {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+
+  .settings-api-key-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

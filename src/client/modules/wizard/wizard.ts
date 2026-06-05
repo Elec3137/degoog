@@ -5,6 +5,7 @@ import { isTourActive, runTour } from "./tour";
 
 const HOME_DONE_KEY = "degoog-wizard-home-done";
 const MANUAL_RESTART_KEY = "degoog-wizard-manual-restart";
+const SETTINGS_PENDING_KEY = "degoog-wizard-settings-pending";
 
 const runHomeTour = (): Promise<void> =>
   runTour(HOME_STEPS, () => {
@@ -28,18 +29,23 @@ export const initHomeWizard = async (): Promise<void> => {
   await runHomeTour();
 };
 
-export const restartWizard = (): void => {
+export const restartWizard = async (): Promise<void> => {
   if (isTourActive()) return;
   sessionStorage.setItem(MANUAL_RESTART_KEY, "true");
+  sessionStorage.setItem(SETTINGS_PENDING_KEY, "true");
   localStorage.removeItem(HOME_DONE_KEY);
-  void patchServerWizard(false);
+  await patchServerWizard(false);
   window.location.href = `${getBase()}/`;
 };
 
 export const initSettingsWizard = async (): Promise<void> => {
   if (isTourActive()) return;
-  const done = await fetchWizardDone();
-  if (done) return;
+  const manualRestart = sessionStorage.getItem(SETTINGS_PENDING_KEY) === "true";
+  if (!manualRestart) {
+    const done = await fetchWizardDone();
+    if (done) return;
+  }
+  sessionStorage.removeItem(SETTINGS_PENDING_KEY);
   void runTour(SETTINGS_STEPS, () => {
     localStorage.removeItem(HOME_DONE_KEY);
     void markServerDone();
