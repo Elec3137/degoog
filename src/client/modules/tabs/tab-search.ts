@@ -10,7 +10,7 @@ import { isImageSearchType } from "../../utils/engines";
 import { setActiveTab } from "../../utils/navigation";
 import { fetchStreamingConfig } from "../../utils/streaming-config";
 import { buildPaginationHtml } from "../../utils/pagination";
-import { fetchSlotPanels } from "../../utils/search-utils";
+import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search-utils";
 import {
   abortStreamingSearch,
   performStreamingSearch,
@@ -86,6 +86,10 @@ export async function performTabSearch(
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) glanceEl.innerHTML = "";
   clearSlotPanels();
+  if (!isImageType) {
+    void fetchSlotPanels(query);
+    void fetchGlancePanels(query);
+  }
   document.title = `${query} - degoog`;
 
   const layout = document.getElementById("results-layout");

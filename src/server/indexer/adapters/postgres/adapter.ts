@@ -1,16 +1,11 @@
 import postgres from "postgres";
-import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "./adapter";
-import type { IndexRow } from "./recorders";
-import type { IndexerConfig } from "./config";
-import { logger } from "../utils/logger";
-
-const SAFE_TYPE = /^[a-z0-9][a-z0-9-]*$/;
-
-const safeSlug = (type: string): string => {
-  const slug = type.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-  if (!SAFE_TYPE.test(slug)) throw new Error(`invalid type: ${type}`);
-  return slug;
-};
+import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
+import type { IndexRow } from "../../recorders";
+import type { IndexerConfig } from "../../types/config";
+import { safeSlug } from "../../shared/safe-type";
+import { logger } from "../../../utils/logger";
+import { initPgSchema } from "./schema";
+import { runPgPrune } from "./prune";
 
 const IMPORT_BATCH_SIZE = 500;
 
@@ -45,61 +40,8 @@ export class PgAdapter implements IndexerAdapter {
   async open(type: string): Promise<void> {
     const schema = safeSlug(type);
     if (this._types.has(schema)) return;
-    await this._initSchema(schema);
+    await this._sql.begin(async (tx) => initPgSchema(tx, schema));
     this._types.add(schema);
-  }
-
-  private async _initSchema(schema: string): Promise<void> {
-    await this._sql.begin(async (tx) => {
-      await tx`CREATE SCHEMA IF NOT EXISTS ${tx(schema)}`;
-      await tx`
-        CREATE TABLE IF NOT EXISTS ${tx(schema)}.urls (
-          id BIGSERIAL PRIMARY KEY,
-          url_norm TEXT NOT NULL UNIQUE,
-          url TEXT NOT NULL,
-          source_engine TEXT NOT NULL,
-          title TEXT NOT NULL,
-          snippet TEXT NOT NULL,
-          thumbnail TEXT,
-          image_url TEXT,
-          is_gif SMALLINT,
-          duration TEXT,
-          extras_json TEXT,
-          first_seen BIGINT NOT NULL,
-          last_seen BIGINT NOT NULL,
-          search_vec tsvector GENERATED ALWAYS AS (
-            to_tsvector('simple',
-              coalesce(title, '') || ' ' ||
-              coalesce(snippet, '') || ' ' ||
-              coalesce(url, '')
-            )
-          ) STORED
-        )
-      `;
-      await tx`
-        CREATE TABLE IF NOT EXISTS ${tx(schema)}.query_hits (
-          id BIGSERIAL PRIMARY KEY,
-          query_norm TEXT NOT NULL,
-          engine_type TEXT NOT NULL,
-          url_id BIGINT NOT NULL REFERENCES ${tx(schema)}.urls(id) ON DELETE CASCADE,
-          best_position INT NOT NULL DEFAULT 9999,
-          hit_count INT NOT NULL DEFAULT 1,
-          first_seen BIGINT NOT NULL,
-          last_seen BIGINT NOT NULL,
-          UNIQUE(query_norm, engine_type, url_id)
-        )
-      `;
-      await tx`CREATE INDEX IF NOT EXISTS ${tx(`idx_${schema}_hits_query_type`)}
-               ON ${tx(schema)}.query_hits(query_norm, engine_type)`;
-      await tx`CREATE INDEX IF NOT EXISTS ${tx(`idx_${schema}_hits_type`)}
-               ON ${tx(schema)}.query_hits(engine_type)`;
-      await tx`CREATE INDEX IF NOT EXISTS ${tx(`idx_${schema}_hits_last_seen`)}
-               ON ${tx(schema)}.query_hits(last_seen)`;
-      await tx`CREATE INDEX IF NOT EXISTS ${tx(`idx_${schema}_urls_last_seen`)}
-               ON ${tx(schema)}.urls(last_seen)`;
-      await tx`CREATE INDEX IF NOT EXISTS ${tx(`idx_${schema}_urls_fts`)}
-               ON ${tx(schema)}.urls USING GIN(search_vec)`;
-    });
   }
 
   discoverTypes(): string[] {
@@ -203,7 +145,7 @@ export class PgAdapter implements IndexerAdapter {
     return { urls: urlsInserted, hits: hitsInserted };
   }
 
-  async queryExact(type: string, queryNorm: string, limit: number): Promise<UrlRow[]> {
+  async queryExact(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
     const schema = safeSlug(type);
     try {
       return await this._sql<UrlRow[]>`
@@ -213,7 +155,7 @@ export class PgAdapter implements IndexerAdapter {
         JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
         WHERE h.query_norm = ${queryNorm} AND h.engine_type = ${type}
         ORDER BY h.best_position ASC, h.hit_count DESC, h.last_seen DESC
-        LIMIT ${limit}
+        LIMIT ${limit} OFFSET ${offset}
       `;
     } catch (err) {
       logger.warn("indexer", `queryExact failed for type=${type}`, err);
@@ -221,7 +163,7 @@ export class PgAdapter implements IndexerAdapter {
     }
   }
 
-  async queryFuzzy(type: string, queryNorm: string, limit: number): Promise<UrlRow[]> {
+  async queryFuzzy(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
     const schema = safeSlug(type);
     const pgExpr = queryNorm
       .split(/\s+/)
@@ -242,7 +184,7 @@ export class PgAdapter implements IndexerAdapter {
           AND h.query_norm != ${queryNorm}
         ORDER BY ts_rank(u.search_vec, to_tsquery('simple', ${pgExpr})) DESC,
                  h.last_seen DESC
-        LIMIT ${limit}
+        LIMIT ${limit} OFFSET ${offset}
       `;
     } catch (err) {
       logger.warn("indexer", `queryFuzzy failed for type=${type}`, err);
@@ -398,50 +340,14 @@ export class PgAdapter implements IndexerAdapter {
 
   async clearType(type: string): Promise<void> {
     const schema = safeSlug(type);
-    await this._sql.begin(async (tx) => {
-      await tx`DELETE FROM ${tx(schema)}.query_hits`;
-      await tx`DELETE FROM ${tx(schema)}.urls`;
-    });
+    await this._sql`DROP SCHEMA IF EXISTS ${this._sql(schema)} CASCADE`;
+    this._types.delete(schema);
   }
 
   async pruneType(type: string, cfg: IndexerConfig): Promise<void> {
     const schema = safeSlug(type);
     try {
-      await this._sql.begin(async (tx) => {
-        if (cfg.maxAgeDays > 0) {
-          const cutoff = Date.now() - cfg.maxAgeDays * 86_400_000;
-          await tx`DELETE FROM ${tx(schema)}.query_hits WHERE last_seen < ${cutoff}`;
-          await tx`
-            DELETE FROM ${tx(schema)}.urls
-            WHERE id NOT IN (SELECT url_id FROM ${tx(schema)}.query_hits)
-          `;
-        }
-        if (!cfg.pruneEnabled) return;
-        if (cfg.maxHits > 0) {
-          await tx`
-            DELETE FROM ${tx(schema)}.query_hits
-            WHERE id IN (
-              SELECT id FROM ${tx(schema)}.query_hits
-              ORDER BY last_seen ASC
-              LIMIT GREATEST(0, (SELECT COUNT(*) FROM ${tx(schema)}.query_hits) - ${cfg.maxHits})
-            )
-          `;
-          await tx`
-            DELETE FROM ${tx(schema)}.urls
-            WHERE id NOT IN (SELECT url_id FROM ${tx(schema)}.query_hits)
-          `;
-        }
-        if (cfg.maxUrls > 0) {
-          await tx`
-            DELETE FROM ${tx(schema)}.urls
-            WHERE id IN (
-              SELECT id FROM ${tx(schema)}.urls
-              ORDER BY last_seen ASC
-              LIMIT GREATEST(0, (SELECT COUNT(*) FROM ${tx(schema)}.urls) - ${cfg.maxUrls})
-            )
-          `;
-        }
-      });
+      await runPgPrune(this._sql, schema, cfg);
     } catch (err) {
       logger.warn("indexer", `pruneType failed for type=${type}`, err);
     }

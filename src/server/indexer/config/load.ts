@@ -1,18 +1,6 @@
-import { asBoolean, asString } from "../utils/plugin-settings";
-import { getInstanceSettings } from "../utils/server-settings";
-
-export interface IndexerConfig {
-  maxPerSearch: number;
-  maxUrls: number;
-  maxHits: number;
-  maxAgeDays: number;
-  pruneEnabled: boolean;
-  fuzzyEnabled: boolean;
-  queryLimit: number;
-  domainAllowlist: string[];
-  domainBlocklist: string[];
-  wordBlocklist: string[];
-}
+import { asBoolean, asString } from "../../utils/plugin-settings";
+import { getInstanceSettings } from "../../utils/server-settings";
+import type { IndexerConfig } from "../types/config";
 
 const clampInt = (raw: string | undefined, fallback: number, min: number, max: number): number => {
   const n = parseInt((raw ?? "").trim(), 10);

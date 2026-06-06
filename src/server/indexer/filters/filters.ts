@@ -1,6 +1,6 @@
-import type { SearchResult } from "../types";
-import type { IndexerConfig } from "./config";
-import { logger } from "../utils/logger";
+import type { SearchResult } from "../../types";
+import type { IndexerConfig } from "../types/config";
+import { logger } from "../../utils/logger";
 
 const hostOf = (url: string): string | null => {
   try {

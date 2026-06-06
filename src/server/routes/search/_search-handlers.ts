@@ -70,34 +70,40 @@ export async function handleSearch(params: SearchParams) {
   const settings = await getInstanceSettings();
   let finalResponse = response;
 
+  const displayResults = await applyDomainRules(response.results);
   const indexed = maybeIndex(
     asBoolean(settings.degoogIndexerEnabled),
     query,
     type,
-    response.results,
+    displayResults,
   );
-  if (indexed) {
-    const degoogTiming = response.engineTimings.find(
-      (et) => et.name === DEGOOG_ENGINE_NAME,
-    );
-    if (degoogTiming?.resultCount === 0) {
-      finalResponse = {
-        ...response,
-        engineTimings: response.engineTimings.map((et) =>
-          et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
-        ),
-      };
-    }
+
+  const degoogTiming = response.engineTimings.find(
+    (et) => et.name === DEGOOG_ENGINE_NAME,
+  );
+  const justIndexed = indexed && degoogTiming?.resultCount === 0;
+
+  if (justIndexed) {
+    finalResponse = {
+      ...response,
+      engineTimings: response.engineTimings.map((et) =>
+        et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
+      ),
+    };
   }
 
   if (!cache.allEnginesFailed(finalResponse)) {
-    const ttl = cache.someEnginesFailed(finalResponse) ? cache.SHORT_TTL_MS : undefined;
+    const ttl = justIndexed
+      ? cache.JUST_INDEXED_TTL_MS
+      : cache.someEnginesFailed(finalResponse)
+        ? cache.SHORT_TTL_MS
+        : undefined;
     await cache.set(key, finalResponse, ttl);
   }
 
   return {
     ...finalResponse,
-    results: signResultThumbnails(await applyDomainRules(finalResponse.results)),
+    results: signResultThumbnails(displayResults),
   };
 }
 
@@ -164,11 +170,12 @@ export async function handleRetry(
     );
 
     const settings = await getInstanceSettings();
-    maybeIndex(asBoolean(settings.degoogIndexerEnabled), query, type, merged);
+    const displayMerged = await applyDomainRules(merged);
+    maybeIndex(asBoolean(settings.degoogIndexerEnabled), query, type, displayMerged);
 
     return {
       ...updated,
-      results: signResultThumbnails(await applyDomainRules(merged)),
+      results: signResultThumbnails(displayMerged),
     };
   }
 

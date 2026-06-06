@@ -1,7 +1,6 @@
-import type { IndexerAdapter } from "./adapter";
-import { SqliteAdapter } from "./adapter-sqlite";
-import { PgAdapter } from "./adapter-postgres";
-import { logger } from "../utils/logger";
+import type { IndexerAdapter } from "../types/adapter";
+import { SqliteAdapter, PgAdapter } from "../adapters";
+import { logger } from "../../utils/logger";
 
 let _adapter: IndexerAdapter | null = null;
 

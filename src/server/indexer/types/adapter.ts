@@ -1,4 +1,4 @@
-import type { IndexRow } from "./recorders";
+import type { IndexRow } from "../recorders";
 import type { IndexerConfig } from "./config";
 
 export interface ExportRow {
@@ -57,8 +57,8 @@ export interface IndexerAdapter {
   writeBatch(type: string, rows: IndexRow[], now: number): Promise<void>;
   importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }>;
 
-  queryExact(type: string, queryNorm: string, limit: number): Promise<UrlRow[]>;
-  queryFuzzy(type: string, queryNorm: string, limit: number): Promise<UrlRow[]>;
+  queryExact(type: string, queryNorm: string, limit: number, offset?: number): Promise<UrlRow[]>;
+  queryFuzzy(type: string, queryNorm: string, limit: number, offset?: number): Promise<UrlRow[]>;
 
   getTypeCounts(type: string): Promise<TypeCounts>;
   totalDbSize(types: string[]): Promise<number>;

@@ -133,6 +133,9 @@ export async function performStreamingSearch(
   if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
+  } else if (type === "web") {
+    void fetchSlotPanels(query);
+    void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
@@ -179,7 +182,7 @@ export async function performStreamingSearch(
   source.addEventListener("engine-result", (e) => {
     const data = JSON.parse(e.data) as StreamEngineResult;
 
-    const existingIdx = engineTimings.findIndex((t) => t.name === data.engine);
+    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
     if (existingIdx >= 0) {
       engineTimings[existingIdx] = data.timing;
     } else {
@@ -230,7 +233,7 @@ export async function performStreamingSearch(
 
   source.addEventListener("engine-retry", (e) => {
     const data = JSON.parse(e.data) as StreamEngineRetry;
-    const existingIdx = engineTimings.findIndex((t) => t.name === data.engine);
+    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
     if (existingIdx >= 0) {
       engineTimings[existingIdx] = { ...data.timing, resultCount: -1 };
     } else {
@@ -264,6 +267,7 @@ export async function performStreamingSearch(
       if (sidebar) sidebar.innerHTML = "";
       if (currentResults.length > 0) setupMediaObserver("images");
     } else if (type === "web") {
+      updateEngineTimings(sidebar, data.engineTimings);
       void fetchGlancePanels(query, currentResults);
       void fetchSlotPanels(query, currentResults).then((panels) => {
         const kpPanels = panels.filter(
@@ -276,6 +280,7 @@ export async function performStreamingSearch(
         );
       });
     } else {
+      updateEngineTimings(sidebar, data.engineTimings);
       renderSidebar(searchData, (q) => onComplete(q));
       if (glanceEl) glanceEl.innerHTML = "";
     }

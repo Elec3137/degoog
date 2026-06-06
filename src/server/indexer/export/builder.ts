@@ -3,41 +3,9 @@ import { unlinkSync, mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomBytes } from "crypto";
-import { getAdapter } from "./db-factory";
-import { logger } from "../utils/logger";
-
-const SCHEMA_DDL = [
-  `CREATE TABLE IF NOT EXISTS urls (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    url_norm TEXT NOT NULL UNIQUE,
-    url TEXT NOT NULL,
-    source_engine TEXT NOT NULL,
-    title TEXT NOT NULL,
-    snippet TEXT NOT NULL,
-    thumbnail TEXT,
-    image_url TEXT,
-    is_gif INTEGER,
-    duration TEXT,
-    extras_json TEXT,
-    first_seen INTEGER NOT NULL,
-    last_seen INTEGER NOT NULL
-  )`,
-  `CREATE TABLE IF NOT EXISTS query_hits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    query_norm TEXT NOT NULL,
-    engine_type TEXT NOT NULL,
-    url_id INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
-    best_position INTEGER NOT NULL DEFAULT 9999,
-    hit_count INTEGER NOT NULL DEFAULT 1,
-    first_seen INTEGER NOT NULL,
-    last_seen INTEGER NOT NULL,
-    UNIQUE(query_norm, engine_type, url_id)
-  )`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_query_type ON query_hits(query_norm, engine_type)`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_type ON query_hits(engine_type)`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_last_seen ON query_hits(last_seen)`,
-  `CREATE INDEX IF NOT EXISTS idx_urls_last_seen ON urls(last_seen)`,
-];
+import { getAdapter } from "../db/factory";
+import { EXPORT_SCHEMA_DDL } from "./schema";
+import { logger } from "../../utils/logger";
 
 export const buildSqliteExport = async (type: string): Promise<Buffer> => {
   const adapter = getAdapter();
@@ -51,7 +19,7 @@ export const buildSqliteExport = async (type: string): Promise<Buffer> => {
     const db = new Database(tmpPath, { create: true });
     try {
       db.exec("PRAGMA journal_mode = WAL");
-      for (const sql of SCHEMA_DDL) db.exec(sql);
+      for (const sql of EXPORT_SCHEMA_DDL) db.exec(sql);
 
       const insertUrl = db.prepare(`
         INSERT INTO urls (url_norm, url, source_engine, title, snippet,

@@ -9,11 +9,10 @@ import {
   sampleRows,
   type DeleteItem,
 } from "../indexer/store";
-import { checkpointType, discoverTypes } from "../indexer/db";
-import { isPostgresMode } from "../indexer/db-factory";
+import { checkpointType, discoverTypes, isPostgresMode } from "../indexer/db";
 import { clearTypeCache } from "../extensions/engines/registry";
-import { importFromBuffer } from "../indexer/importer";
-import { buildSqliteExport } from "../indexer/export-builder";
+import { importFromBuffer } from "../indexer/import/importer";
+import { buildSqliteExport } from "../indexer/export/builder";
 import { indexerDbForType } from "../utils/paths";
 import { getInstanceSettings } from "../utils/server-settings";
 import { asBoolean } from "../utils/plugin-settings";

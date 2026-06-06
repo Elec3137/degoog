@@ -3,21 +3,16 @@ import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomBytes } from "crypto";
-import type { ExportRow } from "./adapter";
-import { getAdapter } from "./db-factory";
-import { logger } from "../utils/logger";
+import type { ExportRow } from "../types/adapter";
+import { getAdapter } from "../db/factory";
+import { EXPORT_SELECT_SQL } from "../shared/export-select";
+import { logger } from "../../utils/logger";
 
 const BATCH_SIZE = 500;
 
 const readExportRows = (db: Database, type: string): ExportRow[] => {
   try {
-    const rows = db.prepare(`
-      SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
-             u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-             u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
-      FROM query_hits h
-      JOIN urls u ON u.id = h.url_id
-    `).all() as ExportRow[];
+    const rows = db.prepare(EXPORT_SELECT_SQL).all() as ExportRow[];
     logger.info("indexer", `importer: read ${rows.length} rows from source db for type=${type}`);
     return rows;
   } catch (err) {

@@ -1,0 +1,32 @@
+export const EXPORT_SCHEMA_DDL = [
+  `CREATE TABLE IF NOT EXISTS urls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url_norm TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL,
+    source_engine TEXT NOT NULL,
+    title TEXT NOT NULL,
+    snippet TEXT NOT NULL,
+    thumbnail TEXT,
+    image_url TEXT,
+    is_gif INTEGER,
+    duration TEXT,
+    extras_json TEXT,
+    first_seen INTEGER NOT NULL,
+    last_seen INTEGER NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS query_hits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    query_norm TEXT NOT NULL,
+    engine_type TEXT NOT NULL,
+    url_id INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
+    best_position INTEGER NOT NULL DEFAULT 9999,
+    hit_count INTEGER NOT NULL DEFAULT 1,
+    first_seen INTEGER NOT NULL,
+    last_seen INTEGER NOT NULL,
+    UNIQUE(query_norm, engine_type, url_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_hits_query_type ON query_hits(query_norm, engine_type)`,
+  `CREATE INDEX IF NOT EXISTS idx_hits_type ON query_hits(engine_type)`,
+  `CREATE INDEX IF NOT EXISTS idx_hits_last_seen ON query_hits(last_seen)`,
+  `CREATE INDEX IF NOT EXISTS idx_urls_last_seen ON urls(last_seen)`,
+];

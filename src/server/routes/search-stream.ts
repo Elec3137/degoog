@@ -240,24 +240,28 @@ router.get("/api/search/stream", async (c) => {
         };
 
         const indexerSettings = await getInstanceSettings();
+        const displayResults = await applyDomainRules(rawScoredResults);
         const indexed = maybeIndex(
           asBoolean(indexerSettings.degoogIndexerEnabled),
           query,
           type,
-          rawScoredResults,
+          displayResults,
         );
-        if (indexed) {
-          const degoogTiming = allTimings.find(
-            (et) => et.name === DEGOOG_ENGINE_NAME,
-          );
-          if (degoogTiming?.resultCount === 0) {
-            const idx = allTimings.indexOf(degoogTiming);
-            allTimings[idx] = { ...degoogTiming, indexed: true };
-          }
+
+        const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
+        const justIndexed = indexed && degoogTiming?.resultCount === 0;
+
+        if (justIndexed) {
+          const idx = allTimings.indexOf(degoogTiming!);
+          allTimings[idx] = { ...degoogTiming!, indexed: true };
         }
 
         if (!cache.allEnginesFailed(response)) {
-          const ttl = cache.someEnginesFailed(response) ? cache.SHORT_TTL_MS : undefined;
+          const ttl = justIndexed
+            ? cache.JUST_INDEXED_TTL_MS
+            : cache.someEnginesFailed(response)
+              ? cache.SHORT_TTL_MS
+              : undefined;
           await cache.set(key, response, ttl);
         }
 

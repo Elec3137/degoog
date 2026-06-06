@@ -1,5 +1,5 @@
-import { getAdapter } from "./db-factory";
-import { logger } from "../utils/logger";
+import { getAdapter } from "./factory";
+import { logger } from "../../utils/logger";
 
 export const discoverTypes = (): string[] => getAdapter().discoverTypes();
 

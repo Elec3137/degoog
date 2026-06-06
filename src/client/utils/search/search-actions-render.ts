@@ -59,6 +59,9 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
+  } else if (resolvedType === "web") {
+    void fetchSlotPanels(query);
+    void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl)

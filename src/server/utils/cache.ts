@@ -26,6 +26,7 @@ export const SHORT_TTL_MS = _readPositiveIntEnv(
   "DEGOOG_CACHE_SHORT_TTL_MS",
   2 * 60 * 1000,
 );
+export const JUST_INDEXED_TTL_MS = 5_000;
 
 const NS = "cache";
 const SEARCH_NAMESPACE = "search";

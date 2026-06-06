@@ -1,19 +1,17 @@
 import type { Database } from "bun:sqlite";
-import type { IndexerConfig } from "./config";
+import type { IndexerConfig } from "../../types/config";
 
-export const pruneOrphanUrls = (db: Database): void => {
+export const pruneOrphans = (db: Database): void => {
   db.exec("DELETE FROM urls WHERE id NOT IN (SELECT url_id FROM query_hits)");
 };
 
-export const runPrune = (db: Database, cfg: IndexerConfig): void => {
+export const runSqlitePrune = (db: Database, cfg: IndexerConfig): void => {
   if (cfg.maxAgeDays > 0) {
     const cutoff = Date.now() - cfg.maxAgeDays * 86_400_000;
     db.prepare("DELETE FROM query_hits WHERE last_seen < ?").run(cutoff);
-    pruneOrphanUrls(db);
+    pruneOrphans(db);
   }
-
   if (!cfg.pruneEnabled) return;
-
   if (cfg.maxHits > 0) {
     const row = db.prepare("SELECT COUNT(*) AS c FROM query_hits").get() as { c: number };
     const excess = row.c - cfg.maxHits;
@@ -23,10 +21,9 @@ export const runPrune = (db: Database, cfg: IndexerConfig): void => {
           SELECT id FROM query_hits ORDER BY last_seen ASC LIMIT ?
         )`,
       ).run(excess);
-      pruneOrphanUrls(db);
+      pruneOrphans(db);
     }
   }
-
   if (cfg.maxUrls > 0) {
     const row = db.prepare("SELECT COUNT(*) AS c FROM urls").get() as { c: number };
     const excess = row.c - cfg.maxUrls;

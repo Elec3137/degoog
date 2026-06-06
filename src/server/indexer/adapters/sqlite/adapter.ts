@@ -1,182 +1,25 @@
 import { Database, type Statement } from "bun:sqlite";
-import { mkdirSync, readdirSync, statSync } from "fs";
-import type { IndexRow } from "./recorders";
-import type { IndexerConfig } from "./config";
-import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "./adapter";
-import { indexerDir, indexerDbForType } from "../utils/paths";
-import { logger } from "../utils/logger";
-
-const SAFE_TYPE = /^[a-z0-9][a-z0-9-]*$/;
-
-const safeSlug = (type: string): string => {
-  const slug = type.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-  if (!SAFE_TYPE.test(slug)) throw new Error(`invalid type: ${type}`);
-  return slug;
-};
-
-const SCHEMA_DDL = [
-  `CREATE TABLE IF NOT EXISTS urls (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    url_norm TEXT NOT NULL UNIQUE,
-    url TEXT NOT NULL,
-    source_engine TEXT NOT NULL,
-    title TEXT NOT NULL,
-    snippet TEXT NOT NULL,
-    thumbnail TEXT,
-    image_url TEXT,
-    is_gif INTEGER,
-    duration TEXT,
-    extras_json TEXT,
-    first_seen INTEGER NOT NULL,
-    last_seen INTEGER NOT NULL
-  )`,
-  `CREATE TABLE IF NOT EXISTS query_hits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    query_norm TEXT NOT NULL,
-    engine_type TEXT NOT NULL,
-    url_id INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
-    best_position INTEGER NOT NULL DEFAULT 9999,
-    hit_count INTEGER NOT NULL DEFAULT 1,
-    first_seen INTEGER NOT NULL,
-    last_seen INTEGER NOT NULL,
-    UNIQUE(query_norm, engine_type, url_id)
-  )`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_query_type ON query_hits(query_norm, engine_type)`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_type ON query_hits(engine_type)`,
-  `CREATE INDEX IF NOT EXISTS idx_hits_last_seen ON query_hits(last_seen)`,
-  `CREATE INDEX IF NOT EXISTS idx_urls_last_seen ON urls(last_seen)`,
-  `CREATE VIRTUAL TABLE IF NOT EXISTS urls_fts USING fts5(
-    title, snippet, url,
-    content='urls', content_rowid='id'
-  )`,
-  `CREATE TRIGGER IF NOT EXISTS urls_ai AFTER INSERT ON urls BEGIN
-    INSERT INTO urls_fts(rowid, title, snippet, url)
-    VALUES (new.id, new.title, new.snippet, new.url);
-  END`,
-  `CREATE TRIGGER IF NOT EXISTS urls_ad AFTER DELETE ON urls BEGIN
-    INSERT INTO urls_fts(urls_fts, rowid, title, snippet, url)
-    VALUES('delete', old.id, old.title, old.snippet, old.url);
-  END`,
-  `CREATE TRIGGER IF NOT EXISTS urls_au AFTER UPDATE ON urls BEGIN
-    INSERT INTO urls_fts(urls_fts, rowid, title, snippet, url)
-    VALUES('delete', old.id, old.title, old.snippet, old.url);
-    INSERT INTO urls_fts(rowid, title, snippet, url)
-    VALUES (new.id, new.title, new.snippet, new.url);
-  END`,
-];
-
-const UPSERT_URL = `
-  INSERT INTO urls (
-    url_norm, url, source_engine, title, snippet,
-    thumbnail, image_url, is_gif, duration, extras_json,
-    first_seen, last_seen
-  ) VALUES (
-    $url_norm, $url, $source_engine, $title, $snippet,
-    $thumbnail, $image_url, $is_gif, $duration, $extras_json,
-    $first_seen, $last_seen
-  )
-  ON CONFLICT(url_norm) DO UPDATE SET
-    last_seen = excluded.last_seen,
-    title = CASE WHEN length(urls.title) >= length(excluded.title) THEN urls.title ELSE excluded.title END,
-    snippet = CASE WHEN length(urls.snippet) >= length(excluded.snippet) THEN urls.snippet ELSE excluded.snippet END,
-    thumbnail = COALESCE(urls.thumbnail, excluded.thumbnail),
-    image_url = COALESCE(urls.image_url, excluded.image_url),
-    is_gif = COALESCE(urls.is_gif, excluded.is_gif),
-    duration = COALESCE(urls.duration, excluded.duration),
-    extras_json = COALESCE(urls.extras_json, excluded.extras_json)
-  RETURNING id
-`;
-
-const UPSERT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, $best_position, 1, $first_seen, $last_seen)
-  ON CONFLICT(query_norm, engine_type, url_id) DO UPDATE SET
-    last_seen = excluded.last_seen,
-    best_position = MIN(query_hits.best_position, excluded.best_position),
-    hit_count = query_hits.hit_count + 1
-`;
-
-const IMPORT_URL = `
-  INSERT INTO urls (
-    url_norm, url, source_engine, title, snippet,
-    thumbnail, image_url, is_gif, duration, extras_json,
-    first_seen, last_seen
-  ) VALUES (
-    $url_norm, $url, $source_engine, $title, $snippet,
-    $thumbnail, $image_url, $is_gif, $duration, $extras_json,
-    $first_seen, $last_seen
-  )
-  ON CONFLICT(url_norm) DO NOTHING
-  RETURNING id
-`;
-
-const IMPORT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, 9999, 1, $first_seen, $last_seen)
-  ON CONFLICT(query_norm, engine_type, url_id) DO NOTHING
-`;
-
-const EXACT_SQL = `
-  SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
-         u.image_url, u.is_gif, u.duration, u.extras_json
-  FROM query_hits h
-  JOIN urls u ON u.id = h.url_id
-  WHERE h.query_norm = ? AND h.engine_type = ?
-  ORDER BY h.best_position ASC, h.hit_count DESC, h.last_seen DESC
-  LIMIT ?
-`;
-
-const FUZZY_SQL = `
-  SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
-         u.image_url, u.is_gif, u.duration, u.extras_json
-  FROM urls_fts f
-  JOIN urls u ON u.id = f.rowid
-  JOIN query_hits h ON h.url_id = u.id
-  WHERE urls_fts MATCH ?
-    AND h.engine_type = ?
-    AND h.query_norm != ?
-  ORDER BY rank, h.last_seen DESC
-  LIMIT ?
-`;
-
-const LIST_SELECT = `
-  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
-  FROM query_hits h
-  JOIN urls u ON u.id = h.url_id
-`;
-
-const SEARCH_WHERE = `
-  WHERE h.query_norm LIKE $term ESCAPE '\\'
-     OR u.url LIKE $term ESCAPE '\\'
-     OR u.title LIKE $term ESCAPE '\\'
-`;
-
-const EXPORT_SQL = `
-  SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
-         u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-         u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
-  FROM query_hits h
-  JOIN urls u ON u.id = h.url_id
-`;
-
-const safeFtsTerm = (s: string): string =>
-  s.replace(/[^a-z0-9\-]/g, "").trim();
-
-const buildFtsQuery = (queryNorm: string): string => {
-  const terms = queryNorm
-    .split(/\s+/)
-    .filter((t) => t.length >= 2)
-    .map(safeFtsTerm)
-    .filter(Boolean);
-  return terms.length > 0 ? terms.map((t) => `${t}*`).join(" OR ") : "";
-};
-
-const escapeLike = (s: string): string =>
-  s.replace(/[\\%_]/g, (ch) => `\\${ch}`);
-
-const pruneOrphans = (db: Database): void => {
-  db.exec("DELETE FROM urls WHERE id NOT IN (SELECT url_id FROM query_hits)");
-};
+import { mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
+import type { IndexRow } from "../../recorders";
+import type { IndexerConfig } from "../../types/config";
+import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
+import { safeSlug } from "../../shared/safe-type";
+import { indexerDir, indexerDbForType } from "../../../utils/paths";
+import { logger } from "../../../utils/logger";
+import { SQLITE_SCHEMA_DDL } from "./schema";
+import {
+  UPSERT_URL,
+  UPSERT_HIT,
+  IMPORT_URL,
+  IMPORT_HIT,
+  EXACT_SQL,
+  FUZZY_SQL,
+  LIST_SELECT,
+  SEARCH_WHERE,
+  EXPORT_SQL,
+} from "./statements";
+import { buildFtsQuery, escapeLike } from "./fts";
+import { pruneOrphans, runSqlitePrune } from "./prune";
 
 export class SqliteAdapter implements IndexerAdapter {
   private readonly _dbs = new Map<string, Database>();
@@ -207,7 +50,7 @@ export class SqliteAdapter implements IndexerAdapter {
     db.exec("PRAGMA synchronous = NORMAL");
     db.exec("PRAGMA foreign_keys = ON");
     try {
-      for (const sql of SCHEMA_DDL) db.exec(sql);
+      for (const sql of SQLITE_SCHEMA_DDL) db.exec(sql);
     } catch (err) {
       logger.error("indexer", `schema init failed for type=${key}`, err);
       throw err;
@@ -340,7 +183,7 @@ export class SqliteAdapter implements IndexerAdapter {
     return { urls: urlsInserted, hits: hitsInserted };
   }
 
-  async queryExact(type: string, queryNorm: string, limit: number): Promise<UrlRow[]> {
+  async queryExact(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
     try {
       const db = this._db(type);
       let stmt = this._exactQs.get(type);
@@ -348,14 +191,14 @@ export class SqliteAdapter implements IndexerAdapter {
         stmt = db.prepare(EXACT_SQL);
         this._exactQs.set(type, stmt);
       }
-      return stmt.all(queryNorm, type, limit) as UrlRow[];
+      return stmt.all(queryNorm, type, limit, offset) as UrlRow[];
     } catch (err) {
       logger.warn("indexer", `queryExact failed for type=${type}`, err);
       return [];
     }
   }
 
-  async queryFuzzy(type: string, queryNorm: string, limit: number): Promise<UrlRow[]> {
+  async queryFuzzy(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
     const ftsQuery = buildFtsQuery(queryNorm);
     if (!ftsQuery) return [];
     try {
@@ -365,7 +208,7 @@ export class SqliteAdapter implements IndexerAdapter {
         stmt = db.prepare(FUZZY_SQL);
         this._fuzzyQs.set(type, stmt);
       }
-      return stmt.all(ftsQuery, type, queryNorm, limit) as UrlRow[];
+      return stmt.all(ftsQuery, type, queryNorm, limit, offset) as UrlRow[];
     } catch (err) {
       logger.warn("indexer", `queryFuzzy failed for type=${type}`, err);
       return [];
@@ -499,43 +342,31 @@ export class SqliteAdapter implements IndexerAdapter {
   }
 
   async clearType(type: string): Promise<void> {
-    const db = this._db(type);
+    const key = safeSlug(type);
+    const db = this._db(key);
     db.exec("DELETE FROM query_hits");
     db.exec("DELETE FROM urls");
     db.exec("INSERT INTO urls_fts(urls_fts) VALUES('rebuild')");
     db.exec("VACUUM");
+    db.close();
+    this._dbs.delete(key);
+    this._upsertUrlStmts.delete(key);
+    this._upsertHitStmts.delete(key);
+    this._exactQs.delete(key);
+    this._fuzzyQs.delete(key);
+    this._listAllQs.delete(key);
+    this._listSearchQs.delete(key);
+    this._countAllQs.delete(key);
+    this._countSearchQs.delete(key);
+    this._sampleQs.delete(key);
+    try {
+      unlinkSync(indexerDbForType(key));
+    } catch (err) {
+      logger.warn("indexer", `clearType: could not delete db file for type=${key}`, err);
+    }
   }
 
   async pruneType(type: string, cfg: IndexerConfig): Promise<void> {
-    const db = this._db(type);
-    if (cfg.maxAgeDays > 0) {
-      const cutoff = Date.now() - cfg.maxAgeDays * 86_400_000;
-      db.prepare("DELETE FROM query_hits WHERE last_seen < ?").run(cutoff);
-      pruneOrphans(db);
-    }
-    if (!cfg.pruneEnabled) return;
-    if (cfg.maxHits > 0) {
-      const row = db.prepare("SELECT COUNT(*) AS c FROM query_hits").get() as { c: number };
-      const excess = row.c - cfg.maxHits;
-      if (excess > 0) {
-        db.prepare(
-          `DELETE FROM query_hits WHERE id IN (
-            SELECT id FROM query_hits ORDER BY last_seen ASC LIMIT ?
-          )`,
-        ).run(excess);
-        pruneOrphans(db);
-      }
-    }
-    if (cfg.maxUrls > 0) {
-      const row = db.prepare("SELECT COUNT(*) AS c FROM urls").get() as { c: number };
-      const excess = row.c - cfg.maxUrls;
-      if (excess > 0) {
-        db.prepare(
-          `DELETE FROM urls WHERE id IN (
-            SELECT id FROM urls ORDER BY last_seen ASC LIMIT ?
-          )`,
-        ).run(excess);
-      }
-    }
+    runSqlitePrune(this._db(type), cfg);
   }
 }

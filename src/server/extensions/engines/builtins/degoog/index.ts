@@ -27,14 +27,14 @@ class DegoogEngine {
 
   async executeSearch(
     query: string,
-    _page?: number,
+    page?: number,
     _timeFilter?: string,
     context?: EngineContext,
   ): Promise<SearchResult[]> {
     if (!(await isIndexerOn())) return [];
     const engineType = context?.searchType;
     if (!engineType) return [];
-    return queryIndex(query, engineType);
+    return queryIndex(query, engineType, undefined, page);
   }
 }
 

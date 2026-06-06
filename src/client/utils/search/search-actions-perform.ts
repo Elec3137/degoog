@@ -344,6 +344,7 @@ async function _performBangCommand(
       }
       if (resultsMeta)
         resultsMeta.textContent = `About ${data.results?.length ?? 0} results (${((data.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
+      state.currentPage = page;
       renderResults(data.results ?? []);
       return;
     }

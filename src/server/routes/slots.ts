@@ -30,10 +30,14 @@ router.post("/api/slots", async (c) => {
   }
   if (!body.query || !body.query.trim()) return c.json({ panels: [] });
   const clientIp = getClientIp(c);
+  const withResults = "results" in body;
+  if (withResults && !Array.isArray(body.results)) {
+    return c.json({ error: "Missing results" }, 400);
+  }
   const panels = await runSlotPlugins(
     body.query.trim(),
     clientIp,
-    body.results,
+    withResults ? body.results : undefined,
     {
       excludePosition: SlotPanelPosition.AtAGlance,
       locale: getLocale(c),
@@ -52,7 +56,9 @@ router.post("/api/slots/glance", async (c) => {
     logger.debug("slots", "invalid JSON body", err);
     return c.json({ error: "Invalid JSON" }, 400);
   }
-  if (!body.query || !Array.isArray(body.results)) {
+  if (!body.query || !body.query.trim()) return c.json({ panels: [] });
+  const withResults = "results" in body;
+  if (withResults && !Array.isArray(body.results)) {
     return c.json({ error: "Missing query or results" }, 400);
   }
   const clientIp = getClientIp(c);
@@ -69,6 +75,8 @@ router.post("/api/slots/glance", async (c) => {
       );
       continue;
     }
+    if (withResults && !plugin.waitForResults) continue;
+    if (!withResults && plugin.waitForResults) continue;
     try {
       const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
       if (await isDisabled(slotSettingsId)) continue;
@@ -76,7 +84,7 @@ router.post("/api/slots/glance", async (c) => {
       if (!ok) continue;
       const context: SlotPluginContext = {
         clientIp: clientIp ?? undefined,
-        results: body.results,
+        results: withResults ? body.results : undefined,
         fetch: outgoingFetch as SlotPluginContext["fetch"],
         signProxyUrl: buildSignedProxyUrl,
         createCache,

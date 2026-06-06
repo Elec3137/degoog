@@ -193,6 +193,9 @@ export async function runSlotPlugins(
       }
     }
     if (exclude && definedPosition === exclude) continue;
+    const withResults = results !== undefined;
+    if (withResults && !plugin.waitForResults) continue;
+    if (!withResults && plugin.waitForResults) continue;
     try {
       if (await isDisabled(slotSettingsId)) continue;
       const ok = await Promise.resolve(plugin.trigger(query.trim()));

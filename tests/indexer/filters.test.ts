@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { shouldIndex } from "../../src/server/indexer/filters";
-import type { IndexerConfig } from "../../src/server/indexer/config";
+import type { IndexerConfig } from "../../src/server/indexer/types/config";
 import type { SearchResult } from "../../src/server/types";
 
 const baseCfg: IndexerConfig = {
