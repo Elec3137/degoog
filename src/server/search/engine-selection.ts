@@ -27,7 +27,9 @@ export const selectActiveEngines = async (
 
 export const readEngineScore = async (id: string): Promise<number> => {
   const stored = await getSettings(id);
-  return Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
+  const parsed = parseFloat(asString(stored["score"]));
+  const score = Number.isFinite(parsed) ? parsed : 1;
+  return Math.max(score, 0.1);
 };
 
 const _stableSettings = (settings: Record<string, unknown>): Record<string, unknown> =>
