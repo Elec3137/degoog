@@ -1,5 +1,6 @@
 import { saveField, saveBatch } from "../../utils/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
+import { flashError, flashSuccess } from "../shared/flash-msg";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
 
@@ -50,9 +51,23 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
     if (!input) continue;
     const key = _toCamel(id);
     input.addEventListener("change", async () => {
-      await saveField(key, boolStr(id), getToken);
-      if (ENGINE_VISIBILITY_KEYS.has(id)) {
-        window.dispatchEvent(new Event("extensions-saved"));
+      const prev = input.checked;
+      try {
+        const ok = await saveField(key, boolStr(id), getToken);
+        if (!ok) {
+          console.error("[auto-save] toggle save failed", { key });
+          input.checked = !prev;
+          flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+          return;
+        }
+        flashSuccess(window.scopedT("core")("settings-page.server.saved"));
+        if (ENGINE_VISIBILITY_KEYS.has(id)) {
+          window.dispatchEvent(new Event("extensions-saved"));
+        }
+      } catch (err) {
+        console.error("[auto-save] toggle save error", { key, err });
+        input.checked = !prev;
+        flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
       }
     });
   }
