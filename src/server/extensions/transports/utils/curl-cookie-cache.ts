@@ -77,7 +77,7 @@ export const parseCurlStdoutWithCookieJar = (
 
   return {
     bodyText,
-    status: status >= 100 ? status : 502,
+    status: status >= 100 && status <= 599 ? status : 502,
     cookieJarText,
   };
 };
