@@ -80,6 +80,7 @@
               <option value="autocomplete">{{t:settings-page.nav.autocomplete}}</option>
               <option value="themes">{{t:settings-page.nav.themes}}</option>
               <option value="store">{{t:settings-page.nav.store}}</option>
+              <option value="shortcuts">{{t:settings-page.nav.shortcuts}}</option>
             </select>
           </div>
 
@@ -130,6 +131,14 @@
               <i class="fa-solid fa-store fa-lg"></i>
               {{t:settings-page.nav.store}}
             </button>
+            <button
+              class="settings-nav-item"
+              data-tab="shortcuts"
+              type="button"
+            >
+              <i class="fa-solid fa-keyboard fa-lg"></i>
+              {{t:settings-page.nav.shortcuts}}
+            </button>
           </nav>
         </div>
 
@@ -160,6 +169,9 @@
           </div>
           <div class="settings-tab-panel" id="tab-indexer">
             <div id="indexer-content"></div>
+          </div>
+          <div class="settings-tab-panel" id="tab-shortcuts">
+            <div id="shortcuts-content"></div>
           </div>
         </main>
       </div>

@@ -1,6 +1,7 @@
 import { saveField, saveBatch } from "../../utils/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
 import { flashError, flashSuccess } from "../shared/flash-msg";
+import { setIndexerNavVisible } from "../indexer/nav";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
 
@@ -43,7 +44,9 @@ const RL_SUGGEST_KEYS = [
 const _toCamel = (s: string): string =>
   s.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
-const ENGINE_VISIBILITY_KEYS = new Set(["degoog-indexer-enabled"]);
+const _syncVisibilityToggle = (id: string, checked: boolean): void => {
+  if (id === "degoog-indexer-enabled") setIndexerNavVisible(checked);
+};
 
 export const bindToggleAutoSave = (getToken: () => string | null): void => {
   for (const id of TOGGLE_KEYS) {
@@ -57,16 +60,19 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         if (!ok) {
           console.error("[auto-save] toggle save failed", { key });
           input.checked = !prev;
+          _syncVisibilityToggle(id, input.checked);
           flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
           return;
         }
         flashSuccess(window.scopedT("core")("settings-page.server.saved"));
-        if (ENGINE_VISIBILITY_KEYS.has(id)) {
+        _syncVisibilityToggle(id, input.checked);
+        if (id === "degoog-indexer-enabled") {
           window.dispatchEvent(new Event("extensions-saved"));
         }
       } catch (err) {
         console.error("[auto-save] toggle save error", { key, err });
         input.checked = !prev;
+        _syncVisibilityToggle(id, input.checked);
         flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
       }
     });

@@ -8,6 +8,7 @@ export const SETTINGS_TABS = [
   "themes",
   "store",
   "indexer",
+  "shortcuts",
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];

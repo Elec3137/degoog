@@ -100,6 +100,8 @@ function canonicalInstalledFolder(
   if (type === ExtensionStoreType.Theme) return makeExtID(folderName, "theme");
   if (type === ExtensionStoreType.Autocomplete)
     return makeExtID(folderName, "autocomplete");
+  if (type === ExtensionStoreType.Shortcut)
+    return makeExtID(folderName, "shortcut");
   return folderName;
 }
 
@@ -154,6 +156,10 @@ function parseDependencyUrl(depUrl: string): {
     {
       type: ExtensionStoreType.Autocomplete,
       pattern: /^(.+?)\/(autocomplete\/[^/]+)$/,
+    },
+    {
+      type: ExtensionStoreType.Shortcut,
+      pattern: /^(.+?)\/(shortcuts\/[^/]+)$/,
     },
   ];
   for (const { type, pattern } of typePatterns) {
@@ -358,6 +364,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
       await push(ExtensionStoreType.Transport, pkg.transports);
     if (pkg.autocomplete)
       await push(ExtensionStoreType.Autocomplete, pkg.autocomplete);
+    if (pkg.shortcuts) await push(ExtensionStoreType.Shortcut, pkg.shortcuts);
   }
 
   if (!repoUrl) {

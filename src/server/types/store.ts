@@ -100,6 +100,14 @@ export interface RepoPackageJson {
     dependencies?: string[];
     minDegoogVersion?: string;
   }>;
+  shortcuts?: Array<{
+    path: string;
+    name: string;
+    description?: string;
+    version?: string;
+    dependencies?: string[];
+    minDegoogVersion?: string;
+  }>;
 }
 
 export interface AuthorJson {

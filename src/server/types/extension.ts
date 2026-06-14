@@ -41,6 +41,7 @@ export enum ExtensionStoreType {
   Engine = "engine",
   Transport = "transport",
   Autocomplete = "autocomplete",
+  Shortcut = "shortcut",
 }
 
 

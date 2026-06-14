@@ -32,6 +32,8 @@ import { logger } from "../../utils/logger";
 import { generateSearchNonce } from "../../utils/search-nonce";
 import { getBasePath, getBaseUrl } from "../../utils/base-url";
 import { getInstanceSettings } from "../../utils/server-settings";
+import { readShortcutsSettings } from "../../utils/shortcuts-settings";
+import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings-auth";
 
 export const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
@@ -209,6 +211,14 @@ export async function applyPagePlaceholders(
     Number.isFinite(acDebounceMs) && acDebounceMs >= 0 ? acDebounceMs : 150;
   const acScript = `<script>window.__DEGOOG_AC_DEBOUNCE__=${acDebounce}</script>`;
   result = result.replace("</head>", `${acScript}\n  </head>`);
+
+  const shortcutSettings = await readShortcutsSettings();
+  const shortcutsConfig = {
+    bindings: shortcutSettings.bindings,
+    custom: await getClientShortcuts(),
+  };
+  const shortcutsScript = `<script>window.__DEGOOG_SHORTCUTS__=${JSON.stringify(shortcutsConfig)}</script>`;
+  result = result.replace("</head>", `${shortcutsScript}\n  </head>`);
 
   result = result.replace(
     "</head>",

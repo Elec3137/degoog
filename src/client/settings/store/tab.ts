@@ -144,6 +144,7 @@ export async function initStoreTab(
         engine: items.filter((i) => i.type === "engine").length,
         transport: items.filter((i) => i.type === "transport").length,
         autocomplete: items.filter((i) => i.type === "autocomplete").length,
+        shortcut: items.filter((i) => i.type === "shortcut").length,
       };
       typeSelect.innerHTML = [
         { id: "all", label: "Extensions", count: typeCounts.all },
@@ -152,6 +153,7 @@ export async function initStoreTab(
         { id: "engine", label: "Engines", count: typeCounts.engine },
         { id: "transport", label: "Transports", count: typeCounts.transport },
         { id: "autocomplete", label: "Autocomplete", count: typeCounts.autocomplete },
+        { id: "shortcut", label: "Shortcuts", count: typeCounts.shortcut },
       ]
         .map(
           (t) =>

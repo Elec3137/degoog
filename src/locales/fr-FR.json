@@ -16,7 +16,8 @@
       "transports": "Transports",
       "themes": "Thèmes",
       "store": "Boutique",
-      "indexer": "Indexeur Degoog"
+      "indexer": "Indexeur Degoog",
+      "shortcuts": "Shortcuts"
     },
     "tab-search": {
       "placeholder": "Rechercher dans les paramètres...",
@@ -160,7 +161,12 @@
       "custom-css-desc": "Injectez du CSS personnalisé dans chaque page. Chargé après les styles du thème et des plugins, il les remplace donc. Utilisez !important pour surpasser des sélecteurs à spécificité plus élevée.",
       "custom-css-label": "CSS personnalisé",
       "saved": "Enregistré",
-      "save-failed-network": "Échec de l'enregistrement. Réessayez."
+      "save-failed-network": "Échec de l'enregistrement. Réessayez.",
+      "shortcuts-heading": "Keyboard shortcuts",
+      "shortcuts-desc": "Enable customisable keyboard shortcuts for this instance. When off, the Shortcuts section is hidden and no shortcuts are active.",
+      "shortcuts-enable": "Enable keyboard shortcuts",
+      "shortcuts-enable-aria": "Enable keyboard shortcuts",
+      "shortcuts-enable-desc": "Power-user shortcuts for focusing search, switching tabs, and navigating results. Configure them in the Shortcuts section."
     },
     "proxy-test": {
       "not-enabled": "Le proxy n'est pas activé. Activez-le et enregistrez avant de tester.",
@@ -383,6 +389,55 @@
       "slot-position": {
         "label": "Position",
         "description": "Où le contenu du slot apparaît sur la page."
+      }
+    },
+    "shortcuts": {
+      "heading": "Keyboard shortcuts",
+      "desc": "Click a shortcut to record a new key combination. Press Escape while recording to cancel.",
+      "reset": "Reset to default",
+      "reset-all": "Reset all to defaults",
+      "add": "Add shortcut",
+      "delete": "Delete shortcut",
+      "file-name": "File name",
+      "source": "JavaScript source",
+      "recording": "Press keys...",
+      "actions": {
+        "focus-search": {
+          "label": "Focus search",
+          "desc": "Move the cursor into the search box."
+        },
+        "next-tab": {
+          "label": "Next tab",
+          "desc": "Switch to the next results tab."
+        },
+        "prev-tab": {
+          "label": "Previous tab",
+          "desc": "Switch to the previous results tab."
+        },
+        "tab-by-number": {
+          "label": "Switch tab by number",
+          "desc": "Hold the recorded modifier and press 1-9 to jump to that tab."
+        },
+        "go-home": {
+          "label": "Go to home",
+          "desc": "Return to the Degoog home page."
+        },
+        "go-settings": {
+          "label": "Go to settings",
+          "desc": "Open the settings page."
+        },
+        "result-down": {
+          "label": "Highlight next result",
+          "desc": "Move focus to the next result link."
+        },
+        "result-up": {
+          "label": "Highlight previous result",
+          "desc": "Move focus to the previous result link."
+        },
+        "result-open": {
+          "label": "Open highlighted result",
+          "desc": "Open the currently focused result."
+        }
       }
     }
   }

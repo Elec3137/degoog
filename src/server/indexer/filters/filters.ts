@@ -5,8 +5,8 @@ import { logger } from "../../utils/logger";
 const hostOf = (url: string): string | null => {
   try {
     return new URL(url).hostname.toLowerCase();
-  } catch (err) {
-    logger.debug("indexer", `invalid result URL "${url}"`, err);
+  } catch {
+    logger.debug("indexer", `invalid result URL "${url}"`);
     return null;
   }
 };

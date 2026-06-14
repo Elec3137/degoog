@@ -15,6 +15,7 @@ import { initServerTab } from "../../settings/server/tab";
 import { initStoreTab } from "../../settings/store/tab";
 import { initIndexerTab } from "../../settings/indexer/tab";
 import { initIndexerPublic } from "../../settings/indexer/public";
+import { initShortcutsTab } from "../../settings/shortcuts/tab";
 import { initGlobalSearch } from "../../settings/shared/settings-search";
 import {
   getStoredToken as _getStoredToken,
@@ -192,6 +193,7 @@ async function _initSettings(): Promise<void> {
   _initTabs();
   void initGeneralTab();
   void initServerTab(getStoredToken);
+  void initShortcutsTab(getStoredToken);
 
   try {
     const [extRes, themesRes] = await Promise.all([

@@ -176,6 +176,8 @@ export function renderItemCard(
     typeLabel = "Transport";
   } else if (item.type === "autocomplete") {
     typeLabel = "Autocomplete";
+  } else if (item.type === "shortcut") {
+    typeLabel = "Shortcut";
   } else {
     typeLabel = "Theme";
   }

@@ -201,7 +201,7 @@ router.get("/api/indexer/export", async (c) => {
       buf = await readFile(indexerDbForType(type));
     }
     _exportCooldown.set(key, now);
-    return new Response(buf, {
+    return new Response(Buffer.from(buf), {
       headers: {
         "Content-Type": "application/octet-stream",
         "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,

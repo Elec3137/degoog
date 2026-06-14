@@ -246,7 +246,6 @@ export async function initServerTab(
       const on = (e.target as HTMLInputElement).checked;
       setIndexerNavVisible(on);
     });
-
   _initApiKeyControls(getToken, handleButtonState);
 
   const CACHE_SCOPES = ["search", "autocomplete", "extensions", "all"] as const;

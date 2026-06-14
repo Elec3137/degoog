@@ -40,6 +40,7 @@ import {
   getAutocompleteExtensionMeta,
   getAutocompleteProviderById,
 } from "../extensions/autocomplete/registry";
+import { getShortcutExtensionMeta } from "../extensions/shortcuts/registry";
 import { outgoingFetch } from "../utils/outgoing";
 import { readFile } from "fs/promises";
 import { extensionReadmeExists } from "../utils/extension-docs";
@@ -63,6 +64,7 @@ router.get("/api/extensions", async (c) => {
     themes,
     transports,
     autocomplete,
+    shortcuts,
     installedItems,
   ] = await Promise.all([
     getEngineExtensionMeta(coreT),
@@ -73,6 +75,7 @@ router.get("/api/extensions", async (c) => {
     getThemeExtensionMeta(),
     getTransportExtensionMeta(),
     getAutocompleteExtensionMeta(),
+    getShortcutExtensionMeta(),
     getInstalledItems(),
   ]);
 
@@ -85,6 +88,7 @@ router.get("/api/extensions", async (c) => {
     ...themes,
     ...transports,
     ...autocomplete,
+    ...shortcuts,
   ];
   for (const meta of allMetas) {
     const inst = installedItems.find((i) => {
@@ -102,7 +106,9 @@ router.get("/api/extensions", async (c) => {
               ? [makeExtID(i.installedAs, "engine")]
               : i.type === ExtensionStoreType.Autocomplete
                 ? [makeExtID(i.installedAs, "autocomplete")]
-                : [makeExtID(i.installedAs, "transport")];
+                : i.type === ExtensionStoreType.Shortcut
+                  ? [makeExtID(i.installedAs, "shortcut")]
+                  : [makeExtID(i.installedAs, "transport")];
       return expected.includes(meta.id);
     });
     if (inst?.minDegoogVersion) {
@@ -123,6 +129,7 @@ router.get("/api/extensions", async (c) => {
     themes: redact(themes),
     transports: redact(transports),
     autocomplete: redact(autocomplete),
+    shortcuts: redact(shortcuts),
   });
 });
 
@@ -144,6 +151,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
     themes,
     transportMeta,
     autocompleteMeta,
+    shortcutMeta,
   ] = await Promise.all([
     getEngineExtensionMeta(coreT),
     getPluginExtensionMeta(coreT),
@@ -153,6 +161,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
     getThemeExtensionMeta(),
     getTransportExtensionMeta(),
     getAutocompleteExtensionMeta(),
+    getShortcutExtensionMeta(),
   ]);
   const ext = [
     ...engines,
@@ -163,6 +172,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
     ...themes,
     ...transportMeta,
     ...autocompleteMeta,
+    ...shortcutMeta,
   ].find((e) => e.id === id);
 
   if (!ext) {
