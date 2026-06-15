@@ -1,4 +1,5 @@
 import type { ExtensionStoreType } from "./extension";
+import type { ShortcutBinding, ShortcutKind } from "../../shared/shortcuts";
 
 export interface RepoInfo {
   url: string;
@@ -32,6 +33,8 @@ export interface StoreItem {
   pluginType?: string;
   engineType?: string;
   engineTypes?: string[];
+  shortcutBinding?: ShortcutBinding;
+  shortcutKind?: ShortcutKind;
   minDegoogVersion?: string;
   requiresNewerVersion?: boolean;
   orphaned?: boolean;

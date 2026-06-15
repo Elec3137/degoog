@@ -16,6 +16,7 @@ export type ShortcutActionMeta = {
   description?: string;
   source?: "builtin" | "plugin";
   editable?: boolean;
+  disabled?: boolean;
 };
 
 export type ClientShortcut = ShortcutActionMeta & {

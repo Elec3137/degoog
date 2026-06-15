@@ -3,6 +3,7 @@ import { screenshotUrl } from "./lightbox";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
 import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";
+import { bindingParts } from "../../shortcuts/binding";
 
 const t = window.scopedT("core");
 
@@ -130,6 +131,16 @@ export function renderRepoList(
   return html;
 }
 
+export function renderShortcutKeycaps(item: StoreItem): string {
+  if (!item.shortcutBinding) return "";
+  const caps = bindingParts(item.shortcutBinding, item.shortcutKind ?? "single");
+  if (!caps.length) return "";
+  const keys = caps
+    .map((cap) => `<kbd class="store-keycap">${escapeHtml(cap)}</kbd>`)
+    .join('<span class="store-keycap-plus">+</span>');
+  return `<div class="store-card-thumb store-card-keycaps">${keys}</div>`;
+}
+
 export function renderItemCard(
   item: StoreItem,
   getToken: () => string | null,
@@ -145,9 +156,11 @@ export function renderItemCard(
       token,
     )
     : "";
+  const keycaps =
+    item.type === "shortcut" ? renderShortcutKeycaps(item) : "";
   const thumb = item.screenshots.length
     ? `<img src="${firstUrl}" alt="" class="store-card-thumb" loading="lazy">`
-    : `<div class="store-card-thumb store-card-thumb-placeholder"></div>`;
+    : keycaps || `<div class="store-card-thumb store-card-thumb-placeholder"></div>`;
   const hasScreenshots = item.screenshots.length > 0;
   const clickableClass = hasScreenshots
     ? " store-card-thumb-wrap--clickable"

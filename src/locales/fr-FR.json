@@ -401,6 +401,8 @@
       "file-name": "Nom du fichier",
       "source": "Code source JavaScript",
       "recording": "Appuyez sur les touches...",
+      "recording-numeric": "Appuyez sur un modificateur + une touche...",
+      "enable-aria": "Activer ou désactiver ce raccourci",
       "actions": {
         "focus-search": {
           "label": "Cibler la recherche",

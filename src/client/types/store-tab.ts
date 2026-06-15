@@ -1,3 +1,5 @@
+import type { ShortcutBinding, ShortcutKind } from "../../shared/shortcuts";
+
 export interface RepoInfo {
   url: string;
   localPath: string;
@@ -24,6 +26,8 @@ export interface StoreItem {
   pluginType?: string;
   engineType?: string;
   engineTypes?: string[];
+  shortcutBinding?: ShortcutBinding;
+  shortcutKind?: ShortcutKind;
   requiresNewerVersion?: boolean;
   orphaned?: boolean;
   untracked?: boolean;

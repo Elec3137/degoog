@@ -41,6 +41,17 @@ const _sameBinding = (a: ShortcutBinding, b: ShortcutBinding): boolean =>
 const _label = (action: ShortcutActionMeta): string =>
   formatBinding(_effective(action), action.kind);
 
+const _canDisable = (action: ShortcutActionMeta): boolean =>
+  action.source !== undefined;
+
+const _toggle = (action: ShortcutActionMeta): string =>
+  _canDisable(action)
+    ? `<label class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
+        <input type="checkbox" class="shortcut-toggle-input" data-action="${escapeHtml(action.id)}"${action.disabled ? "" : " checked"} aria-label="${escapeHtml(t("settings-page.shortcuts.enable-aria"))}">
+        <span class="toggle-slider degoog-toggle"></span>
+      </label>`
+    : "";
+
 const _card = (action: ShortcutActionMeta): string => `
   <div class="ext-card degoog-panel degoog-panel--ext-card" data-action="${escapeHtml(action.id)}">
     <div class="ext-card-main">
@@ -54,6 +65,7 @@ const _card = (action: ShortcutActionMeta): string => `
           <i class="fa-solid fa-rotate-left"></i>
         </button>
         ${action.editable ? `<button type="button" class="degoog-icon-btn shortcut-delete" data-action="${escapeHtml(action.id)}" aria-label="${escapeHtml(t("settings-page.shortcuts.delete"))}"><i class="fa-solid fa-trash"></i></button>` : ""}
+        ${_toggle(action)}
       </div>
     </div>
   </div>`;
@@ -105,7 +117,11 @@ const _setBinding = (
 const _record = (action: ShortcutActionMeta, btn: HTMLButtonElement): void => {
   _stopRecording?.();
   btn.classList.add("shortcut-recorder--recording");
-  btn.textContent = t("settings-page.shortcuts.recording");
+  btn.textContent = t(
+    action.kind === "numeric"
+      ? "settings-page.shortcuts.recording-numeric"
+      : "settings-page.shortcuts.recording",
+  );
 
   const stop = (): void => {
     document.removeEventListener("keydown", onKey, true);
@@ -144,6 +160,33 @@ const _bind = (container: HTMLElement): void => {
       btn.addEventListener("click", () => {
         const action = _action(btn.dataset.action ?? "");
         if (action) _setBinding(action, action.defaultBinding);
+      });
+    },
+  );
+  container.querySelectorAll<HTMLInputElement>(".shortcut-toggle-input").forEach(
+    (input) => {
+      input.addEventListener("change", async () => {
+        const id = input.dataset.action;
+        if (!id) return;
+        const disabled = !input.checked;
+        try {
+          const res = await fetch(
+            `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
+            {
+              method: "POST",
+              headers: jsonHeaders(_getToken),
+              body: JSON.stringify({ disabled: String(disabled) }),
+            },
+          );
+          if (!res.ok) throw new Error("save failed");
+          const action = _customActions.find((a) => a.id === id);
+          if (action) action.disabled = disabled;
+          flashSuccess(t("settings-page.server.saved"));
+        } catch (err) {
+          console.warn("[settings] shortcut toggle failed", err);
+          input.checked = !input.checked;
+          flashError(t("settings-page.server.save-failed-network"));
+        }
       });
     },
   );

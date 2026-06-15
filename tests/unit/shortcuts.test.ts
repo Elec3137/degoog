@@ -4,6 +4,7 @@ import {
   parseShortcutsMap,
 } from "../../src/shared/shortcuts";
 import { formatBinding } from "../../src/client/shortcuts/binding";
+import { parseShortcutMetaFromSource } from "../../src/server/extensions/store/item-ops";
 
 describe("shortcuts shared model", () => {
   test("action ids are unique and every action has a default binding", () => {
@@ -28,9 +29,35 @@ describe("shortcuts shared model", () => {
   test("formatBinding renders single and numeric bindings", () => {
     expect(formatBinding({ key: "k", ctrl: true })).toBe("Ctrl + K");
     expect(formatBinding({ key: "ArrowLeft", alt: true })).toBe("Alt + Left");
-    expect(formatBinding({ meta: true, alt: true }, "numeric")).toBe(
-      "Alt + Meta + 1-9",
-    );
+  });
+
+  test("formatBinding labels the meta key per platform", () => {
+    const original = globalThis.navigator;
+    const stub = (platform: string): void => {
+      Object.defineProperty(globalThis, "navigator", {
+        value: { platform, userAgent: platform },
+        configurable: true,
+      });
+    };
+    try {
+      stub("MacIntel");
+      expect(formatBinding({ meta: true, alt: true }, "numeric")).toBe(
+        "⌥ + ⌘ + 1-9",
+      );
+      stub("Win32");
+      expect(formatBinding({ meta: true, alt: true }, "numeric")).toBe(
+        "Alt + Win + 1-9",
+      );
+      stub("Linux x86_64");
+      expect(formatBinding({ meta: true, alt: true }, "numeric")).toBe(
+        "Alt + Super + 1-9",
+      );
+    } finally {
+      Object.defineProperty(globalThis, "navigator", {
+        value: original,
+        configurable: true,
+      });
+    }
   });
 
   test("parseShortcutsMap validates and normalizes shortcut overrides", () => {
@@ -56,5 +83,30 @@ describe("shortcuts shared model", () => {
     expect(parseShortcutsMap({ "focus-search": { ctrl: true } })).toBeNull();
     expect(parseShortcutsMap({ "focus-search": { key: "x", extra: true } })).toBeNull();
     expect(parseShortcutsMap({ "tab-by-number": { key: "1" } }, actions)).toBeNull();
+  });
+
+  test("parseShortcutMetaFromSource extracts the default binding for keycaps", () => {
+    const single = `export default {
+      name: "Next tab",
+      defaultBinding: { key: "ArrowRight", alt: true },
+      run({ document }) { document.querySelector("a")?.click(); },
+    };`;
+    expect(parseShortcutMetaFromSource(single)).toEqual({
+      binding: { key: "ArrowRight", alt: true },
+      kind: "single",
+    });
+
+    const numeric = `export default {
+      name: "Switch tab by number",
+      kind: "numeric",
+      defaultBinding: { alt: true },
+      run({ event }) { const n = Number(event?.key); },
+    };`;
+    expect(parseShortcutMetaFromSource(numeric)).toEqual({
+      binding: { alt: true },
+      kind: "numeric",
+    });
+
+    expect(parseShortcutMetaFromSource("export default { name: 'x' };")).toBeNull();
   });
 });

@@ -395,6 +395,8 @@
       "file-name": "Nome del file",
       "source": "Codice JavaScript",
       "recording": "Premi i tasti...",
+      "recording-numeric": "Premi un modificatore + un tasto qualsiasi...",
+      "enable-aria": "Abilita o disabilita questa scorciatoia",
       "actions": {
         "focus-search": {
           "label": "Metti a fuoco la ricerca",

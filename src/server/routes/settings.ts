@@ -14,6 +14,7 @@ import { SHORTCUT_ACTIONS } from "../../shared/shortcuts";
 import {
   getEditableShortcutFile,
   getShortcutActions,
+  getShortcutDisabledStates,
   reloadShortcutsRegistry,
 } from "../extensions/shortcuts/registry";
 import { makeExtID, slugifyIdPart } from "../utils/extension-id";
@@ -371,7 +372,11 @@ router.get("/api/settings/shortcuts", async (c) => {
   const denied = await guardSettingsRoute(c, "GET /api/settings/shortcuts");
   if (denied) return denied;
   const settings = await readShortcutsSettings();
-  const custom = getShortcutActions();
+  const states = await getShortcutDisabledStates();
+  const custom = getShortcutActions().map((action) => ({
+    ...action,
+    disabled: states[action.id] ?? false,
+  }));
   return c.json({ shortcuts: settings.bindings, custom });
 });
 

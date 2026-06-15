@@ -100,6 +100,18 @@ export const getShortcutActions = (): ShortcutActionMeta[] =>
     editable: shortcut.editable === true,
   }));
 
+export const getShortcutDisabledStates = async (): Promise<
+  Record<string, boolean>
+> => {
+  const states: Record<string, boolean> = {};
+  for (const shortcut of getShortcutExtensions()) {
+    if (!shortcut.id) continue;
+    const settings = await getSettings(shortcut.id);
+    states[shortcut.id] = asBoolean(settings.disabled);
+  }
+  return states;
+};
+
 export const getClientShortcuts = async (): Promise<ClientShortcut[]> => {
   const result: ClientShortcut[] = [];
   for (const shortcut of getShortcutExtensions()) {

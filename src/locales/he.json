@@ -395,6 +395,8 @@
       "file-name": "שם הקובץ",
       "source": "קוד מקור JavaScript",
       "recording": "הקש מקשים...",
+      "recording-numeric": "הקש מקש שינוי + מקש כלשהו...",
+      "enable-aria": "הפעל או השבת קיצור דרך זה",
       "actions": {
         "focus-search": {
           "label": "מיקוד החיפוש",

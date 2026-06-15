@@ -22,6 +22,7 @@ import { bumpPluginRegistryReload } from "../registry-factory";
 import { createMutex } from "../../utils/mutex";
 import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
+import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
 
 const _storeMutex = createMutex();
 
@@ -222,6 +223,51 @@ const parseEngineTypesFromSource = (src: string): string[] | null => {
 const catalogPrimaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
+const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
+const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
+const SHORTCUT_KEY_RE = /\bkey\s*:\s*["']([^"']+)["']/;
+const shortcutMetaCache = new Map<string, ShortcutCatalogMeta | null>();
+
+type ShortcutCatalogMeta = {
+  binding: ShortcutBinding;
+  kind: ShortcutKind;
+};
+
+export const parseShortcutMetaFromSource = (
+  src: string,
+): ShortcutCatalogMeta | null => {
+  const blockMatch = SHORTCUT_BINDING_RE.exec(src);
+  if (!blockMatch) return null;
+  const block = blockMatch[1];
+  const binding: ShortcutBinding = {};
+  const keyMatch = SHORTCUT_KEY_RE.exec(block);
+  if (keyMatch) binding.key = keyMatch[1];
+  for (const mod of ["ctrl", "meta", "alt", "shift"] as const) {
+    if (new RegExp(`\\b${mod}\\s*:\\s*true`).test(block)) binding[mod] = true;
+  }
+  const kind: ShortcutKind =
+    SHORTCUT_KIND_RE.exec(src)?.[1] === "numeric" ? "numeric" : "single";
+  return { binding, kind };
+};
+
+const readShortcutMeta = async (
+  dir: string,
+): Promise<ShortcutCatalogMeta | null> => {
+  if (shortcutMetaCache.has(dir)) return shortcutMetaCache.get(dir) ?? null;
+  let result: ShortcutCatalogMeta | null = null;
+  for (const file of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
+    try {
+      const src = await readFile(join(dir, file), "utf-8");
+      result = parseShortcutMetaFromSource(src);
+      if (result) break;
+    } catch {
+      continue;
+    }
+  }
+  shortcutMetaCache.set(dir, result);
+  return result;
+};
+
 const readEngineTypes = async (dir: string): Promise<string[] | null> => {
   if (engineTypesCache.has(dir)) return engineTypesCache.get(dir) ?? null;
   let result: string[] | null = null;
@@ -334,6 +380,13 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
               }
             : {}),
         };
+        if (type === ExtensionStoreType.Shortcut) {
+          const meta = await readShortcutMeta(fullPath);
+          if (meta) {
+            item.shortcutBinding = meta.binding;
+            item.shortcutKind = meta.kind;
+          }
+        }
         if (type === ExtensionStoreType.Plugin && ent.type)
           item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {

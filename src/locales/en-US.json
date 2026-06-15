@@ -463,6 +463,8 @@
       "file-name": "File name",
       "source": "JavaScript source",
       "recording": "Press keys...",
+      "recording-numeric": "Press a modifier + any key...",
+      "enable-aria": "Enable or disable this shortcut",
       "actions": {
         "focus-search": {
           "label": "Focus search",

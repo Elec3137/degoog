@@ -3,8 +3,9 @@ import { getShortcutModuleSource } from "../extensions/shortcuts/registry";
 
 const router = new Hono();
 
-router.get("/api/shortcuts/modules/:id.js", async (c) => {
-  const id = c.req.param("id");
+router.get("/api/shortcuts/modules/:file", async (c) => {
+  const file = c.req.param("file");
+  const id = file.endsWith(".js") ? file.slice(0, -3) : "";
   if (!id) return c.json({ error: "Not found" }, 404);
   const source = await getShortcutModuleSource(id);
   if (!source) return c.json({ error: "Not found" }, 404);

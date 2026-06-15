@@ -3,6 +3,7 @@ import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";
+import { flashError, flashSuccess } from "../shared/flash-msg";
 
 const t = window.scopedT("core");
 
@@ -133,15 +134,23 @@ const _bindCards = (
         const id = input.dataset.id;
         if (!id) return;
         const disabled = !input.checked;
-        const res = await fetch(
-          `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ disabled: disabled ? "true" : "" }),
-          },
-        );
-        if (res.ok) window.dispatchEvent(new CustomEvent("extensions-saved"));
+        try {
+          const res = await fetch(
+            `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ disabled: disabled ? "true" : "" }),
+            },
+          );
+          if (!res.ok) throw new Error("save failed");
+          window.dispatchEvent(new CustomEvent("extensions-saved"));
+          flashSuccess(t("settings-page.server.saved"));
+        } catch (err) {
+          console.warn("[settings] plugin toggle failed", err);
+          input.checked = !input.checked;
+          flashError(t("settings-page.server.save-failed-network"));
+        }
       });
     });
 
