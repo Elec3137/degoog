@@ -1,7 +1,7 @@
-import { readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import { Hono } from "hono";
 import { outgoingFetch } from "../utils/outgoing";
-import { defaultEnginesFile } from "../utils/paths";
+import { defaultEnginesFile, shortcutsDir } from "../utils/paths";
 import { asBoolean, asString } from "../utils/plugin-settings";
 import { getRandomUserAgent } from "../utils/user-agents";
 import { DEFAULT_LANGUAGES } from "../utils/search";
@@ -10,6 +10,19 @@ import { resolveBanHours, syncBlocklist } from "../utils/bot-trap";
 import { addEntry, listActive, removeEntry } from "../utils/blocklist";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
 import { readObjectBody } from "../utils/hono";
+import { SHORTCUT_ACTIONS } from "../../shared/shortcuts";
+import {
+  getEditableShortcutFile,
+  getShortcutActions,
+  getShortcutDisabledStates,
+  reloadShortcutsRegistry,
+} from "../extensions/shortcuts/registry";
+import { makeExtID, slugifyIdPart } from "../utils/extension-id";
+import {
+  readShortcutsSettings,
+  writeShortcutsSettings,
+  saveShortcutBindings,
+} from "../utils/shortcuts-settings";
 import {
   getInstanceSettings,
   setInstanceSettings,
@@ -419,6 +432,86 @@ router.post("/api/settings/tab-order", async (c) => {
   await updateInstanceSettings({
     engineTabsOrder: body.engineTabsOrder as string[],
   });
+  return c.json({ ok: true });
+});
+
+router.get("/api/settings/shortcuts", async (c) => {
+  const denied = await guardSettingsRoute(c, "GET /api/settings/shortcuts");
+  if (denied) return denied;
+  const settings = await readShortcutsSettings();
+  const states = await getShortcutDisabledStates();
+  const custom = getShortcutActions().map((action) => ({
+    ...action,
+    disabled: states[action.id] ?? false,
+  }));
+  return c.json({ shortcuts: settings.bindings, custom });
+});
+
+router.post("/api/settings/shortcuts", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/shortcuts");
+  if (denied) return denied;
+  const body = await readObjectBody<{ shortcuts?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  const shortcuts = await saveShortcutBindings(body.shortcuts, [
+    ...SHORTCUT_ACTIONS,
+    ...getShortcutActions(),
+  ]);
+  if (!shortcuts) {
+    return c.json({ error: "Invalid shortcuts map" }, 400);
+  }
+  return c.json({ ok: true });
+});
+
+const SHORTCUT_SCAFFOLD = `export default {
+  name: "My shortcut",
+  description: "Describe what this shortcut does.",
+  defaultBinding: { key: "k", alt: true },
+  run(ctx) {
+    const { document } = ctx;
+    document.querySelector("#results-list a.result-title")?.focus();
+  },
+};
+`;
+
+router.get("/api/settings/shortcuts/scaffold", async (c) => {
+  const denied = await guardSettingsRoute(c, "GET /api/settings/shortcuts/scaffold");
+  if (denied) return denied;
+  return c.json({ source: SHORTCUT_SCAFFOLD });
+});
+
+router.post("/api/settings/shortcuts/source", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/shortcuts/source");
+  if (denied) return denied;
+  const body = await readObjectBody<{ name?: unknown; source?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  if (typeof body.name !== "string" || typeof body.source !== "string") {
+    return c.json({ error: "Invalid shortcut source" }, 400);
+  }
+  const base = slugifyIdPart(body.name);
+  const id = makeExtID(base, "shortcut");
+  const target = `${shortcutsDir()}/${id}.js`;
+  await mkdir(shortcutsDir(), { recursive: true });
+  const overwrite = await stat(target).then(() => true).catch(() => false);
+  if (overwrite) {
+    logger.info("settings", `shortcut source overwritten id=${id}`);
+  }
+  await writeFile(target, body.source, "utf-8");
+  await reloadShortcutsRegistry(true);
+  return c.json({ ok: true, id, overwrite });
+});
+
+router.delete("/api/settings/shortcuts/source/:id", async (c) => {
+  const denied = await guardSettingsRoute(c, "DELETE /api/settings/shortcuts/source/:id");
+  if (denied) return denied;
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "Missing id" }, 400);
+  const file = getEditableShortcutFile(id);
+  if (!file) return c.json({ error: "Shortcut is not editable" }, 403);
+  const settings = await readShortcutsSettings();
+  delete settings.bindings[id];
+  await writeShortcutsSettings(settings);
+  await unlink(file);
+  await reloadShortcutsRegistry(true);
   return c.json({ ok: true });
 });
 

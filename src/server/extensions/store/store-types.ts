@@ -5,6 +5,7 @@ import {
   enginesDir,
   transportsDir,
   autocompleteDir,
+  shortcutsDir,
 } from "../../utils/paths";
 import { getPluginSettingsIds } from "../../utils/plugin-assets";
 import { makeExtID } from "../../utils/extension-id";
@@ -22,13 +23,15 @@ import { reloadThemes } from "../themes/registry";
 import { reloadEngines } from "../engines/registry";
 import { reloadTransports } from "../transports/registry";
 import { reloadAutocomplete } from "../autocomplete/registry";
+import { reloadShortcutsRegistry } from "../shortcuts/registry";
 
 type ManifestKey =
   | "plugins"
   | "themes"
   | "engines"
   | "transports"
-  | "autocomplete";
+  | "autocomplete"
+  | "shortcuts";
 
 interface StoreTypeSpec {
   destDir: () => string;
@@ -84,5 +87,11 @@ export const STORE_TYPE_SPECS: Record<ExtensionStoreType, StoreTypeSpec> = {
     manifestKey: "autocomplete",
     reload: reloadAutocomplete,
     settingsIds: (id) => [makeExtID(id, "autocomplete")],
+  },
+  [ExtensionStoreType.Shortcut]: {
+    destDir: shortcutsDir,
+    manifestKey: "shortcuts",
+    reload: reloadShortcutsRegistry,
+    settingsIds: (id) => [makeExtID(id, "shortcut")],
   },
 };

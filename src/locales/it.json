@@ -15,7 +15,8 @@
       "plugins": "Plugin",
       "transports": "Trasporti",
       "themes": "Temi",
-      "store": "Negozio"
+      "store": "Negozio",
+      "shortcuts": "Shortcuts"
     },
     "tab-search": {
       "placeholder": "Cerca nelle impostazioni...",
@@ -155,7 +156,12 @@
       "custom-css-desc": "Inietta CSS personalizzato in ogni pagina. Caricato dopo gli stili del tema e dei plugin, quindi li sovrascrive. Usa !important quando devi superare selettori con specificità più alta.",
       "custom-css-label": "CSS personalizzato",
       "saved": "Salvato",
-      "save-failed-network": "Salvataggio non riuscito. Riprova."
+      "save-failed-network": "Salvataggio non riuscito. Riprova.",
+      "shortcuts-heading": "Scorciatoie",
+      "shortcuts-desc": "Abilita le scorciatoie personalizzabili per questa istanza. Quando è disattivato, la sezione Scorciatoie è nascosta e nessuna scorciatoia è attiva.",
+      "shortcuts-enable": "Abilita scorciatoie",
+      "shortcuts-enable-aria": "Abilita scorciatoie",
+      "shortcuts-enable-desc": "Scorciatoie per utenti esperti per mettere a fuoco la ricerca, cambiare scheda e navigare tra i risultati. Configurale nella sezione Scorciatoie."
     },
     "proxy-test": {
       "not-enabled": "Il proxy non è abilitato. Abilitalo e salva prima di verificare.",
@@ -379,6 +385,57 @@
       "slot-position": {
         "label": "Posizione",
         "description": "Dove appare il contenuto dello slot nella pagina."
+      }
+    },
+    "shortcuts": {
+      "heading": "Scorciatoie",
+      "desc": "Clicca su una scorciatoia per registrare una nuova combinazione di tasti. Premi Esc durante la registrazione per annullare.",
+      "reset": "Ripristina predefinita",
+      "reset-all": "Ripristina tutte alle predefinite",
+      "add": "Aggiungi scorciatoia",
+      "delete": "Elimina scorciatoia",
+      "file-name": "Nome del file",
+      "source": "Codice JavaScript",
+      "recording": "Premi i tasti...",
+      "recording-numeric": "Premi un modificatore + un tasto qualsiasi...",
+      "enable-aria": "Abilita o disabilita questa scorciatoia",
+      "actions": {
+        "focus-search": {
+          "label": "Metti a fuoco la ricerca",
+          "desc": "Sposta il cursore nella casella di ricerca."
+        },
+        "next-tab": {
+          "label": "Scheda successiva",
+          "desc": "Passa alla scheda dei risultati successiva."
+        },
+        "prev-tab": {
+          "label": "Scheda precedente",
+          "desc": "Passa alla scheda dei risultati precedente."
+        },
+        "tab-by-number": {
+          "label": "Cambia scheda per numero",
+          "desc": "Tieni premuto il modificatore registrato e premi 1-9 per saltare a quella scheda."
+        },
+        "go-home": {
+          "label": "Vai alla home",
+          "desc": "Torna alla pagina iniziale di Degoog."
+        },
+        "go-settings": {
+          "label": "Vai alle impostazioni",
+          "desc": "Apri la pagina delle impostazioni."
+        },
+        "result-down": {
+          "label": "Evidenzia il risultato successivo",
+          "desc": "Sposta il focus al link del risultato successivo."
+        },
+        "result-up": {
+          "label": "Evidenzia il risultato precedente",
+          "desc": "Sposta il focus al link del risultato precedente."
+        },
+        "result-open": {
+          "label": "Apri il risultato evidenziato",
+          "desc": "Apri il risultato attualmente a fuoco."
+        }
       }
     }
   }

@@ -3,6 +3,7 @@ import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";
+import { flashError, flashSuccess } from "../shared/flash-msg";
 
 const t = window.scopedT("core");
 
@@ -129,19 +130,34 @@ const _bindCards = (
   container
     .querySelectorAll<HTMLInputElement>(".plugin-toggle-input")
     .forEach((input) => {
+      let reqToken = 0;
+      let confirmed = input.checked;
       input.addEventListener("change", async () => {
         const id = input.dataset.id;
         if (!id) return;
-        const disabled = !input.checked;
-        const res = await fetch(
-          `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ disabled: disabled ? "true" : "" }),
-          },
-        );
-        if (res.ok) window.dispatchEvent(new CustomEvent("extensions-saved"));
+        const intended = input.checked;
+        const disabled = !intended;
+        const token = ++reqToken;
+        try {
+          const res = await fetch(
+            `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ disabled: disabled ? "true" : "" }),
+            },
+          );
+          if (!res.ok) throw new Error("save failed");
+          if (token !== reqToken) return;
+          confirmed = intended;
+          window.dispatchEvent(new CustomEvent("extensions-saved"));
+          flashSuccess(t("settings-page.server.saved"));
+        } catch (err) {
+          console.warn("[settings] plugin toggle failed", err);
+          if (token !== reqToken) return;
+          input.checked = confirmed;
+          flashError(t("settings-page.server.save-failed-network"));
+        }
       });
     });
 

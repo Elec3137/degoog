@@ -42,6 +42,8 @@ function getStoreItemPath(type: ExtensionStoreType, item: string): string {
       return `transports/${item}`;
     case ExtensionStoreType.Autocomplete:
       return `autocomplete/${item}`;
+    case ExtensionStoreType.Shortcut:
+      return `shortcuts/${item}`;
     case ExtensionStoreType.Engine:
       return `engines/${item}`;
   }

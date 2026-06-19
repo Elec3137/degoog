@@ -16,6 +16,7 @@ import { initThemes } from "./extensions/themes/registry";
 import { initTransports } from "./extensions/transports/registry";
 import { initAutocomplete } from "./extensions/autocomplete/registry";
 import { initInterceptors } from "./extensions/interceptors/registry";
+import { initShortcutsRegistry } from "./extensions/shortcuts/registry";
 import globalRouter from "./routes";
 import { markReady } from "./routes/health";
 import { build404 } from "./routes/pages";
@@ -106,6 +107,7 @@ const initExtensionRegistries = async (): Promise<void> => {
     initThemes(),
     initUovadipasquas(),
     initAutocomplete(),
+    initShortcutsRegistry(),
   ]);
 
   /**

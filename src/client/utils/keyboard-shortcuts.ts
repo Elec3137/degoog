@@ -32,18 +32,6 @@ export function registerShortcut(shortcut: Shortcut): void {
   shortcuts.push(shortcut);
 }
 
-export function focusInput(element: HTMLInputElement | null): void {
-  if (!element) return;
-  registerShortcut({
-    key: "/",
-    when: () => document.body.contains(element),
-    handler: () => {
-      element.focus();
-      element.select();
-    },
-  });
-}
-
 export function initKeyboardShortcuts(): void {
   if (initialized) return;
   initialized = true;

@@ -10,6 +10,7 @@ export type ExtensionKind =
   | "engine"
   | "theme"
   | "autocomplete"
+  | "shortcut"
   | "uovadipasqua";
 
 const _shortHash = (input: string): string =>

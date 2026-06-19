@@ -76,10 +76,17 @@
               <option value="server">{{t:settings-page.nav.server}}</option>
               <option value="engines">{{t:settings-page.nav.engines}}</option>
               <option value="plugins">{{t:settings-page.nav.plugins}}</option>
-              <option value="transports">{{t:settings-page.nav.transports}}</option>
-              <option value="autocomplete">{{t:settings-page.nav.autocomplete}}</option>
+              <option value="transports">
+                {{t:settings-page.nav.transports}}
+              </option>
+              <option value="autocomplete">
+                {{t:settings-page.nav.autocomplete}}
+              </option>
               <option value="themes">{{t:settings-page.nav.themes}}</option>
               <option value="store">{{t:settings-page.nav.store}}</option>
+              <option value="shortcuts">
+                {{t:settings-page.nav.shortcuts}}
+              </option>
             </select>
           </div>
 
@@ -88,7 +95,11 @@
             id="settings-tabs-nav"
             aria-label="{{t:settings-page.nav.aria-sections}}"
           >
-            <button class="settings-nav-item active" data-tab="general" type="button">
+            <button
+              class="settings-nav-item active"
+              data-tab="general"
+              type="button"
+            >
               <i class="fa-solid fa-gear fa-lg"></i>
               {{t:settings-page.nav.general}}
             </button>
@@ -114,13 +125,29 @@
               <i class="fa-solid fa-puzzle-piece fa-lg"></i>
               {{t:settings-page.nav.plugins}}
             </button>
-            <button class="settings-nav-item" data-tab="transports" type="button">
+            <button
+              class="settings-nav-item"
+              data-tab="transports"
+              type="button"
+            >
               <i class="fa-solid fa-network-wired fa-lg"></i>
               {{t:settings-page.nav.transports}}
             </button>
-            <button class="settings-nav-item" data-tab="autocomplete" type="button">
+            <button
+              class="settings-nav-item"
+              data-tab="autocomplete"
+              type="button"
+            >
               <i class="fa-solid fa-keyboard fa-lg"></i>
               {{t:settings-page.nav.autocomplete}}
+            </button>
+            <button
+              class="settings-nav-item"
+              data-tab="shortcuts"
+              type="button"
+            >
+              <i class="fa-solid fa-arrow-down-a-z fa-lg"></i>
+              {{t:settings-page.nav.shortcuts}}
             </button>
             <button class="settings-nav-item" data-tab="themes" type="button">
               <i class="fa-solid fa-palette fa-lg"></i>
@@ -160,6 +187,9 @@
           </div>
           <div class="settings-tab-panel" id="tab-indexer">
             <div id="indexer-content"></div>
+          </div>
+          <div class="settings-tab-panel" id="tab-shortcuts">
+            <div id="shortcuts-content"></div>
           </div>
         </main>
       </div>

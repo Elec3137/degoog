@@ -16,7 +16,8 @@
       "transports": "Transports",
       "themes": "Thèmes",
       "store": "Boutique",
-      "indexer": "Indexeur Degoog"
+      "indexer": "Indexeur Degoog",
+      "shortcuts": "Shortcuts"
     },
     "tab-search": {
       "placeholder": "Rechercher dans les paramètres...",
@@ -161,7 +162,12 @@
       "custom-css-desc": "Injectez du CSS personnalisé dans chaque page. Chargé après les styles du thème et des plugins, il les remplace donc. Utilisez !important pour surpasser des sélecteurs à spécificité plus élevée.",
       "custom-css-label": "CSS personnalisé",
       "saved": "Enregistré",
-      "save-failed-network": "Échec de l'enregistrement. Réessayez."
+      "save-failed-network": "Échec de l'enregistrement. Réessayez.",
+      "shortcuts-heading": "Raccourcis clavier",
+      "shortcuts-desc": "Activez les raccourcis clavier personnalisables pour cette instance. Lorsqu'ils sont désactivés, la section Raccourcis est masquée et aucun raccourci n'est actif.",
+      "shortcuts-enable": "Activer les raccourcis clavier",
+      "shortcuts-enable-aria": "Activer les raccourcis clavier",
+      "shortcuts-enable-desc": "Raccourcis pour utilisateurs avancés permettant de cibler la recherche, de changer d'onglet et de naviguer dans les résultats. Configurez-les dans la section Raccourcis."
     },
     "proxy-test": {
       "not-enabled": "Le proxy n'est pas activé. Activez-le et enregistrez avant de tester.",
@@ -385,6 +391,57 @@
       "slot-position": {
         "label": "Position",
         "description": "Où le contenu du slot apparaît sur la page."
+      }
+    },
+    "shortcuts": {
+      "heading": "Raccourcis clavier",
+      "desc": "Cliquez sur un raccourci pour enregistrer une nouvelle combinaison de touches. Appuyez sur Échap pendant l'enregistrement pour annuler.",
+      "reset": "Réinitialiser par défaut",
+      "reset-all": "Tout réinitialiser par défaut",
+      "add": "Ajouter un raccourci",
+      "delete": "Supprimer le raccourci",
+      "file-name": "Nom du fichier",
+      "source": "Code source JavaScript",
+      "recording": "Appuyez sur les touches...",
+      "recording-numeric": "Appuyez sur un modificateur + une touche...",
+      "enable-aria": "Activer ou désactiver ce raccourci",
+      "actions": {
+        "focus-search": {
+          "label": "Cibler la recherche",
+          "desc": "Place le curseur dans le champ de recherche."
+        },
+        "next-tab": {
+          "label": "Onglet suivant",
+          "desc": "Passe à l'onglet de résultats suivant."
+        },
+        "prev-tab": {
+          "label": "Onglet précédent",
+          "desc": "Passe à l'onglet de résultats précédent."
+        },
+        "tab-by-number": {
+          "label": "Changer d'onglet par numéro",
+          "desc": "Maintenez le modificateur enregistré et appuyez sur 1-9 pour accéder à cet onglet."
+        },
+        "go-home": {
+          "label": "Aller à l'accueil",
+          "desc": "Retourne à la page d'accueil de Degoog."
+        },
+        "go-settings": {
+          "label": "Aller aux paramètres",
+          "desc": "Ouvre la page des paramètres."
+        },
+        "result-down": {
+          "label": "Surligner le résultat suivant",
+          "desc": "Déplace le focus vers le lien du résultat suivant."
+        },
+        "result-up": {
+          "label": "Surligner le résultat précédent",
+          "desc": "Déplace le focus vers le lien du résultat précédent."
+        },
+        "result-open": {
+          "label": "Ouvrir le résultat surligné",
+          "desc": "Ouvre le résultat actuellement ciblé."
+        }
       }
     }
   }

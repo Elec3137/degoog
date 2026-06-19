@@ -33,6 +33,15 @@ describe("settingsIdsForInstalled", () => {
     expect(ids).not.toContain("autocomplete-acme-ac");
   });
 
+  test("shortcut uses canonical -shortcut suffix, not shortcut- prefix", () => {
+    const ids = settingsIdsForInstalled(
+      ExtensionStoreType.Shortcut,
+      "acme-do-thing",
+    );
+    expect(ids).toContain("acme-do-thing-shortcut");
+    expect(ids).not.toContain("shortcut-acme-do-thing");
+  });
+
   test("plugin command uses canonical -command suffix, not plugin- prefix", () => {
     const ids = settingsIdsForInstalled(ExtensionStoreType.Plugin, "acme-px");
     expect(ids).toContain("acme-px-command");
