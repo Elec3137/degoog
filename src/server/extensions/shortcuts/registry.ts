@@ -34,13 +34,7 @@ const isBinding = (value: unknown): value is ShortcutBinding => {
   for (const mod of ["ctrl", "meta", "alt", "shift"] as const) {
     if (mod in record && typeof record[mod] !== "boolean") return false;
   }
-  return (
-    "key" in record ||
-    "ctrl" in record ||
-    "meta" in record ||
-    "alt" in record ||
-    "shift" in record
-  );
+  return typeof record.key === "string" && record.key.trim().length > 0;
 };
 
 const isShortcutExtension = (value: unknown): value is ShortcutExtension => {
