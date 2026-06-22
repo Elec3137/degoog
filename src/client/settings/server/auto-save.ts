@@ -1,5 +1,8 @@
 import { saveField, saveBatch } from "../../utils/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
+import { flashError, flashSuccess } from "../shared/flash-msg";
+import { setIndexerNavVisible } from "../indexer/nav";
+import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
 
@@ -42,13 +45,37 @@ const RL_SUGGEST_KEYS = [
 const _toCamel = (s: string): string =>
   s.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
+const _syncVisibilityToggle = (id: string, checked: boolean): void => {
+  if (id === "degoog-indexer-enabled") setIndexerNavVisible(checked);
+};
+
 export const bindToggleAutoSave = (getToken: () => string | null): void => {
   for (const id of TOGGLE_KEYS) {
     const input = document.getElementById(`settings-${id}`) as HTMLInputElement | null;
     if (!input) continue;
     const key = _toCamel(id);
-    input.addEventListener("change", () => {
-      void saveField(key, boolStr(id), getToken);
+    input.addEventListener("change", async () => {
+      const prev = input.checked;
+      try {
+        const ok = await saveField(key, boolStr(id), getToken);
+        if (!ok) {
+          console.error("[auto-save] toggle save failed", { key });
+          input.checked = !prev;
+          _syncVisibilityToggle(id, input.checked);
+          flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+          return;
+        }
+        flashSuccess(window.scopedT("core")("settings-page.server.saved"));
+        _syncVisibilityToggle(id, input.checked);
+        if (id === "degoog-indexer-enabled") {
+          window.dispatchEvent(new Event("extensions-saved"));
+        }
+      } catch (err) {
+        console.error("[auto-save] toggle save error", { key, err });
+        input.checked = !prev;
+        _syncVisibilityToggle(id, input.checked);
+        flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+      }
     });
   }
 };
@@ -70,6 +97,7 @@ export const injectFieldSaveBtns = (getToken: () => string | null): void => {
   for (const field of fields) {
     const key = field.dataset.saveKey;
     if (!key) continue;
+    if (field.classList.contains(OVERSIZED_CLASS)) continue;
     const btn = createFieldSaveBtn();
     field.insertAdjacentElement("afterend", btn);
     field.addEventListener("input", () => { btn.hidden = false; });

@@ -5,6 +5,7 @@
 # Setup:
 #   mkdir -p ./data && sudo chown -R 1000:1000 ./data
 #   Change POSTGRES_PASSWORD below before starting.
+#   Set DEGOOG_SETTINGS_PASSWORDS before exposing this instance to the internet.
 
 services:
   degoog:
@@ -15,6 +16,13 @@ services:
       - "4444:4444"
     restart: unless-stopped
     environment:
+      # Leave both unset only for trusted local/LAN use. If this instance is
+      # reachable from the internet, SET A PASSWORD: an unlocked instance lets
+      # anyone install extensions, which runs code on the server.
+      # DEGOOG_SETTINGS_PASSWORDS: "set-a-strong-password-here"
+      # When "true", every admin and store action stays behind the password
+      # above even on a local network.
+      DEGOOG_PUBLIC_INSTANCE: "false"
       DEGOOG_VALKEY_URL: "redis://degoog-valkey:6379"
       DEGOOG_POSTGRES: "postgresql://degoog:changeme@degoog-postgres:5432/degoog"
     depends_on:

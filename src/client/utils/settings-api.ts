@@ -1,9 +1,10 @@
 import { getBase } from "./base-url";
 import { jsonHeaders } from "./request";
+import type { ShortcutBinding } from "../../shared/shortcuts";
 
 const _post = async (
   path: string,
-  body: Record<string, string>,
+  body: object,
   getToken: () => string | null,
 ): Promise<boolean> => {
   try {
@@ -30,3 +31,9 @@ export const saveBatch = (
   getToken: () => string | null,
 ): Promise<boolean> =>
   _post("/api/settings/general", fields, getToken);
+
+export const saveShortcuts = (
+  shortcuts: Record<string, ShortcutBinding>,
+  getToken: () => string | null,
+): Promise<boolean> =>
+  _post("/api/settings/shortcuts", { shortcuts }, getToken);

@@ -16,7 +16,8 @@
       "transports": "Transports",
       "themes": "Thèmes",
       "store": "Boutique",
-      "indexer": "Indexeur Degoog"
+      "indexer": "Indexeur Degoog",
+      "shortcuts": "Raccourcis"
     },
     "tab-search": {
       "placeholder": "Rechercher dans les paramètres...",
@@ -60,6 +61,84 @@
       "last-checked": "Dernière vérification"
     },
     "server": {
+      "presets": {
+        "heading": "Préréglages serveur",
+        "desc": "Appliquez un modèle ponctuel pour les styles de déploiement courants. Les préréglages remplacent les paramètres listés, mais ne définissent pas les variables d’environnement et ne remplacent pas vos listes personnalisées.",
+        "select-label": "Préréglage",
+        "select-placeholder": "Choisir un préréglage",
+        "warnings-heading": "Avant d’appliquer",
+        "changes-heading": "Paramètres que ce préréglage va modifier",
+        "apply": "Appliquer le préréglage",
+        "applying": "Application...",
+        "applied": "Préréglage appliqué",
+        "apply-failed": "Échec du préréglage",
+        "no-changes": "Ce préréglage correspond déjà aux paramètres gérés.",
+        "value-on": "Activé",
+        "value-off": "Désactivé",
+        "value-empty": "Vide",
+        "change-row": "{field} : {current} -> {next}",
+        "personal-local": {
+          "label": "Personnel / Local uniquement",
+          "desc": "Pour les déploiements LAN ou homelab mono-utilisateur où le confort prime et où le réseau est fiable."
+        },
+        "private-team": {
+          "label": "Équipe privée / Semi-souple",
+          "desc": "Pour une petite équipe de confiance derrière une authentification, un VPN ou un reverse proxy privé."
+        },
+        "public-web": {
+          "label": "Instance web publique",
+          "desc": "Pour une instance publique normale avec streaming, pièges honeypot et limites de débit raisonnables."
+        },
+        "hardened-public": {
+          "label": "Instance publique renforcée",
+          "desc": "Pour les instances exposées qui s’attendent aux abus, avec limites plus strictes et contrôles de clé API activés."
+        },
+        "indexer-discovery": {
+          "label": "Mode indexeur / Découverte",
+          "desc": "Pour les instances privilégiant les fonctions de découverte et l’enregistrement local des résultats tout en gardant des protections publiques de base."
+        },
+        "compat-low-resource": {
+          "label": "Compatibilité / Faibles ressources",
+          "desc": "Pour les anciens navigateurs, les proxies qui mettent les flux en tampon, les petits VPS ou un comportement de requêtes plus simple sans streaming."
+        },
+        "warnings": {
+          "local-only": "À utiliser uniquement sur des réseaux locaux de confiance. Ne l’exposez pas tel quel au web public.",
+          "private-team": "Placez ceci derrière une authentification, un VPN ou un reverse proxy et évitez d’exposer les routes admin/settings.",
+          "public-password": "Définissez DEGOOG_SETTINGS_PASSWORDS dans l’environnement. L’interface ne peut pas le faire pour vous.",
+          "public-https": "Utilisez HTTPS et un reverse proxy correctement configuré pour les déploiements exposés.",
+          "public-monitor": "Surveillez les abus et évitez d’exposer les routes admin/settings.",
+          "api-key": "L’application de la clé API n’aide que si les clients sont configurés pour envoyer des requêtes signées valides et si la clé est protégée.",
+          "hardened": "Envisagez un renforcement du proxy, WAF, conteneur et hôte pour le trafic hostile.",
+          "indexer-storage": "Le mode indexeur nécessite une planification du stockage/backend avant de s’y fier.",
+          "compat": "Le mode sans streaming peut sembler plus lent et moins vivant, mais il est plus facile à déboguer et fonctionne mieux avec certains proxies."
+        },
+        "fields": {
+          "streamingEnabled": "Résultats en streaming",
+          "streamingAutoRetry": "Nouvelle tentative automatique du streaming",
+          "streamingMaxRetries": "Nombre maximal de tentatives streaming",
+          "rateLimitEnabled": "Limitation du débit de recherche",
+          "rateLimitBurstWindow": "Fenêtre de rafale recherche",
+          "rateLimitBurstMax": "Maximum de rafale recherche",
+          "rateLimitLongWindow": "Fenêtre longue recherche",
+          "rateLimitLongMax": "Maximum long recherche",
+          "rateLimitSuggestEnabled": "Limitation du débit autocomplete",
+          "rateLimitSuggestBurstWindow": "Fenêtre de rafale autocomplete",
+          "rateLimitSuggestBurstMax": "Maximum de rafale autocomplete",
+          "rateLimitSuggestLongWindow": "Fenêtre longue autocomplete",
+          "rateLimitSuggestLongMax": "Maximum long autocomplete",
+          "acDebounceMs": "Délai autocomplete",
+          "imageProxyAllowLocal": "Accès local au proxy d’images",
+          "honeypotEnabled": "Pièges honeypot",
+          "honeypotCssCheck": "Vérification navigateur",
+          "honeypotBanDuration": "Durée de bannissement honeypot",
+          "apiKeySearchEnabled": "Application de clé API pour la recherche",
+          "apiKeySuggestEnabled": "Application de clé API pour les suggestions",
+          "degoogIndexerEnabled": "Indexeur Degoog",
+          "domainBlockUiEnabled": "Interface de blocage de domaines",
+          "domainReplaceUiEnabled": "Interface de remplacement de domaines",
+          "domainScoreUiEnabled": "Interface de score de domaines"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Effacer les résultats de recherche stockés.",
       "cache-clear": "Vider le cache de recherche",
@@ -129,6 +208,7 @@
       "domain-score-remove-aria": "Retirer une règle",
       "domain-score-ui-enable": "Autoriser le scoring depuis les résultats de recherche",
       "domain-score-ui-desc": "Lorsque activé, les utilisateurs authentifiés peuvent scorer un domaine directement depuis un menu en forme de hamburger sur chaque ligne de résultat. Masqué sur les instances publiques ou non authentifiées indépendamment de ce paramètre.",
+      "oversized": "<trop volumineux pour l'affichage> {lines} entrées ({size}). Modifiez cette liste directement dans data/search/search-lists.json.",
       "domain-block-regex-help": "Les entrées regex doivent être encadrées par /slashes/ et utiliser la syntaxe RegExp de JavaScript (sans drapeaux). Elles sont comparées uniquement au nom d'hôte de l'URL (pas à l'URL complète). Exemple : /(^|\\\\.)instagram\\\\.com$/ bloque instagram.com et tous ses sous-domaines ; /^www\\\\.instagram\\\\.com$/ ne bloque que www.instagram.com.",
       "domain-replace-heading": "Remplacement de domaines",
       "domain-replace-desc": "Remplacez les domaines dans les URL des résultats de recherche. Utilisez le format : source.com -> cible.com (une règle par ligne). Les sous-domaines sont reconnus automatiquement et le chemin est conservé.",
@@ -160,7 +240,12 @@
       "custom-css-desc": "Injectez du CSS personnalisé dans chaque page. Chargé après les styles du thème et des plugins, il les remplace donc. Utilisez !important pour surpasser des sélecteurs à spécificité plus élevée.",
       "custom-css-label": "CSS personnalisé",
       "saved": "Enregistré",
-      "save-failed-network": "Échec de l'enregistrement. Réessayez."
+      "save-failed-network": "Échec de l'enregistrement. Réessayez.",
+      "shortcuts-heading": "Raccourcis clavier",
+      "shortcuts-desc": "Activez les raccourcis clavier personnalisables pour cette instance. Lorsqu'ils sont désactivés, la section Raccourcis est masquée et aucun raccourci n'est actif.",
+      "shortcuts-enable": "Activer les raccourcis clavier",
+      "shortcuts-enable-aria": "Activer les raccourcis clavier",
+      "shortcuts-enable-desc": "Raccourcis pour utilisateurs avancés permettant de cibler la recherche, de changer d'onglet et de naviguer dans les résultats. Configurez-les dans la section Raccourcis."
     },
     "proxy-test": {
       "not-enabled": "Le proxy n'est pas activé. Activez-le et enregistrez avant de tester.",
@@ -191,6 +276,7 @@
       "test-testing": "Test en cours…",
       "test-request-failed": "Échec de la requête",
       "field-remove-aria": "Retirer",
+      "field-edit-aria": "Modifier",
       "field-add": "Ajouter"
     },
     "confirm": {
@@ -233,7 +319,8 @@
       "password-placeholder": "Mot de passe",
       "unlock": "Déverrouiller",
       "incorrect-password": "Mot de passe incorrect.",
-      "network-error": "Une erreur s'est produite. Réessayez."
+      "network-error": "Une erreur s'est produite. Réessayez.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS n’est pas défini. Degoog a donc généré un mot de passe temporaire pour cette exécution. Consultez les journaux du serveur pour le retrouver. Pour désactiver volontairement cette protection, définissez DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Moteurs"
@@ -252,6 +339,7 @@
       "domain-blocklist-desc": "Un domaine par ligne. Les résultats de ces domaines ne sont jamais indexés.",
       "word-blocklist": "Liste noire de mots",
       "word-blocklist-desc": "Un mot par ligne. Si un mot apparaît dans le titre, l'extrait ou l'URL d'un résultat, ce résultat n'est jamais indexé.",
+      "oversized": "<trop volumineux pour l'affichage> {lines} entrées ({size}). Modifiez cette liste directement dans data/indexer/indexer-config.json.",
       "storage-heading": "Stockage et limites",
       "max-per-search": "Max. résultats indexés par recherche",
       "max-per-search-desc": "Seuls les N premiers résultats agrégés sont indexés. 0 = pas de limite.",
@@ -383,6 +471,57 @@
       "slot-position": {
         "label": "Position",
         "description": "Où le contenu du slot apparaît sur la page."
+      }
+    },
+    "shortcuts": {
+      "heading": "Raccourcis clavier",
+      "desc": "Cliquez sur un raccourci pour enregistrer une nouvelle combinaison de touches. Appuyez sur Échap pendant l'enregistrement pour annuler.",
+      "reset": "Réinitialiser par défaut",
+      "reset-all": "Tout réinitialiser par défaut",
+      "add": "Ajouter un raccourci",
+      "delete": "Supprimer le raccourci",
+      "file-name": "Nom du fichier",
+      "source": "Code source JavaScript",
+      "recording": "Appuyez sur les touches...",
+      "recording-numeric": "Appuyez sur un modificateur + une touche...",
+      "enable-aria": "Activer ou désactiver ce raccourci",
+      "actions": {
+        "focus-search": {
+          "label": "Cibler la recherche",
+          "desc": "Place le curseur dans le champ de recherche."
+        },
+        "next-tab": {
+          "label": "Onglet suivant",
+          "desc": "Passe à l'onglet de résultats suivant."
+        },
+        "prev-tab": {
+          "label": "Onglet précédent",
+          "desc": "Passe à l'onglet de résultats précédent."
+        },
+        "tab-by-number": {
+          "label": "Changer d'onglet par numéro",
+          "desc": "Maintenez le modificateur enregistré et appuyez sur 1-9 pour accéder à cet onglet."
+        },
+        "go-home": {
+          "label": "Aller à l'accueil",
+          "desc": "Retourne à la page d'accueil de Degoog."
+        },
+        "go-settings": {
+          "label": "Aller aux paramètres",
+          "desc": "Ouvre la page des paramètres."
+        },
+        "result-down": {
+          "label": "Surligner le résultat suivant",
+          "desc": "Déplace le focus vers le lien du résultat suivant."
+        },
+        "result-up": {
+          "label": "Surligner le résultat précédent",
+          "desc": "Déplace le focus vers le lien du résultat précédent."
+        },
+        "result-open": {
+          "label": "Ouvrir le résultat surligné",
+          "desc": "Ouvre le résultat actuellement ciblé."
+        }
       }
     }
   }

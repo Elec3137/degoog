@@ -40,17 +40,26 @@ export const settingsTokensFile = (): string =>
 export const autocompleteDir = (): string =>
   process.env.DEGOOG_AUTOCOMPLETE_DIR ?? join(_dataDir(), "autocomplete");
 
+export const shortcutsDir = (): string =>
+  process.env.DEGOOG_SHORTCUTS_DIR ?? join(_dataDir(), "shortcuts");
+
 export const blocklistFile = (): string =>
   process.env.DEGOOG_BLOCKLIST_FILE ?? join(_dataDir(), "blocklist.json");
 
 export const serverSettingsFile = (): string =>
   process.env.DEGOOG_SERVER_SETTINGS_FILE ?? join(_dataDir(), "server-settings.json");
 
+export const searchListsFile = (): string =>
+  process.env.DEGOOG_SEARCH_LISTS_FILE ?? join(_dataDir(), "search", "search-lists.json");
+
 export const indexerDir = (): string =>
   process.env.DEGOOG_INDEXER_DIR ?? join(_dataDir(), "indexer");
 
 export const indexerDbFile = (): string =>
   process.env.DEGOOG_INDEXER_DB ?? join(indexerDir(), "index.db");
+
+export const indexerConfigFile = (): string =>
+  process.env.DEGOOG_INDEXER_CONFIG_FILE ?? join(indexerDir(), "indexer-config.json");
 
 export const indexerDbForType = (type: string): string =>
   join(indexerDir(), `index-${type}.db`);

@@ -41,6 +41,7 @@ export enum ExtensionStoreType {
   Engine = "engine",
   Transport = "transport",
   Autocomplete = "autocomplete",
+  Shortcut = "shortcut",
 }
 
 
@@ -55,6 +56,8 @@ export interface SettingField {
   | "toggle"
   | "textarea"
   | "select"
+  | "urllist"
+  | "list"
   | "info";
   required?: boolean;
   placeholder?: string;
@@ -65,6 +68,8 @@ export interface SettingField {
   default?: string;
   advanced?: boolean;
   visibleWhen?: { key: string; equals: string };
+  itemSchema?: SettingField[];
+  addLabel?: string;
 }
 
 export interface PluginManifest {
@@ -290,6 +295,7 @@ export type ProxyAwareFetch = (
 export interface TransportContext {
   proxyUrl?: string;
   fetch: ProxyAwareFetch;
+  useCache: UseCache;
 }
 
 export interface TransportWsSocket {

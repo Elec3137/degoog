@@ -12,6 +12,7 @@ import { asBoolean } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   canBalrogPass,
+  hasGeneratedDefaultSettingsPassword,
   isPasswordRequired,
   shouldServeSettingsGate,
   gandalf,
@@ -19,6 +20,7 @@ import {
 import { ping, verifyToken } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
+import { escapeHtml } from "../utils/text";
 import { FAKE_RESULTS } from "../../shared/fake-results";
 import { getInstanceSettings } from "../utils/server-settings";
 import {
@@ -112,6 +114,25 @@ const _injectIntoHead = (html: string, fragment: string): string => {
   return `${fragment}\n${html}`;
 };
 
+const _highlightEnvVars = (text: string): string =>
+  text.replace(/DEGOOG_[A-Z_]+(?:=[A-Za-z0-9]+)?/g, "<code>$&</code>");
+
+const _buildGateNote = (text: string): string =>
+  `<div class="settings-auth-note" role="note">
+      <p class="settings-auth-note-text">${_highlightEnvVars(escapeHtml(text))}</p>
+    </div>`;
+
+const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
+  const html = await buildPage("settings-gate.html", locale);
+  const t = await getCoreTranslator();
+  const note = hasGeneratedDefaultSettingsPassword()
+    ? _buildGateNote(
+      t("settings-page.gate.generated-password-note", undefined, locale),
+    )
+    : "";
+  return html.replace("__SETTINGS_AUTH_DEFAULT_PASSWORD_NOTE__", note);
+};
+
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
@@ -140,7 +161,7 @@ router.get("/settings", async (c) => {
   if (ADMIN_PATH !== "settings")
     return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html", locale));
+    return c.html(await _buildSettingsGatePage(locale));
   }
   return c.html(await buildPage("settings.html", locale));
 });
@@ -160,7 +181,7 @@ router.get("/settings/:tab", async (c) => {
   }
   const locale = getLocale(c);
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html", locale));
+    return c.html(await _buildSettingsGatePage(locale));
   }
   return c.html(await buildPage("settings.html", locale));
 });
@@ -177,7 +198,7 @@ for (const ap of _adminPaths) {
       return c.text("Not Found", 404);
     const locale = getLocale(c);
     if (await shouldServeSettingsGate(c)) {
-      return c.html(await buildPage("settings-gate.html", locale));
+      return c.html(await _buildSettingsGatePage(locale));
     }
     return c.html(await buildPage("settings.html", locale));
   });
@@ -191,7 +212,7 @@ for (const ap of _adminPaths) {
     }
     const locale = getLocale(c);
     if (await shouldServeSettingsGate(c)) {
-      return c.html(await buildPage("settings-gate.html", locale));
+      return c.html(await _buildSettingsGatePage(locale));
     }
     return c.html(await buildPage("settings.html", locale));
   });
@@ -214,13 +235,13 @@ router.get("/opensearch.xml", (c) => {
     new URL(c.req.url).host;
   const basePath = BASE_URL
     ? (() => {
-        try {
-          return new URL(BASE_URL).pathname.replace(/\/+$/, "");
-        } catch (err) {
-          logger.debug("pages", `invalid DEGOOG_BASE_URL "${BASE_URL}"`, err);
-          return BASE_URL;
-        }
-      })()
+      try {
+        return new URL(BASE_URL).pathname.replace(/\/+$/, "");
+      } catch (err) {
+        logger.debug("pages", `invalid DEGOOG_BASE_URL "${BASE_URL}"`, err);
+        return BASE_URL;
+      }
+    })()
     : "";
   return c.body(buildOpenSearchXml(`${proto}://${host}${basePath}`), 200, {
     "Content-Type": "application/opensearchdescription+xml; charset=utf-8",

@@ -3,6 +3,7 @@ import { serveStatic, createBunWebSocket } from "hono/bun";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
+import { getLocale } from "./utils/hono";
 import { initPlugins } from "./extensions/commands/registry";
 import { initUovadipasquas } from "./extensions/uovadipasqua/registry";
 import { initEngines } from "./extensions/engines/registry";
@@ -15,12 +16,15 @@ import { initThemes } from "./extensions/themes/registry";
 import { initTransports } from "./extensions/transports/registry";
 import { initAutocomplete } from "./extensions/autocomplete/registry";
 import { initInterceptors } from "./extensions/interceptors/registry";
+import { initShortcutsRegistry } from "./extensions/shortcuts/registry";
 import globalRouter from "./routes";
 import { markReady } from "./routes/health";
 import { build404 } from "./routes/pages";
 import { initServerKey } from "./utils/server-key";
+import { logSettingsPasswordStatus } from "./routes/settings-auth";
 import { initValkey } from "./utils/cache-valkey";
-import { getInstanceId } from "./utils/server-settings";
+import { getInstanceId, getInstanceSettings } from "./utils/server-settings";
+import { asBoolean } from "./utils/plugin-settings";
 import { runMigrations } from "./migrations";
 import { closeAllDbs } from "./indexer/db";
 import { startQueue, stopQueue } from "./indexer/queue";
@@ -55,11 +59,7 @@ app.use(
 app.route(BASE_PATH || "/", globalRouter);
 
 app.notFound(async (c) => {
-  const locale = c.req
-    .header("accept-language")
-    ?.split(",")[0]
-    ?.split("-")[0]
-    ?.trim();
+  const locale = getLocale(c);
   return c.html(await build404(locale), 404);
 });
 
@@ -106,6 +106,7 @@ const initExtensionRegistries = async (): Promise<void> => {
     initThemes(),
     initUovadipasquas(),
     initAutocomplete(),
+    initShortcutsRegistry(),
   ]);
 
   /**
@@ -134,8 +135,9 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 Promise.all([initServerKey(), initExtensionRegistries()])
-  .then(() => {
-    startQueue();
+  .then(async () => {
+    const settings = await getInstanceSettings();
+    if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
 
     const { upgradeWebSocket, websocket } = createBunWebSocket();
 
@@ -147,8 +149,8 @@ Promise.all([initServerKey(), initExtensionRegistries()])
         if (handlers?.onUpgrade?.(passwordPath) === false) {
           return {
             onOpen(_evt, ws) { ws.close(1008, "unauthorized"); },
-            onMessage() {},
-            onClose() {},
+            onMessage() { },
+            onClose() { },
           };
         }
         return {
@@ -168,6 +170,8 @@ Promise.all([initServerKey(), initExtensionRegistries()])
 
     Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
     markReady();
+
+    logSettingsPasswordStatus();
   })
   .catch((err) => {
     console.error("[startup] initialization failed", err);

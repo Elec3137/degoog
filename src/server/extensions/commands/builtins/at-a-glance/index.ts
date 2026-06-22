@@ -13,7 +13,11 @@ import {
   isDisabled,
 } from "../../../../utils/plugin-settings";
 import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
-import { looksLikeProse, stripSnippetPrefix } from "../../../../utils/text";
+import {
+  escapeHtml,
+  looksLikeProse,
+  stripSnippetPrefix,
+} from "../../../../utils/text";
 import { getRandomUserAgent } from "../../../../utils/user-agents";
 import { logger } from "../../../../utils/logger";
 
@@ -28,13 +32,6 @@ let _extractCache: AsyncTtlCache<string> = useCache<string>(
   EXTRACT_TTL_MS,
 );
 
-const _escapeHtml = (s: string): string =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 
 const _isWikipediaUrl = (url: string): boolean => {
   try {
@@ -341,9 +338,9 @@ const atAGlanceSlot: SlotPlugin = {
     return {
       html:
         '<div class="glance-box degoog-panel degoog-panel--slot degoog-panel--slot-body-padded degoog-vstack">' +
-        `<div class="glance-snippet degoog-text degoog-text--md">${_escapeHtml(snippet)}</div>` +
-        `<a class="glance-link degoog-link" href="${_escapeHtml(best.url)}" target="_blank">${_escapeHtml(best.title)}</a>` +
-        `<div class="glance-sources degoog-text degoog-text--sm degoog-text--secondary degoog-text--spaced">${_escapeHtml(foundOn)}</div>` +
+        `<div class="glance-snippet degoog-text degoog-text--md">${escapeHtml(snippet)}</div>` +
+        `<a class="glance-link degoog-link" href="${escapeHtml(best.url)}" target="_blank">${escapeHtml(best.title)}</a>` +
+        `<div class="glance-sources degoog-text degoog-text--sm degoog-text--secondary degoog-text--spaced">${escapeHtml(foundOn)}</div>` +
         "</div>",
     };
   },

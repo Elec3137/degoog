@@ -8,10 +8,11 @@ import {
   onInvalidate,
   publishInvalidate,
 } from "./cache-valkey";
+import type { SettingValue } from "./plugin-settings";
 
 export const WIZARD_ENV_VAR = "DEGOOG_WIZARD";
 
-export type ServerSettingValue = string | string[] | boolean;
+export type ServerSettingValue = SettingValue;
 
 export interface ServerSettings {
   wizard: boolean;
@@ -31,6 +32,10 @@ onInvalidate((payload) => {
   if (payload.scope !== INVALIDATE_SCOPE.SERVER_SETTINGS) return;
   _cache = null;
 });
+
+export const clearServerSettingsCache = (): void => {
+  _cache = null;
+};
 
 const _persist = async (settings: ServerSettings): Promise<void> => {
   await writeJsonAtomic(serverSettingsFile(), settings);
@@ -111,10 +116,10 @@ export const writeServerSettings = async (
 };
 
 export const getInstanceSettings = async (): Promise<
-  Record<string, ServerSettingValue>
+  Record<string, SettingValue>
 > => {
   const s = await readServerSettings();
-  return s.settings ?? {};
+  return (s.settings ?? {}) as Record<string, SettingValue>;
 };
 
 export const setInstanceSettings = async (
@@ -126,7 +131,7 @@ export const setInstanceSettings = async (
 export const updateInstanceSettings = async (
   patch: Record<string, ServerSettingValue>,
 ): Promise<void> => {
-  const current = await getInstanceSettings();
+  const current = (await readServerSettings()).settings ?? {};
   await setInstanceSettings({ ...current, ...patch });
 };
 

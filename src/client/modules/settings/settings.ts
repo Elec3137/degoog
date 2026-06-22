@@ -15,6 +15,7 @@ import { initServerTab } from "../../settings/server/tab";
 import { initStoreTab } from "../../settings/store/tab";
 import { initIndexerTab } from "../../settings/indexer/tab";
 import { initIndexerPublic } from "../../settings/indexer/public";
+import { initShortcutsTab } from "../../settings/shortcuts/tab";
 import { initGlobalSearch } from "../../settings/shared/settings-search";
 import {
   getStoredToken as _getStoredToken,
@@ -87,6 +88,9 @@ function _showAuthMisconfigured(): void {
     </header>
     <div class="settings-auth-gate">
       <div class="settings-auth-gate-inner">
+        <span class="settings-auth-lock settings-auth-lock--warn" aria-hidden="true">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </span>
         <p class="settings-auth-desc">${t("settings-page.gate.misconfigured")}</p>
       </div>
     </div>`;
@@ -107,6 +111,9 @@ function _showAuthGate(): void {
     </header>
     <div class="settings-auth-gate">
       <div class="settings-auth-gate-inner">
+        <span class="settings-auth-lock" aria-hidden="true">
+          <i class="fa-solid fa-lock"></i>
+        </span>
         <p class="settings-auth-desc">${t("settings-page.gate.desc")}</p>
         <form class="settings-auth-form" id="settings-auth-form" autocomplete="off">
           <input class="settings-auth-input" type="password" id="settings-auth-input" placeholder="${t("settings-page.gate.password-placeholder")}" autocomplete="current-password" autofocus>
@@ -192,6 +199,7 @@ async function _initSettings(): Promise<void> {
   _initTabs();
   void initGeneralTab();
   void initServerTab(getStoredToken);
+  void initShortcutsTab(getStoredToken);
 
   try {
     const [extRes, themesRes] = await Promise.all([

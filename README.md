@@ -8,7 +8,7 @@ Search aggregator that queries multiple engines and shows results in one place. 
 
 **Now in stable beta.** You can use it in production but there may be _some_ inconsistent behaviour.
 
-Please check the docs [here](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
+Please check the [documentation](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
 
 ---
 
@@ -47,6 +47,7 @@ Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-e
 | [`valkey.yml`](docker-compose-examples/valkey.yml) | degoog + Valkey | Multi-replica or public instance with shared cache keeps settings and invalidation in sync |
 | [`postgres.yml`](docker-compose-examples/postgres.yml) | degoog + Postgres | Busy public instance with a large indexer - Postgres scales concurrent writes and FTS better than SQLite |
 | [`full.yml`](docker-compose-examples/full.yml) | degoog + Valkey + Postgres | High-traffic public instance - both shared cache and scalable indexer |
+| [`mcp.yml`](docker-compose-examples/mcp.yml) | degoog + [degoog-mcp](mcp/README.md) | Exposing Degoog to LLMs / MCP clients (Claude, Cursor, llama.cpp) next to the web UI |
 
 </details>
 
@@ -54,7 +55,9 @@ Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-e
 <summary>Inline podman</summary>
 
 ```bash
-podman run -d --name degoog -p 4444:4444 -v ./data:/app/data --security-opt label=disable --restart unless-stopped ghcr.io/degoog-org/degoog:latest
+# Set DEGOOG_SETTINGS_PASSWORDS before exposing this instance to the internet -
+# an unlocked instance lets anyone install extensions, which runs code on the server.
+podman run -d --name degoog -p 4444:4444 -v ./data:/app/data -e DEGOOG_SETTINGS_PASSWORDS=changeme --security-opt label=disable --restart unless-stopped ghcr.io/degoog-org/degoog:latest
 ```
 
 </details>
@@ -75,6 +78,9 @@ ContainerName=degoog
 Environment=TZ=<Country/City>
 Environment=PUID=1000
 Environment=PGID=1000
+# Set a password before exposing this instance to the internet - an unlocked
+# instance lets anyone install extensions, which runs code on the server.
+Environment=DEGOOG_SETTINGS_PASSWORDS=changeme
 # Environment=DEGOOG_PUBLIC_INSTANCE=true # Add if public
 UIDMap=+%U:@%U
 Volume=<Path to config>:/app/data:Z
@@ -96,7 +102,9 @@ WantedBy=default.target
 <summary>Inline docker</summary>
 
 ```bash
-docker run -d --name degoog -p 4444:4444 -v ./data:/app/data --restart unless-stopped ghcr.io/degoog-org/degoog:latest
+# Set DEGOOG_SETTINGS_PASSWORDS before exposing this instance to the internet -
+# an unlocked instance lets anyone install extensions, which runs code on the server.
+docker run -d --name degoog -p 4444:4444 -v ./data:/app/data -e DEGOOG_SETTINGS_PASSWORDS=changeme --restart unless-stopped ghcr.io/degoog-org/degoog:latest
 ```
 
 </details>

@@ -15,7 +15,8 @@
       "plugins": "תוספים",
       "transports": "דרכי העברה",
       "themes": "ערכות נושא",
-      "store": "חנות"
+      "store": "חנות",
+      "shortcuts": "קיצורים"
     },
     "tab-search": {
       "placeholder": "חיפוש בהגדרות...",
@@ -59,6 +60,84 @@
       "last-checked": "נבדק לאחרונה"
     },
     "server": {
+      "presets": {
+        "heading": "תבניות שרת",
+        "desc": "החילו תבנית חד-פעמית לסגנונות פריסה נפוצים. התבניות מחליפות את ההגדרות הרשומות, אבל אינן מגדירות משתני סביבה ואינן מחליפות רשימות מותאמות אישית.",
+        "select-label": "תבנית",
+        "select-placeholder": "בחרו תבנית",
+        "warnings-heading": "לפני ההחלה",
+        "changes-heading": "הגדרות שהתבנית תשנה",
+        "apply": "החל תבנית",
+        "applying": "מחיל...",
+        "applied": "התבנית הוחלה",
+        "apply-failed": "החלת התבנית נכשלה",
+        "no-changes": "התבנית כבר תואמת להגדרות המנוהלות.",
+        "value-on": "פעיל",
+        "value-off": "כבוי",
+        "value-empty": "ריק",
+        "change-row": "{field}: {current} -> {next}",
+        "personal-local": {
+          "label": "אישי / מקומי בלבד",
+          "desc": "לפריסות LAN או homelab של משתמש יחיד, כשהנוחות חשובה והרשת מהימנה."
+        },
+        "private-team": {
+          "label": "צוות פרטי / חצי-משוחרר",
+          "desc": "לצוות קטן ומהימן מאחורי אימות, VPN או reverse proxy פרטי."
+        },
+        "public-web": {
+          "label": "מופע אינטרנט ציבורי",
+          "desc": "למופע ציבורי רגיל עם סטרימינג, בדיקות honeypot ומגבלות קצב הגיוניות."
+        },
+        "hardened-public": {
+          "label": "מופע ציבורי מוקשח",
+          "desc": "למופעים חשופים שצפויים לקבל ניצול לרעה, עם מגבלות מחמירות ואכיפת מפתח API."
+        },
+        "indexer-discovery": {
+          "label": "מצב אינדקסר / גילוי",
+          "desc": "למופעים שמעדיפים יכולות גילוי ושמירת תוצאות מקומית, תוך שמירה על הגנות ציבוריות בסיסיות."
+        },
+        "compat-low-resource": {
+          "label": "תאימות / משאבים נמוכים",
+          "desc": "לדפדפנים ישנים, פרוקסים שמבצעים buffering לסטרימים, VPS קטן או התנהגות בקשות פשוטה יותר ללא סטרימינג."
+        },
+        "warnings": {
+          "local-only": "השתמשו בזה רק ברשתות מקומיות מהימנות. אל תחשפו זאת כפי שזה לאינטרנט הציבורי.",
+          "private-team": "שימו זאת מאחורי אימות, VPN או reverse proxy, והימנעו מחשיפה חופשית של נתיבי admin/settings.",
+          "public-password": "הגדירו DEGOOG_SETTINGS_PASSWORDS בסביבה. הממשק לא יכול להגדיר זאת עבורכם.",
+          "public-https": "השתמשו ב-HTTPS וב-reverse proxy שמוגדר נכון עבור פריסות חשופות.",
+          "public-monitor": "עקבו אחרי שימוש לרעה והימנעו מחשיפה חופשית של admin/settings.",
+          "api-key": "אכיפת מפתח API עוזרת רק כאשר הלקוחות מוגדרים לשלוח בקשות חתומות תקפות והמפתח מוגן.",
+          "hardened": "שקלו הקשחה של proxy, WAF, קונטיינר ומארח עבור תעבורה עוינת.",
+          "indexer-storage": "מצב אינדקסר דורש תכנון אחסון/backend לפני שמסתמכים עליו.",
+          "compat": "מצב ללא סטרימינג יכול להרגיש איטי ופחות חי, אבל קל יותר לדבג אותו והוא עובד טוב יותר עם חלק מהפרוקסים."
+        },
+        "fields": {
+          "streamingEnabled": "תוצאות בסטרימינג",
+          "streamingAutoRetry": "ניסיון חוזר אוטומטי לסטרימינג",
+          "streamingMaxRetries": "מספר ניסיונות חוזרים מרבי לסטרימינג",
+          "rateLimitEnabled": "הגבלת קצב חיפוש",
+          "rateLimitBurstWindow": "חלון burst לחיפוש",
+          "rateLimitBurstMax": "מקסימום burst לחיפוש",
+          "rateLimitLongWindow": "חלון ארוך לחיפוש",
+          "rateLimitLongMax": "מקסימום חלון ארוך לחיפוש",
+          "rateLimitSuggestEnabled": "הגבלת קצב השלמה אוטומטית",
+          "rateLimitSuggestBurstWindow": "חלון burst להשלמה אוטומטית",
+          "rateLimitSuggestBurstMax": "מקסימום burst להשלמה אוטומטית",
+          "rateLimitSuggestLongWindow": "חלון ארוך להשלמה אוטומטית",
+          "rateLimitSuggestLongMax": "מקסימום חלון ארוך להשלמה אוטומטית",
+          "acDebounceMs": "השהיית השלמה אוטומטית",
+          "imageProxyAllowLocal": "גישה מקומית לפרוקסי תמונות",
+          "honeypotEnabled": "מלכודות honeypot",
+          "honeypotCssCheck": "אימות דפדפן",
+          "honeypotBanDuration": "משך חסימת honeypot",
+          "apiKeySearchEnabled": "אכיפת מפתח API לחיפוש",
+          "apiKeySuggestEnabled": "אכיפת מפתח API להצעות",
+          "degoogIndexerEnabled": "אינדקסר Degoog",
+          "domainBlockUiEnabled": "ממשק חסימת דומיינים",
+          "domainReplaceUiEnabled": "ממשק החלפת דומיינים",
+          "domainScoreUiEnabled": "ממשק ניקוד דומיינים"
+        }
+      },
       "cache-heading": "מטמון (Cache)",
       "cache-desc": "נקה תוצאות חיפוש מאוחסנות.",
       "cache-clear": "נקה מטמון חיפוש",
@@ -134,6 +213,7 @@
       "domain-score-remove-aria": "הסר כלל",
       "domain-score-ui-enable": "אפשר ניקוד מתוצאות חיפוש",
       "domain-score-ui-desc": "כאשר מופעל, משתמשים מאומתים יכולים לנקוד דומיין ישירות מתוך תפריט מערבב על כל שורת תוצאות. מוסתר במופעים ציבוריים או לא מאומתים ללא קשר לפרמטר זה.",
+      "oversized": "<גדול מדי להצגה> {lines} רשומות ({size}). ערוך רשימה זו ישירות בקובץ data/search/search-lists.json.",
       "honeypot-heading": "בקרת בוטים",
       "honeypot-desc": "הגן על המופע שלך מפני בוטים וסקרייפרים. מלכודות ה-honeypot פותות ובלוקות את הזוחלים; בדיקת הדפדפן מוודאת שהבקשות מגיעות מדפדפן אמיתי באמצעות אסימון CSS חתום המוזרק לכל עמוד.",
       "honeypot-enable": "הפעל מלכודות honeypot",
@@ -154,7 +234,12 @@
       "custom-css-desc": "הזרק CSS מותאם אישית לכל עמוד. נטען אחרי סגנונות הנושא והתוספים, כך שהוא עוקף אותם. השתמש ב-!important כשצריך להכריע סלקטורים עם ספציפיות גבוהה יותר.",
       "custom-css-label": "CSS מותאם אישית",
       "saved": "נשמר",
-      "save-failed-network": "השמירה נכשלה. אנא נסה שוב."
+      "save-failed-network": "השמירה נכשלה. אנא נסה שוב.",
+      "shortcuts-heading": "קיצורי מקלדת",
+      "shortcuts-desc": "הפעל קיצורי מקלדת מותאמים אישית עבור מופע זה. כשהאפשרות כבויה, מקטע הקיצורים מוסתר ואף קיצור אינו פעיל.",
+      "shortcuts-enable": "הפעל קיצורי מקלדת",
+      "shortcuts-enable-aria": "הפעל קיצורי מקלדת",
+      "shortcuts-enable-desc": "קיצורים למשתמשים מתקדמים למיקוד החיפוש, החלפת לשוניות וניווט בתוצאות. הגדר אותם במקטע הקיצורים."
     },
     "proxy-test": {
       "not-enabled": "פרוקסי אינו מופעל. אפשר אותו ושמור לפני הבדיקה.",
@@ -185,6 +270,7 @@
       "test-testing": "בודק...",
       "test-request-failed": "הבקשה נכשלה",
       "field-remove-aria": "הסר",
+      "field-edit-aria": "ערוך",
       "field-add": "הוסף"
     },
     "confirm": {
@@ -227,7 +313,8 @@
       "password-placeholder": "סיסמה",
       "unlock": "שחרר נעילה",
       "incorrect-password": "סיסמה שגויה.",
-      "network-error": "משהו השתבש. אנא נסה שוב."
+      "network-error": "משהו השתבש. אנא נסה שוב.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS לא מוגדר, לכן Degoog יצר סיסמה זמנית להרצה הזו. בדקו את לוגי השרת כדי למצוא אותה. כדי לכבות בכוונה את שער הסיסמה, הגדירו DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "מנועים"
@@ -303,6 +390,7 @@
       "domain-blocklist-desc": "דומיין אחד לשורה. תוצאות מדומיינים אלה לא יאונדקסו לעולם.",
       "word-blocklist": "רשימת מילים חסומות",
       "word-blocklist-desc": "מילה אחת לשורה. אם מילה מופיעה בכותרת, בתקציר או ב-URL של תוצאה, אותה תוצאה לא תאונדקס.",
+      "oversized": "<גדול מדי להצגה> {lines} רשומות ({size}). ערוך רשימה זו ישירות בקובץ data/indexer/indexer-config.json.",
       "storage-heading": "אחסון ומגבלות",
       "max-per-search": "מקסימום תוצאות לשמירה לחיפוש",
       "max-per-search-desc": "רק N התוצאות המצטברות הראשונות לאחר כל חיפוש יאונדקסו. 0 = ללא מגבלה.",
@@ -377,6 +465,57 @@
       "slot-position": {
         "label": "מיקום",
         "description": "איפה תוכן ה-slot מופיע בדף."
+      }
+    },
+    "shortcuts": {
+      "heading": "קיצורי מקלדת",
+      "desc": "לחץ על קיצור כדי להקליט צירוף מקשים חדש. הקש Escape במהלך ההקלטה כדי לבטל.",
+      "reset": "אפס לברירת מחדל",
+      "reset-all": "אפס הכול לברירות המחדל",
+      "add": "הוסף קיצור",
+      "delete": "מחק קיצור",
+      "file-name": "שם הקובץ",
+      "source": "קוד מקור JavaScript",
+      "recording": "הקש מקשים...",
+      "recording-numeric": "הקש מקש שינוי + מקש כלשהו...",
+      "enable-aria": "הפעל או השבת קיצור דרך זה",
+      "actions": {
+        "focus-search": {
+          "label": "מיקוד החיפוש",
+          "desc": "מעביר את הסמן לתיבת החיפוש."
+        },
+        "next-tab": {
+          "label": "הלשונית הבאה",
+          "desc": "עובר ללשונית התוצאות הבאה."
+        },
+        "prev-tab": {
+          "label": "הלשונית הקודמת",
+          "desc": "עובר ללשונית התוצאות הקודמת."
+        },
+        "tab-by-number": {
+          "label": "החלף לשונית לפי מספר",
+          "desc": "החזק את המקש המגדיר שהוקלט והקש 1-9 כדי לקפוץ ללשונית זו."
+        },
+        "go-home": {
+          "label": "מעבר לדף הבית",
+          "desc": "חוזר לדף הבית של Degoog."
+        },
+        "go-settings": {
+          "label": "מעבר להגדרות",
+          "desc": "פותח את דף ההגדרות."
+        },
+        "result-down": {
+          "label": "הדגש את התוצאה הבאה",
+          "desc": "מעביר את המיקוד לקישור התוצאה הבאה."
+        },
+        "result-up": {
+          "label": "הדגש את התוצאה הקודמת",
+          "desc": "מעביר את המיקוד לקישור התוצאה הקודמת."
+        },
+        "result-open": {
+          "label": "פתח את התוצאה המודגשת",
+          "desc": "פותח את התוצאה הממוקדת כעת."
+        }
       }
     }
   }

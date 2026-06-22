@@ -22,6 +22,9 @@ export const escapeHtml = (str: string | null | undefined): string => {
   return div.innerHTML;
 };
 
+export const escapeAttribute = (str: string | null | undefined): string =>
+  escapeHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
 type SchemaField = { key: string; required?: boolean };
 
 const _hasValue = (v: string | string[] | undefined): boolean => {

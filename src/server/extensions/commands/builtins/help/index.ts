@@ -6,16 +6,9 @@ import {
 } from "../../../../types";
 import { getCustomEngineTypes } from "../../../engines/registry";
 import { getFilteredCommandRegistry } from "../../registry";
+import { escapeHtml } from "../../../../utils/text";
 
 let template = "";
-
-function _escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 export const helpCommand: BangCommand = {
   name: "Help",
@@ -54,7 +47,7 @@ export const helpCommand: BangCommand = {
     const tabButtons = sortedCategories
       .map(
         (cat, i) =>
-          `<button class="help-tab${i === 0 ? " active" : ""}" data-help-cat="${_escapeHtml(cat)}">${_escapeHtml(cat)} <span class="help-tab-count">${groups[cat].length}</span></button>`,
+          `<button class="help-tab${i === 0 ? " active" : ""}" data-help-cat="${escapeHtml(cat)}">${escapeHtml(cat)} <span class="help-tab-count">${groups[cat].length}</span></button>`,
       )
       .join("");
 
@@ -65,25 +58,25 @@ export const helpCommand: BangCommand = {
         .map((c) => {
           const aliasStr =
             c.aliases.length > 0
-              ? `<span class="help-aliases">${c.aliases.map((a) => `!${_escapeHtml(a)}`).join(", ")}</span>`
+              ? `<span class="help-aliases">${c.aliases.map((a) => `!${escapeHtml(a)}`).join(", ")}</span>`
               : "";
           const searchData = `${c.trigger} ${c.name} ${c.description} ${c.aliases.join(" ")}`;
-          return `<div class="help-row" data-help-search="${_escapeHtml(searchData)}">
+          return `<div class="help-row" data-help-search="${escapeHtml(searchData)}">
             <div class="help-row-main">
-              <span class="help-trigger">!${_escapeHtml(c.trigger)}</span>
-              <span class="help-name">${_escapeHtml(c.name)}</span>
+              <span class="help-trigger">!${escapeHtml(c.trigger)}</span>
+              <span class="help-name">${escapeHtml(c.name)}</span>
             </div>
-            <div class="help-row-desc">${_escapeHtml(c.description)}</div>
+            <div class="help-row-desc">${escapeHtml(c.description)}</div>
             ${aliasStr ? `<div class="help-row-aliases">${this.t!("help.aliases", { aliases: aliasStr })}</div>` : ""}
           </div>`;
         })
         .join("");
-      panels += `<div class="help-panel${i === 0 ? " active" : ""}" data-help-panel="${_escapeHtml(cat)}"><div class="help-panel-card">${rows}</div></div>`;
+      panels += `<div class="help-panel${i === 0 ? " active" : ""}" data-help-panel="${escapeHtml(cat)}"><div class="help-panel-card">${rows}</div></div>`;
     }
 
     const prefixHint =
       engineTypes.length > 0
-        ? `<div class="help-hint">${this.t!("help.prefix-hint", { types: engineTypes.map((t) => `<code>${_escapeHtml(t)}:query</code>`).join(", ") })}</div>`
+        ? `<div class="help-hint">${this.t!("help.prefix-hint", { types: engineTypes.map((t) => `<code>${escapeHtml(t)}:query</code>`).join(", ") })}</div>`
         : "";
 
     if (template) {
@@ -97,7 +90,7 @@ export const helpCommand: BangCommand = {
     return {
       title: this.t!("help.title"),
       html: `<div class="command-result help-container">
-        <div class="help-search-wrap degoog-search-bar degoog-search-bar--square-advanced"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text" class="search-input" placeholder="${_escapeHtml(this.t!("help.search-placeholder"))}" id="help-search-input"></div>
+        <div class="help-search-wrap degoog-search-bar degoog-search-bar--square-advanced"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text" class="search-input" placeholder="${escapeHtml(this.t!("help.search-placeholder"))}" id="help-search-input"></div>
         ${prefixHint}
         <div class="help-layout"><div class="help-tabs">${tabButtons}</div><div class="help-panels">${panels}</div></div></div>`,
     };

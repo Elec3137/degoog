@@ -16,17 +16,20 @@ let settingsRouter: Router;
 
 let savedPublic: string | undefined;
 let savedPasswords: string | undefined;
+let savedDangerouslyNoPassword: string | undefined;
 let savedDistrust: string | undefined;
 let savedSettingsPath: string | undefined;
 
 beforeAll(async () => {
   savedPublic = process.env.DEGOOG_PUBLIC_INSTANCE;
   savedPasswords = process.env.DEGOOG_SETTINGS_PASSWORDS;
+  savedDangerouslyNoPassword = process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
   savedDistrust = process.env.DEGOOG_DISTRUST_PROXY;
   savedSettingsPath = process.env.DEGOOG_SETTINGS_PATH;
 
   process.env.DEGOOG_PUBLIC_INSTANCE = "true";
   process.env.DEGOOG_SETTINGS_PASSWORDS = CORRECT_PASSWORD;
+  delete process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
   process.env.DEGOOG_DISTRUST_PROXY = "0";
   delete process.env.DEGOOG_SETTINGS_PATH;
 
@@ -50,6 +53,9 @@ afterAll(() => {
   if (savedPasswords !== undefined)
     process.env.DEGOOG_SETTINGS_PASSWORDS = savedPasswords;
   else delete process.env.DEGOOG_SETTINGS_PASSWORDS;
+  if (savedDangerouslyNoPassword !== undefined)
+    process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = savedDangerouslyNoPassword;
+  else delete process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
   if (savedDistrust !== undefined)
     process.env.DEGOOG_DISTRUST_PROXY = savedDistrust;
   else delete process.env.DEGOOG_DISTRUST_PROXY;
@@ -74,9 +80,10 @@ const apiGet = (path: string, token?: string) =>
     }),
   );
 
-describe("public instance - no password", () => {
+describe("public instance - generated password", () => {
   beforeAll(() => {
     delete process.env.DEGOOG_SETTINGS_PASSWORDS;
+    delete process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
   });
 
   afterAll(() => {
@@ -90,14 +97,18 @@ describe("public instance - no password", () => {
     expect(html).toContain("settings-page");
   });
 
-  test("GET /admin returns 404 - does not reveal admin exists", async () => {
+  test("GET /admin returns 200 and shows the generated-password auth gate", async () => {
     const res = await pagesRouter.request("http://localhost/admin");
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("settings-auth");
   });
 
-  test("GET /admin/:tab returns 404", async () => {
+  test("GET /admin/:tab returns 200 and shows the generated-password auth gate", async () => {
     const res = await pagesRouter.request("http://localhost/admin/general");
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("settings-auth");
   });
 
   test("public settings HTML has no reference to the admin path", async () => {
@@ -114,6 +125,28 @@ describe("public instance - no password", () => {
   test("POST /api/settings/auth returns 401 on public instance with no password", async () => {
     const res = await authPost("anything", "10.1.0.1");
     expect(res.status).toBe(401);
+  });
+});
+
+describe("public instance - dangerously no password", () => {
+  beforeAll(() => {
+    delete process.env.DEGOOG_SETTINGS_PASSWORDS;
+    process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = "true";
+  });
+
+  afterAll(() => {
+    process.env.DEGOOG_SETTINGS_PASSWORDS = CORRECT_PASSWORD;
+    delete process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
+  });
+
+  test("GET /admin returns 404 - does not reveal admin exists", async () => {
+    const res = await pagesRouter.request("http://localhost/admin");
+    expect(res.status).toBe(404);
+  });
+
+  test("GET /admin/:tab returns 404", async () => {
+    const res = await pagesRouter.request("http://localhost/admin/general");
+    expect(res.status).toBe(404);
   });
 });
 

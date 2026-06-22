@@ -1,4 +1,5 @@
 import { renderField, initUrlList, syncConditionalFields } from "./modal-fields";
+import { initListFields } from "./list-field";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
@@ -56,7 +57,11 @@ const _initTestButton = (container: HTMLElement): void => {
     try {
       const res = await fetch(
         `${getBase()}/api/extensions/transports/${encodeURIComponent(transport)}/test`,
-        { method: "POST", headers: jsonHeaders(getStoredToken) },
+        {
+          method: "POST",
+          headers: jsonHeaders(getStoredToken),
+          body: JSON.stringify(_collectValues()),
+        },
       );
       const data = (await res.json()) as { ok: boolean; message: string };
       if (resultEl) {
@@ -110,6 +115,13 @@ const _collectValues = (): Record<string, string | string[]> => {
       }
       return;
     }
+    if (type === "list") {
+      const hidden = fieldEl.querySelector<HTMLInputElement>(
+        ".ext-field-list-value",
+      );
+      values[key] = hidden?.value?.trim() || "[]";
+      return;
+    }
 
     const input =
       fieldEl.querySelector<HTMLTextAreaElement>("textarea") ||
@@ -138,6 +150,13 @@ const _advancedFieldDiffersFromDefault = (
 
   if (field.type === "urllist") {
     return Array.isArray(raw) && raw.length > 0;
+  }
+
+  if (field.type === "list") {
+    const val = typeof raw === "string" ? raw.trim() : "";
+    const normalized = val === "[]" ? "" : val;
+    const def = defaultStr === "[]" ? "" : defaultStr;
+    return normalized !== def;
   }
 
   if (raw === undefined) {
@@ -227,6 +246,7 @@ export function openModal(ext: ExtensionMeta): void {
       });
     _initTestButton(bodyEl);
     initUrlList(bodyEl);
+    initListFields(bodyEl);
     syncConditionalFields(bodyEl);
     bodyEl
       .querySelectorAll<HTMLElement>(".ext-field-input--configured")

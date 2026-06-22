@@ -14,6 +14,14 @@ export type Shortcut = {
 const shortcuts: Shortcut[] = [];
 let initialized = false;
 
+const PHYSICAL_KEY = /^(?:Key([A-Z])|Digit([0-9]))$/;
+
+export const eventKey = (e: KeyboardEvent): string => {
+  if (!e.altKey) return e.key;
+  const match = PHYSICAL_KEY.exec(e.code);
+  return match ? (match[1] ?? match[2]).toLowerCase() : e.key;
+};
+
 const _isEditableTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
@@ -32,26 +40,15 @@ export function registerShortcut(shortcut: Shortcut): void {
   shortcuts.push(shortcut);
 }
 
-export function focusInput(element: HTMLInputElement | null): void {
-  if (!element) return;
-  registerShortcut({
-    key: "/",
-    when: () => document.body.contains(element),
-    handler: () => {
-      element.focus();
-      element.select();
-    },
-  });
-}
-
 export function initKeyboardShortcuts(): void {
   if (initialized) return;
   initialized = true;
 
   document.addEventListener("keydown", (e) => {
+    const key = eventKey(e);
     const editable = _isEditableTarget(e.target);
     for (const s of shortcuts) {
-      if (s.key !== e.key) continue;
+      if (s.key !== key && s.key !== e.key) continue;
       if (!_modifiersMatch(e, s)) continue;
       if (editable && !s.allowInEditable) continue;
       if (s.when && !s.when()) continue;

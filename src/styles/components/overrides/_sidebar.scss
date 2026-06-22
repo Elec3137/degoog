@@ -88,6 +88,26 @@
   color: var(--text-secondary);
 }
 
+.degoog-panel:has(.engine-stat-row) {
+  overflow: visible;
+}
+
+.engine-stat-reason {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+
+  &[data-tooltip]::after {
+    left: 0;
+    right: auto;
+    transform: none;
+    white-space: normal;
+    width: max-content;
+    max-width: 220px;
+    text-align: left;
+  }
+}
+
 .related-search-link {
   display: block;
   padding: $space-2 0;

@@ -21,7 +21,8 @@ import { initTabs } from "./tabs/tabs";
 
 import { copyTextToClipboard } from "../utils/clipboard";
 import { initInstallPrompt } from "../utils/install-prompt";
-import { focusInput, initKeyboardShortcuts } from "../utils/keyboard-shortcuts";
+import { initKeyboardShortcuts } from "../utils/keyboard-shortcuts";
+import { initShortcuts } from "../shortcuts/init";
 import { initSearchBarActions } from "../utils/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
@@ -145,7 +146,7 @@ export function init(): void {
   );
   initSearchBarActions();
   initKeyboardShortcuts();
-  focusInput(resultsInput);
+  initShortcuts();
   initLuckyAnimation();
   initTabs();
   initMediaPreview();

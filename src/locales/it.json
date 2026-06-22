@@ -15,7 +15,8 @@
       "plugins": "Plugin",
       "transports": "Trasporti",
       "themes": "Temi",
-      "store": "Negozio"
+      "store": "Negozio",
+      "shortcuts": "Scorciatoie"
     },
     "tab-search": {
       "placeholder": "Cerca nelle impostazioni...",
@@ -59,6 +60,84 @@
       "last-checked": "Ultimo controllo"
     },
     "server": {
+      "presets": {
+        "heading": "Preset server",
+        "desc": "Applica un modello una tantum per gli stili di distribuzione più comuni. I preset sovrascrivono le impostazioni elencate, ma non impostano variabili d’ambiente e non sostituiscono le tue liste personalizzate.",
+        "select-label": "Preset",
+        "select-placeholder": "Scegli un preset",
+        "warnings-heading": "Prima di applicare",
+        "changes-heading": "Impostazioni che questo preset modificherà",
+        "apply": "Applica preset",
+        "applying": "Applicazione...",
+        "applied": "Preset applicato",
+        "apply-failed": "Preset non riuscito",
+        "no-changes": "Questo preset corrisponde già alle impostazioni gestite.",
+        "value-on": "Attivo",
+        "value-off": "Disattivo",
+        "value-empty": "Vuoto",
+        "change-row": "{field}: {current} -> {next}",
+        "personal-local": {
+          "label": "Personale / Solo locale",
+          "desc": "Per distribuzioni LAN o homelab con un solo utente, dove conta la comodità e la rete è fidata."
+        },
+        "private-team": {
+          "label": "Team privato / Semi-permissivo",
+          "desc": "Per un piccolo team fidato dietro autenticazione, VPN o reverse proxy privato."
+        },
+        "public-web": {
+          "label": "Istanza web pubblica",
+          "desc": "Per una normale istanza pubblica con streaming, controlli honeypot e limiti ragionevoli."
+        },
+        "hardened-public": {
+          "label": "Istanza pubblica rinforzata",
+          "desc": "Per istanze esposte che si aspettano abusi, con limiti più severi e controlli chiave API abilitati."
+        },
+        "indexer-discovery": {
+          "label": "Modalità indicizzatore / Scoperta",
+          "desc": "Per istanze che privilegiano funzioni di scoperta e registrazione locale dei risultati mantenendo protezioni pubbliche di base."
+        },
+        "compat-low-resource": {
+          "label": "Compatibilità / Poche risorse",
+          "desc": "Per browser vecchi, proxy che bufferizzano gli stream, piccoli VPS o comportamento delle richieste più semplice con streaming disattivato."
+        },
+        "warnings": {
+          "local-only": "Usalo solo su reti locali fidate. Non esporlo al web pubblico così com’è.",
+          "private-team": "Mettilo dietro autenticazione, VPN o reverse proxy ed evita di esporre liberamente le route admin/settings.",
+          "public-password": "Imposta DEGOOG_SETTINGS_PASSWORDS nell’ambiente. L’interfaccia non può farlo per te.",
+          "public-https": "Usa HTTPS e un reverse proxy configurato correttamente per le distribuzioni esposte.",
+          "public-monitor": "Monitora gli abusi ed evita di esporre liberamente admin/settings.",
+          "api-key": "L’obbligo di chiave API aiuta solo quando i client sono configurati per inviare richieste firmate valide e la chiave è protetta.",
+          "hardened": "Considera hardening di proxy, WAF, container e host per traffico ostile.",
+          "indexer-storage": "La modalità indicizzatore richiede pianificazione di storage/backend prima di farci affidamento.",
+          "compat": "La modalità non-streaming può sembrare più lenta e meno viva, ma è più facile da debuggare e funziona meglio con alcuni proxy."
+        },
+        "fields": {
+          "streamingEnabled": "Risultati in streaming",
+          "streamingAutoRetry": "Riprova automatica streaming",
+          "streamingMaxRetries": "Numero massimo di tentativi streaming",
+          "rateLimitEnabled": "Limitazione richieste di ricerca",
+          "rateLimitBurstWindow": "Finestra burst ricerca",
+          "rateLimitBurstMax": "Massimo burst ricerca",
+          "rateLimitLongWindow": "Finestra lunga ricerca",
+          "rateLimitLongMax": "Massimo lungo ricerca",
+          "rateLimitSuggestEnabled": "Limitazione autocomplete",
+          "rateLimitSuggestBurstWindow": "Finestra burst autocomplete",
+          "rateLimitSuggestBurstMax": "Massimo burst autocomplete",
+          "rateLimitSuggestLongWindow": "Finestra lunga autocomplete",
+          "rateLimitSuggestLongMax": "Massimo lungo autocomplete",
+          "acDebounceMs": "Ritardo autocomplete",
+          "imageProxyAllowLocal": "Accesso locale proxy immagini",
+          "honeypotEnabled": "Trappole honeypot",
+          "honeypotCssCheck": "Verifica browser",
+          "honeypotBanDuration": "Durata ban honeypot",
+          "apiKeySearchEnabled": "Obbligo chiave API per ricerca",
+          "apiKeySuggestEnabled": "Obbligo chiave API per suggerimenti",
+          "degoogIndexerEnabled": "Indicizzatore Degoog",
+          "domainBlockUiEnabled": "UI blocco domini",
+          "domainReplaceUiEnabled": "UI sostituzione domini",
+          "domainScoreUiEnabled": "UI punteggio domini"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Cancella i risultati di ricerca memorizzati.",
       "cache-clear": "Svuota cache di ricerca",
@@ -134,6 +213,7 @@
       "domain-score-remove-aria": "Rimuovi regola",
       "domain-score-ui-enable": "Abilita punteggio dai risultati di ricerca",
       "domain-score-ui-desc": "Quando abilitato, gli utenti autenticati possono punteggiare un dominio direttamente dal menu a tendina su ogni riga di risultati. Nascondi su istanze pubbliche o non autenticate indipendentemente da questa impostazione.",
+      "oversized": "<troppo grande da mostrare> {lines} voci ({size}). Modifica questa lista direttamente in data/search/search-lists.json.",
       "honeypot-heading": "Controllo bot",
       "honeypot-desc": "Proteggi la tua istanza da bot e scraper. Le trappole honeypot attirano e bloccano i crawler; la verifica del browser controlla che le richieste provengano da un browser reale tramite un token CSS firmato iniettato in ogni pagina.",
       "honeypot-enable": "Attiva le trappole honeypot",
@@ -154,7 +234,12 @@
       "custom-css-desc": "Inietta CSS personalizzato in ogni pagina. Caricato dopo gli stili del tema e dei plugin, quindi li sovrascrive. Usa !important quando devi superare selettori con specificità più alta.",
       "custom-css-label": "CSS personalizzato",
       "saved": "Salvato",
-      "save-failed-network": "Salvataggio non riuscito. Riprova."
+      "save-failed-network": "Salvataggio non riuscito. Riprova.",
+      "shortcuts-heading": "Scorciatoie",
+      "shortcuts-desc": "Abilita le scorciatoie personalizzabili per questa istanza. Quando è disattivato, la sezione Scorciatoie è nascosta e nessuna scorciatoia è attiva.",
+      "shortcuts-enable": "Abilita scorciatoie",
+      "shortcuts-enable-aria": "Abilita scorciatoie",
+      "shortcuts-enable-desc": "Scorciatoie per utenti esperti per mettere a fuoco la ricerca, cambiare scheda e navigare tra i risultati. Configurale nella sezione Scorciatoie."
     },
     "proxy-test": {
       "not-enabled": "Il proxy non è abilitato. Abilitalo e salva prima di verificare.",
@@ -185,6 +270,7 @@
       "test-testing": "Verifica in corso…",
       "test-request-failed": "Richiesta non riuscita",
       "field-remove-aria": "Rimuovi",
+      "field-edit-aria": "Modifica",
       "field-add": "Aggiungi"
     },
     "confirm": {
@@ -227,7 +313,8 @@
       "password-placeholder": "Password",
       "unlock": "Sblocca",
       "incorrect-password": "Password errata.",
-      "network-error": "Si è verificato un errore. Riprova."
+      "network-error": "Si è verificato un errore. Riprova.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS non è impostato, quindi Degoog ha generato una password temporanea per questa esecuzione. Cercala nei log del server. Per disattivare intenzionalmente questo blocco, imposta DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Motori"
@@ -303,6 +390,7 @@
       "domain-blocklist-desc": "Un dominio per riga. I risultati di questi domini non vengono mai indicizzati.",
       "word-blocklist": "Lista di parole bloccate",
       "word-blocklist-desc": "Una parola per riga. Se una parola appare nel titolo, nell'estratto o nell'URL di un risultato, quel risultato non viene mai indicizzato.",
+      "oversized": "<troppo grande da mostrare> {lines} voci ({size}). Modifica questa lista direttamente in data/indexer/indexer-config.json.",
       "storage-heading": "Archiviazione e limiti",
       "max-per-search": "Max risultati salvati per ricerca",
       "max-per-search-desc": "Solo i primi N risultati aggregati per ogni ricerca vengono indicizzati. 0 = nessun limite.",
@@ -377,6 +465,57 @@
       "slot-position": {
         "label": "Posizione",
         "description": "Dove appare il contenuto dello slot nella pagina."
+      }
+    },
+    "shortcuts": {
+      "heading": "Scorciatoie",
+      "desc": "Clicca su una scorciatoia per registrare una nuova combinazione di tasti. Premi Esc durante la registrazione per annullare.",
+      "reset": "Ripristina predefinita",
+      "reset-all": "Ripristina tutte alle predefinite",
+      "add": "Aggiungi scorciatoia",
+      "delete": "Elimina scorciatoia",
+      "file-name": "Nome del file",
+      "source": "Codice JavaScript",
+      "recording": "Premi i tasti...",
+      "recording-numeric": "Premi un modificatore + un tasto qualsiasi...",
+      "enable-aria": "Abilita o disabilita questa scorciatoia",
+      "actions": {
+        "focus-search": {
+          "label": "Metti a fuoco la ricerca",
+          "desc": "Sposta il cursore nella casella di ricerca."
+        },
+        "next-tab": {
+          "label": "Scheda successiva",
+          "desc": "Passa alla scheda dei risultati successiva."
+        },
+        "prev-tab": {
+          "label": "Scheda precedente",
+          "desc": "Passa alla scheda dei risultati precedente."
+        },
+        "tab-by-number": {
+          "label": "Cambia scheda per numero",
+          "desc": "Tieni premuto il modificatore registrato e premi 1-9 per saltare a quella scheda."
+        },
+        "go-home": {
+          "label": "Vai alla home",
+          "desc": "Torna alla pagina iniziale di Degoog."
+        },
+        "go-settings": {
+          "label": "Vai alle impostazioni",
+          "desc": "Apri la pagina delle impostazioni."
+        },
+        "result-down": {
+          "label": "Evidenzia il risultato successivo",
+          "desc": "Sposta il focus al link del risultato successivo."
+        },
+        "result-up": {
+          "label": "Evidenzia il risultato precedente",
+          "desc": "Sposta il focus al link del risultato precedente."
+        },
+        "result-open": {
+          "label": "Apri il risultato evidenziato",
+          "desc": "Apri il risultato attualmente a fuoco."
+        }
       }
     }
   }

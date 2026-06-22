@@ -1,5 +1,6 @@
 import { escapeHtml } from "../../../utils/dom";
 import { renderMdInline } from "../../../utils/md";
+import { renderListField } from "./list-field";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
@@ -62,6 +63,12 @@ export function readLiveSettingFieldValue(
   if (type === "urllist") {
     const hidden = fieldEl.querySelector<HTMLInputElement>(
       ".ext-field-urllist-value",
+    );
+    return hidden?.value?.trim() ?? "";
+  }
+  if (type === "list") {
+    const hidden = fieldEl.querySelector<HTMLInputElement>(
+      ".ext-field-list-value",
     );
     return hidden?.value?.trim() ?? "";
   }
@@ -249,15 +256,23 @@ export const renderField = (
     const descriptionHtml = field.description
       ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
       : "";
+    const hasValue = field.default != null && field.default !== "";
+    const valueHtml = hasValue
+      ? `<input class="ext-field-input degoog-input" type="text" value="${escapeHtml(field.default ?? "")}" disabled>`
+      : "";
     return `<div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="info">
       <label class="ext-field-label">${escapeHtml(field.label)}</label>
-      <input class="ext-field-input degoog-input" type="text" value="${escapeHtml(field.default ?? "")}" disabled>
+      ${valueHtml}
       ${descriptionHtml}
     </div>`;
   }
 
   if (field.type === "urllist") {
     return _wrapVisibleWhen(field, _renderUrlListField(field, ext), ext);
+  }
+
+  if (field.type === "list") {
+    return _wrapVisibleWhen(field, renderListField(field, ext), ext);
   }
 
   if (field.type === "toggle") {

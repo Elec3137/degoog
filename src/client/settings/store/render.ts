@@ -3,6 +3,7 @@ import { screenshotUrl } from "./lightbox";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
 import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";
+import { bindingParts } from "../../shortcuts/binding";
 
 const t = window.scopedT("core");
 
@@ -102,7 +103,7 @@ export function renderRepoList(
   selectedUrl: string | null,
 ): string {
   if (!repos.length) {
-    return '<p class="store-empty">No repositories added. Add a git repository URL to browse its plugins, themes, engines, and transports.</p>';
+    return '<p class="store-empty">No repositories added. Add a git repository URL to browse its plugins, themes, engines, transports and shortcuts.</p>';
   }
   const selected = selectedUrl
     ? repos.find((r) => r.url === selectedUrl)
@@ -130,6 +131,19 @@ export function renderRepoList(
   return html;
 }
 
+export function renderShortcutKeycaps(item: StoreItem): string {
+  if (!item.shortcutBinding) return "";
+  const caps = bindingParts(
+    item.shortcutBinding,
+    item.shortcutKind ?? "single",
+  );
+  if (!caps.length) return "";
+  const keys = caps
+    .map((cap) => `<kbd class="store-keycap">${escapeHtml(cap)}</kbd>`)
+    .join('<span class="store-keycap-plus">+</span>');
+  return `<div class="store-card-thumb store-card-keycaps">${keys}</div>`;
+}
+
 export function renderItemCard(
   item: StoreItem,
   getToken: () => string | null,
@@ -138,16 +152,18 @@ export function renderItemCard(
   const token = getToken();
   const firstUrl = item.screenshots.length
     ? screenshotUrl(
-      item.repoSlug,
-      item.type,
-      itemSlug,
-      item.screenshots[0],
-      token,
-    )
+        item.repoSlug,
+        item.type,
+        itemSlug,
+        item.screenshots[0],
+        token,
+      )
     : "";
+  const keycaps = item.type === "shortcut" ? renderShortcutKeycaps(item) : "";
   const thumb = item.screenshots.length
     ? `<img src="${firstUrl}" alt="" class="store-card-thumb" loading="lazy">`
-    : `<div class="store-card-thumb store-card-thumb-placeholder"></div>`;
+    : keycaps ||
+      `<div class="store-card-thumb store-card-thumb-placeholder"></div>`;
   const hasScreenshots = item.screenshots.length > 0;
   const clickableClass = hasScreenshots
     ? " store-card-thumb-wrap--clickable"
@@ -176,6 +192,8 @@ export function renderItemCard(
     typeLabel = "Transport";
   } else if (item.type === "autocomplete") {
     typeLabel = "Autocomplete";
+  } else if (item.type === "shortcut") {
+    typeLabel = "Shortcut";
   } else {
     typeLabel = "Theme";
   }
@@ -276,7 +294,8 @@ export function collectSubtypes(
     const set = new Set<string>();
     items.forEach((i) => {
       if (i.type !== "engine") return;
-      for (const engineType of i.engineTypes ?? (i.engineType ? [i.engineType] : [])) {
+      for (const engineType of i.engineTypes ??
+        (i.engineType ? [i.engineType] : [])) {
         set.add(engineType);
       }
     });

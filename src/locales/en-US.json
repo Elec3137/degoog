@@ -17,7 +17,8 @@
       "autocomplete": "Autocomplete",
       "themes": "Themes",
       "store": "Store",
-      "indexer": "Indexer"
+      "indexer": "Indexer",
+      "shortcuts": "Shortcuts"
     },
     "tab-search": {
       "placeholder": "Search settings...",
@@ -61,6 +62,84 @@
       "last-checked": "Last checked"
     },
     "server": {
+      "presets": {
+        "heading": "Server presets",
+        "desc": "Apply a one-shot template for common deployment styles. Presets override the listed settings, but they do not set environment variables or replace your custom lists.",
+        "select-label": "Preset",
+        "select-placeholder": "Choose a preset",
+        "warnings-heading": "Before applying",
+        "changes-heading": "Settings this preset will change",
+        "apply": "Apply preset",
+        "applying": "Applying...",
+        "applied": "Preset applied",
+        "apply-failed": "Preset failed",
+        "no-changes": "This preset already matches the managed settings.",
+        "value-on": "On",
+        "value-off": "Off",
+        "value-empty": "Empty",
+        "change-row": "{field}: {current} -> {next}",
+        "personal-local": {
+          "label": "Personal / Local Only",
+          "desc": "For single-user LAN or homelab deployments where convenience matters and the network is trusted."
+        },
+        "private-team": {
+          "label": "Family / Semi-Lax",
+          "desc": "For a small trusted set of people behind auth, VPN, or a private reverse proxy."
+        },
+        "public-web": {
+          "label": "Public Web Instance",
+          "desc": "For a normal public-facing instance with streaming, honeypot checks, and sensible public rate limits."
+        },
+        "hardened-public": {
+          "label": "Hardened Public Instance",
+          "desc": "For exposed instances expecting abuse, with stricter limits and API key enforcement toggles enabled."
+        },
+        "indexer-discovery": {
+          "label": "Indexer / Discovery Mode",
+          "desc": "For instances prioritizing discovery features and local result recording while keeping basic public safeguards."
+        },
+        "compat-low-resource": {
+          "label": "Compatibility / Low Resource Mode",
+          "desc": "For older browsers, buffering proxies, small VPSes, or simpler request behavior with streaming disabled."
+        },
+        "warnings": {
+          "local-only": "Use this only on trusted local networks. Do not expose it to the public web as-is.",
+          "private-team": "Put this behind auth, VPN, or a reverse proxy and avoid casually exposing admin/settings routes.",
+          "public-password": "Set DEGOOG_SETTINGS_PASSWORDS in the environment. The UI cannot set it for you.",
+          "public-https": "Use HTTPS and a properly configured reverse proxy for exposed deployments.",
+          "public-monitor": "Monitor abuse and avoid exposing admin/settings casually.",
+          "api-key": "API key enforcement only helps when clients are configured to send valid signed requests and the key is protected.",
+          "hardened": "Consider proxy, WAF, container, and host hardening for hostile traffic.",
+          "indexer-storage": "Indexer mode needs storage/backend planning before you rely on it.",
+          "compat": "Non-streaming can feel slower and less lively, but it is easier to debug and works better with some proxies."
+        },
+        "fields": {
+          "streamingEnabled": "Streaming results",
+          "streamingAutoRetry": "Streaming auto-retry",
+          "streamingMaxRetries": "Streaming max retries",
+          "rateLimitEnabled": "Search rate limiting",
+          "rateLimitBurstWindow": "Search burst window",
+          "rateLimitBurstMax": "Search burst max",
+          "rateLimitLongWindow": "Search long window",
+          "rateLimitLongMax": "Search long max",
+          "rateLimitSuggestEnabled": "Autocomplete rate limiting",
+          "rateLimitSuggestBurstWindow": "Autocomplete burst window",
+          "rateLimitSuggestBurstMax": "Autocomplete burst max",
+          "rateLimitSuggestLongWindow": "Autocomplete long window",
+          "rateLimitSuggestLongMax": "Autocomplete long max",
+          "acDebounceMs": "Autocomplete delay",
+          "imageProxyAllowLocal": "Local image proxy access",
+          "honeypotEnabled": "Honeypot traps",
+          "honeypotCssCheck": "Browser verification",
+          "honeypotBanDuration": "Honeypot ban duration",
+          "apiKeySearchEnabled": "Search API key enforcement",
+          "apiKeySuggestEnabled": "Suggestion API key enforcement",
+          "degoogIndexerEnabled": "Degoog Indexer",
+          "domainBlockUiEnabled": "Domain block UI",
+          "domainReplaceUiEnabled": "Domain replace UI",
+          "domainScoreUiEnabled": "Domain score UI"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Flush stored cache entries. Search and autocomplete are kept separately; extensions register their own caches (e.g. wiki, ai-summary).",
       "cache-clear": "Clear search cache",
@@ -149,6 +228,7 @@
       "domain-score-remove-aria": "Remove rule",
       "domain-score-ui-enable": "Allow scoring from search results",
       "domain-score-ui-desc": "When enabled, authenticated users can score a domain directly from a kebab menu on each result row. Hidden on public or unauthenticated instances regardless of this setting.",
+      "oversized": "<too large to render> {lines} entries ({size}). Edit this list directly in data/search/search-lists.json.",
       "custom-css-heading": "Custom CSS",
       "custom-css-desc": "Inject custom CSS into every page. Loaded after theme and plugin styles, so it overrides them. Use !important when you need to beat selectors with higher specificity.",
       "custom-css-label": "Custom CSS",
@@ -174,7 +254,12 @@
       "indexer-enable-desc": "When on, search results are stored locally.",
       "indexer-enable-aria": "Enable Degoog indexer",
       "saved": "Saved",
-      "save-failed-network": "Save failed. Please try again."
+      "save-failed-network": "Save failed. Please try again.",
+      "shortcuts-heading": "Keyboard shortcuts",
+      "shortcuts-desc": "Enable customisable keyboard shortcuts for this instance. When off, the Shortcuts section is hidden and no shortcuts are active.",
+      "shortcuts-enable": "Enable keyboard shortcuts",
+      "shortcuts-enable-aria": "Enable keyboard shortcuts",
+      "shortcuts-enable-desc": "Power-user shortcuts for focusing search, switching tabs, and navigating results. Configure them in the Shortcuts section."
     },
     "proxy-test": {
       "not-enabled": "Proxy is not enabled. Enable it and save before testing.",
@@ -205,6 +290,7 @@
       "test-testing": "Testing…",
       "test-request-failed": "Request failed",
       "field-remove-aria": "Remove",
+      "field-edit-aria": "Edit",
       "field-add": "Add"
     },
     "confirm": {
@@ -254,7 +340,8 @@
       "unlock": "Unlock",
       "incorrect-password": "Incorrect password.",
       "network-error": "Something went wrong. Please try again.",
-      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS."
+      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS is not set, so Degoog generated a temporary password for this run. Check the server logs for it. To intentionally disable this gate, set DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Engines"
@@ -273,6 +360,7 @@
       "domain-blocklist-desc": "One domain per line. Results from these domains are never indexed.",
       "word-blocklist": "Word blocklist",
       "word-blocklist-desc": "One word per line. If a word appears in a result's title, snippet, or URL, that result is never indexed.",
+      "oversized": "<too large to render> {lines} entries ({size}). Edit this list directly in data/indexer/indexer-config.json.",
       "storage-heading": "Storage and limits",
       "max-per-search": "Max results stored per search",
       "max-per-search-desc": "Only the top N aggregated results after each search are indexed. 0 means no limit.",
@@ -423,6 +511,9 @@
       "autocomplete-body": "Select which provider powers the search-bar suggestions. Enabling Rich suggestions will give you thumbnails and descriptions for the most relevant results.",
       "server-title": "9. Server settings",
       "server-body": "Rate limits, language list, honeypot, proxy, API key. The defaults are sensible. Visit this tab when you need to harden the instance.",
+      "security-title": "One last thing",
+      "security-body": "If this instance is reachable from the internet, lock down admin and store actions: set DEGOOG_SETTINGS_PASSWORDS, or set DEGOOG_PUBLIC_INSTANCE=true. With neither, anyone who can reach it can install extensions, which run code on your server.",
+      "security-link": "How to set DEGOOG_SETTINGS_PASSWORDS",
       "done-title": "You're set",
       "done-body": "That's the tour. Reopen it any time from the general tab if you forget where something lives.",
       "restart-heading": "Setup tour",
@@ -445,6 +536,57 @@
       "slot-position": {
         "label": "Position",
         "description": "Where the slot content appears on the page."
+      }
+    },
+    "shortcuts": {
+      "heading": "Keyboard shortcuts",
+      "desc": "Click a shortcut to record a new key combination. Press Escape while recording to cancel.",
+      "reset": "Reset to default",
+      "reset-all": "Reset all to defaults",
+      "add": "Add shortcut",
+      "delete": "Delete shortcut",
+      "file-name": "File name",
+      "source": "JavaScript source",
+      "recording": "Press keys...",
+      "recording-numeric": "Press a modifier + any key...",
+      "enable-aria": "Enable or disable this shortcut",
+      "actions": {
+        "focus-search": {
+          "label": "Focus search",
+          "desc": "Move the cursor into the search box."
+        },
+        "next-tab": {
+          "label": "Next tab",
+          "desc": "Switch to the next results tab."
+        },
+        "prev-tab": {
+          "label": "Previous tab",
+          "desc": "Switch to the previous results tab."
+        },
+        "tab-by-number": {
+          "label": "Switch tab by number",
+          "desc": "Hold the recorded modifier and press 1-9 to jump to that tab."
+        },
+        "go-home": {
+          "label": "Go to home",
+          "desc": "Return to the Degoog home page."
+        },
+        "go-settings": {
+          "label": "Go to settings",
+          "desc": "Open the settings page."
+        },
+        "result-down": {
+          "label": "Highlight next result",
+          "desc": "Move focus to the next result link."
+        },
+        "result-up": {
+          "label": "Highlight previous result",
+          "desc": "Move focus to the previous result link."
+        },
+        "result-open": {
+          "label": "Open highlighted result",
+          "desc": "Open the currently focused result."
+        }
       }
     }
   }

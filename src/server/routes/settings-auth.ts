@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { randomBytes } from "node:crypto";
 import { getMiddleware } from "../extensions/middleware/registry";
 import { asString, getSettings } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
@@ -19,6 +20,84 @@ const router = new Hono();
 const COOKIE_NAME = "settings-token";
 const MIDDLEWARE_SETTINGS_ID = "middleware";
 const SETTINGS_GATE_KEY = "settingsGate";
+const GENERATED_PASSWORD = randomBytes(24).toString("base64url");
+
+const _envTruthy = (name: string): boolean => {
+  const value = (process.env[name] ?? "").trim().toLowerCase();
+  return value === "true" || value === "1" || value === "yes";
+};
+
+export const isDangerouslyNoPassword = (): boolean =>
+  _envTruthy("DEGOOG_DANGEROUSLY_NO_PASSWORD");
+
+const _explicitPasswords = (): string[] => {
+  const raw = process.env.DEGOOG_SETTINGS_PASSWORDS ?? "";
+  return raw
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+};
+
+export const hasGeneratedDefaultSettingsPassword = (): boolean =>
+  _explicitPasswords().length === 0 && !isDangerouslyNoPassword();
+
+const _noColor = !!process.env.NO_COLOR;
+const _ansi = (code: string): string => (_noColor ? "" : code);
+const ANSI_BLUE = _ansi("\x1b[38;2;66;133;244m");
+const ANSI_YELLOW = _ansi("\x1b[38;2;251;188;5m");
+const ANSI_GREEN = _ansi("\x1b[38;2;52;168;83m");
+const ANSI_BOLD = _ansi("\x1b[1m");
+const ANSI_RESET = _ansi("\x1b[0m");
+const ACCENT_BAR = `${ANSI_YELLOW}┃${ANSI_RESET}`;
+
+const _barLine = (text = ""): string => ` ${ACCENT_BAR} ${text}`;
+
+const _envVar = (name: string): string => `${ANSI_BLUE}${name}${ANSI_RESET}`;
+
+const _authBanner = (title: string, lines: string[]): string =>
+  [
+    "",
+    _barLine(`${ANSI_YELLOW}${ANSI_BOLD}${title}${ANSI_RESET}`),
+    _barLine(),
+    ...lines.map((line) => _barLine(line)),
+    "",
+  ].join("\n");
+
+const _otherOptionLines = (): string[] => [
+  "",
+  "Other options:",
+  `  - ${_envVar("DEGOOG_PUBLIC_INSTANCE=true")} runs a public instance and`,
+  "    auto-locks sensitive admin actions.",
+  `  - ${_envVar("DEGOOG_SETTINGS_PATH=<path>")} moves settings away from the`,
+  "    default /settings (or /admin) URL.",
+];
+
+export function logSettingsPasswordStatus(): void {
+  const explicit = _explicitPasswords();
+  if (explicit.length > 0) return;
+  if (isDangerouslyNoPassword()) {
+    console.warn(
+      _authBanner("Settings authentication is disabled", [
+        `${_envVar("DEGOOG_DANGEROUSLY_NO_PASSWORD")} is enabled, so the settings`,
+        "and admin areas are open. Only use this on a trusted local network.",
+        ..._otherOptionLines(),
+      ]),
+    );
+    return;
+  }
+  console.warn(
+    _authBanner("Temporary settings password", [
+      `${_envVar("DEGOOG_SETTINGS_PASSWORDS")} is not set, so Degoog generated a`,
+      "one-off password for this run. Sign in to settings with:",
+      "",
+      `   ${ANSI_GREEN}${ANSI_BOLD}${GENERATED_PASSWORD}${ANSI_RESET}`,
+      "",
+      `Set ${_envVar("DEGOOG_SETTINGS_PASSWORDS")} to keep a stable password, or`,
+      `set ${_envVar("DEGOOG_DANGEROUSLY_NO_PASSWORD=true")} to disable the gate.`,
+      ..._otherOptionLines(),
+    ]),
+  );
+}
 
 const buildSessionCookie = (token: string, secure: boolean): string => {
   const attrs = [
@@ -98,11 +177,10 @@ export async function shouldServeSettingsGate(c: Context): Promise<boolean> {
 }
 
 function getPasswords(): string[] {
-  const raw = process.env.DEGOOG_SETTINGS_PASSWORDS ?? "";
-  return raw
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const explicit = _explicitPasswords();
+  if (explicit.length > 0) return explicit;
+  if (isDangerouslyNoPassword()) return [];
+  return [GENERATED_PASSWORD];
 }
 
 export function isPasswordRequired(): boolean {
@@ -152,14 +230,26 @@ async function isAuthRequired(): Promise<boolean> {
 
 router.get("/api/settings/auth", async (c) => {
   const required = await isAuthRequired();
-  if (!required) return c.json({ required: false, valid: true });
+  if (!required)
+    return c.json({
+      required: false,
+      valid: true,
+      dangerouslyNoPassword: isDangerouslyNoPassword(),
+      generatedDefaultPassword: false,
+    });
 
   const token = canBalrogPass(c);
   if (await gandalf(token)) return c.json({ required: true, valid: true });
 
   const m = await getSelectedMiddlewareForSettingsGate();
   if (!m) {
-    if (isPasswordRequired()) return c.json({ required: true, valid: false });
+    if (isPasswordRequired())
+      return c.json({
+        required: true,
+        valid: false,
+        generatedDefaultPassword: hasGeneratedDefaultSettingsPassword(),
+        dangerouslyNoPassword: false,
+      });
     logger.warn(
       "settings-auth",
       "settingsGate references a middleware that is not loaded; refusing to grant access",
