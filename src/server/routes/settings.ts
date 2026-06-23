@@ -29,6 +29,7 @@ import {
   updateInstanceSettings,
   type ServerSettingValue,
 } from "../utils/server-settings";
+import { writeSyncedDefaults } from "../utils/synced-settings";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
@@ -469,6 +470,23 @@ router.post("/api/settings/shortcuts", async (c) => {
     return c.json({ error: "Invalid shortcuts map" }, 400);
   }
   return c.json({ ok: true });
+});
+
+// The owner publishes default browsing prefs here. They reach visitors via
+// injection (see pages/render.ts), not a GET on this route.
+router.post("/api/settings/sync", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/sync");
+  if (denied) return denied;
+  const body = await readObjectBody<{ settings?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  if (!body.settings || typeof body.settings !== "object" || Array.isArray(body.settings)) {
+    return c.json({ error: "Missing settings" }, 400);
+  }
+  if (JSON.stringify(body.settings).length > 64_000) {
+    return c.json({ error: "Settings too large" }, 413);
+  }
+  const settings = await writeSyncedDefaults(body.settings as Record<string, unknown>);
+  return c.json({ ok: true, settings });
 });
 
 const SHORTCUT_SCAFFOLD = `export default {

@@ -13,6 +13,7 @@ import { recordSettingsReturn, showHome } from "../utils/navigation";
 import { performSearch } from "../utils/search-actions";
 import { applyUovaStorage } from "../utils/uovadipasqua";
 import { initTheme } from "../utils/theme";
+import { applyDefaults } from "../utils/sync";
 import { initOptionsDropdown } from "../utils/time-filter";
 import { initImgFilters } from "./filters/image-filters";
 import { initMediaPreview } from "./media/media-preview";
@@ -41,7 +42,18 @@ type DegoogHistoryState = {
   imageFilter?: ImageFilter;
 };
 
-export function init(): void {
+export async function init(): Promise<void> {
+  // Seed the owner's default browsing prefs into IndexedDB (only keys this
+  // browser hasn't set) before initTheme() and the state loads below read them,
+  // so the defaults apply on first paint. Awaited intentionally so seeding
+  // finishes before the render below; an IndexedDB failure is swallowed so it
+  // can't break app init.
+  try {
+    await applyDefaults();
+  } catch {
+    /* defaults are best-effort */
+  }
+
   renderPageTemplates();
   void applyUovaStorage();
   void initHomeWizard();

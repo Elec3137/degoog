@@ -1,4 +1,5 @@
 import { initTheme } from "../../utils/theme";
+import { applyDefaults } from "../../utils/sync";
 import { getBase } from "../../utils/base-url";
 import { initInstallPrompt } from "../../utils/install-prompt";
 import {
@@ -265,6 +266,14 @@ window.addEventListener("extensions-saved", async () => {
 });
 
 async function _initPublicSettings(): Promise<void> {
+  // Seed the owner's defaults (for keys this browser hasn't set) before theme
+  // and the appearance controls read IndexedDB, so a visitor whose first page
+  // is this settings page still starts from the published defaults.
+  try {
+    await applyDefaults();
+  } catch {
+    /* defaults are best-effort */
+  }
   void initTheme();
   const publicContent = document.getElementById("public-settings-content");
   if (publicContent) publicContent.innerHTML = renderPublicSettingsTop();

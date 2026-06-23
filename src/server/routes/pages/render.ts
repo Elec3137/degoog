@@ -35,6 +35,7 @@ import { getInstanceSettings } from "../../utils/server-settings";
 import { readShortcutsSettings } from "../../utils/shortcuts-settings";
 import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings-auth";
+import { readSyncedDefaults } from "../../utils/synced-settings";
 
 export const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
@@ -220,6 +221,18 @@ export async function applyPagePlaceholders(
   const safeShortcuts = JSON.stringify(shortcutsConfig).replace(/<\//g, "<\\/");
   const shortcutsScript = `<script>window.__DEGOOG_SHORTCUTS__=${safeShortcuts}</script>`;
   result = result.replace("</head>", `${shortcutsScript}\n  </head>`);
+
+  // The owner's default browsing prefs, injected so a visitor's first paint
+  // starts from them. These are non-secret UI prefs only (whitelisted
+  // SYNC_KEYS), so they're safe to expose even to anonymous public visitors.
+  // The client applies them only to keys it hasn't set, so a visitor's own
+  // choice always wins.
+  const syncedDefaults = await readSyncedDefaults();
+  if (Object.keys(syncedDefaults).length > 0) {
+    const safeSync = JSON.stringify(syncedDefaults).replace(/<\//g, "<\\/");
+    const syncScript = `<script>window.__DEGOOG_SYNCED_DEFAULTS__=${safeSync}</script>`;
+    result = result.replace("</head>", `${syncScript}\n  </head>`);
+  }
 
   result = result.replace(
     "</head>",

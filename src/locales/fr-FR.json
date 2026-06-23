@@ -47,6 +47,12 @@
       "post-method-aria": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux"
     },
+    "sync": {
+      "heading": "Paramètres par défaut de l'instance",
+      "desc": "Publiez les paramètres actuels de ce navigateur comme valeurs par défaut pour les nouveaux visiteurs. Les choix de chaque visiteur ont toujours priorité sur ces valeurs par défaut.",
+      "save-button": "Enregistrer les paramètres actuels comme valeurs par défaut",
+      "saved": "Valeurs par défaut enregistrées"
+    },
     "install": {
       "heading": "Installer l'application",
       "desc": "Ajoutez degoog à l'écran d'accueil. Si votre navigateur n'a pas affiché l'invite d'installation, utilisez ce bouton pour réessayer. Cela ne fonctionnera pas sauf si vous servez votre site via https et que votre navigateur prend en charge les PWA.",

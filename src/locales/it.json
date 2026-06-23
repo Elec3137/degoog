@@ -46,6 +46,12 @@
       "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati"
     },
+    "sync": {
+      "heading": "Impostazioni predefinite dell'istanza",
+      "desc": "Pubblica le impostazioni attuali di questo browser come predefinite per i nuovi visitatori. Le scelte di ogni visitatore hanno sempre la priorità su queste impostazioni predefinite.",
+      "save-button": "Salva le impostazioni attuali come predefinite",
+      "saved": "Impostazioni predefinite salvate"
+    },
     "install": {
       "heading": "Installa app",
       "desc": "Aggiungi degoog alla schermata home. Se il browser non ha mostrato l’invito all’installazione, usa questo pulsante per riprovare. Questo non funzionerà a meno che tu non stia servendo il tuo sito via https e il tuo browser supporta PWA.",

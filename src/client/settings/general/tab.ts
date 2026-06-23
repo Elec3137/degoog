@@ -9,6 +9,7 @@ import {
 } from "../../constants";
 import { getBase } from "../../utils/base-url";
 import { idbGet, idbSet } from "../../utils/db";
+import { saveDefaults } from "../../utils/sync";
 import { requestInstallPrompt } from "../../utils/install-prompt";
 import { applyTheme } from "../../utils/theme";
 import { restartWizard } from "../../modules/wizard/wizard";
@@ -74,6 +75,17 @@ const renderSearchOptionsSection = (): string =>
     icon: "fa-solid fa-magnifying-glass",
     headingKey: "settings-page.search-options.heading",
     content: SEARCH_OPTION_TOGGLES.map(renderToggle).join(""),
+  });
+
+const renderSyncSection = (): string =>
+  renderSection({
+    icon: "fa-solid fa-rotate",
+    headingKey: "settings-page.sync.heading",
+    descKey: "settings-page.sync.desc",
+    noFieldset: true,
+    content: `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-save-defaults" type="button">
+      ${escapeHtml(t("settings-page.sync.save-button"))}
+    </button>`,
   });
 
 const renderWizardSection = (): string =>
@@ -151,6 +163,7 @@ export const renderGeneralContent = (): string =>
   [
     renderAppearanceSection(),
     renderSearchOptionsSection(),
+    renderSyncSection(),
     renderWizardSection(),
     renderInstallSection(),
     renderUpdateSection(),
@@ -168,6 +181,14 @@ async function getNewestRelease(): Promise<string> {
   }
   return "Unknown";
 }
+
+const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: boolean }[] = [
+  { id: "settings-open-new-tab", key: OPEN_IN_NEW_TAB_KEY, defaultVal: false },
+  { id: "display-engine-performance", key: DISPLAY_ENGINE_PERFORMANCE, defaultVal: true },
+  { id: "display-related-queries", key: DISPLAY_SEARCH_SUGGESTIONS, defaultVal: true },
+  { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
+  { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
+];
 
 export async function initAppearanceSettings(): Promise<void> {
   const themeSelect = document.getElementById("theme-select") as HTMLSelectElement | null;
@@ -215,14 +236,6 @@ export async function initAppearanceSettings(): Promise<void> {
     }
   });
 
-  const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: boolean }[] = [
-    { id: "settings-open-new-tab", key: OPEN_IN_NEW_TAB_KEY, defaultVal: false },
-    { id: "display-engine-performance", key: DISPLAY_ENGINE_PERFORMANCE, defaultVal: true },
-    { id: "display-related-queries", key: DISPLAY_SEARCH_SUGGESTIONS, defaultVal: true },
-    { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
-    { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
-  ];
-
   for (const pref of PREF_TOGGLES) {
     const el = document.getElementById(pref.id) as HTMLInputElement | null;
     if (!el) continue;
@@ -233,6 +246,24 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(pref.key, pref.invert ? !el.checked : el.checked);
     });
   }
+}
+
+async function initSyncSetting(): Promise<void> {
+  const btn = document.getElementById("settings-sync-save-defaults") as HTMLButtonElement | null;
+  if (!btn) return;
+  const label = btn.textContent;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    // Snapshot this browser's current browsing prefs as the instance defaults.
+    const ok = await saveDefaults();
+    btn.textContent = ok
+      ? t("settings-page.sync.saved")
+      : t("settings-page.server.save-failed-network");
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.disabled = false;
+    }, 1200);
+  });
 }
 
 async function initVersionChecker(): Promise<void> {
@@ -280,6 +311,7 @@ export async function initGeneralTab(): Promise<void> {
   if (container) container.innerHTML = renderGeneralContent();
 
   await initAppearanceSettings();
+  await initSyncSetting();
   await initVersionChecker();
 
   document

@@ -48,6 +48,12 @@
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-tooltip": "POST method is not compatible with streaming results"
     },
+    "sync": {
+      "heading": "Instance defaults",
+      "desc": "Publish this browser's current settings as the defaults for new visitors. Each visitor's own choices always take priority over these defaults.",
+      "save-button": "Save current settings as defaults",
+      "saved": "Defaults saved"
+    },
     "install": {
       "heading": "Install app",
       "desc": "Add degoog to your home screen. If your browser did not show the install prompt, use this to try again. This won't work unless you are serving your site via https and your browser supports PWA.",
