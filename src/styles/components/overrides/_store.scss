@@ -138,6 +138,14 @@
   min-width: 12.5rem;
 }
 
+.store-btn-add-confirm {
+  height: $search-bar-height;
+  width: $search-bar-height;
+  font-size: $font-size-md;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .store-inline-error {
   color: $danger;
   font-size: $font-size-small;
