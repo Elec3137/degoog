@@ -45,12 +45,8 @@ html:has(.settings-page-body) {
 }
 
 .settings-page-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg);
   padding-top: clamp($space-6, 4vw, $space-8);
-  margin-bottom: $space-6;
+  padding-bottom: $space-6;
 }
 
 .settings-page-back {
@@ -100,7 +96,9 @@ html:has(.settings-page-body) {
     flex-shrink: 0;
     align-self: flex-start;
     position: sticky;
-    top: 9rem;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
     margin-bottom: 0;
   }
 }
@@ -194,6 +192,10 @@ html:has(.settings-page-body) {
   flex-direction: column;
   flex: 1;
   min-width: 0;
+
+  @media (min-width: 768px) {
+    padding-top: clamp($space-6, 4vw, $space-8);
+  }
 }
 
 .settings-section {
