@@ -92,7 +92,10 @@ describe("store progress streaming auth (CSRF)", () => {
   let storeRouter: {
     request: (req: Request | string) => Response | Promise<Response>;
   };
-  let tokenStore: { set: (t: string, exp: number) => void };
+  let tokenStore: {
+    set: (t: string, exp: number) => void;
+    delete: (t: string) => void;
+  };
   let validToken: string;
   let tmp: string;
   let savedDataDir: string | undefined;
@@ -112,6 +115,7 @@ describe("store progress streaming auth (CSRF)", () => {
   });
 
   afterAll(async () => {
+    if (validToken) tokenStore.delete(validToken);
     if (savedDataDir === undefined) delete process.env.DEGOOG_DATA_DIR;
     else process.env.DEGOOG_DATA_DIR = savedDataDir;
     if (savedPasswords === undefined) delete process.env.DEGOOG_SETTINGS_PASSWORDS;
