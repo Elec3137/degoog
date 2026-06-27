@@ -119,13 +119,15 @@ describe("store progress streaming auth (CSRF)", () => {
     await rm(tmp, { recursive: true, force: true });
   });
 
-  test("rejects a cookie-only request (no header/query token)", async () => {
+  test("accepts the settings cookie like the non-stream store routes", async () => {
     const res = await storeRouter.request(
       new Request("http://localhost/api/store/update-all/stream", {
         headers: { cookie: `settings-token=${validToken}` },
       }),
     );
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain("event: done");
   });
 
   test("accepts an explicit query token", async () => {

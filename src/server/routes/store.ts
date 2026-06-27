@@ -1,4 +1,4 @@
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { existsSync } from "fs";
 import { canBalrogPass, gandalf } from "./settings-auth";
 import { resolve, relative } from "path";
@@ -26,15 +26,6 @@ import { getBaseUrl } from "../utils/base-url";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
-
-/**
- * Mutating SSE routes are GET (EventSource cannot use other verbs), so they must
- * not accept the auto-sent settings cookie or they would be CSRF-triggerable by
- * a cross-site page. Require the token explicitly from a header or query param,
- * which a cross-site request cannot supply.
- */
-const explicitToken = (c: Context): string | undefined =>
-  c.req.header("x-settings-token") ?? c.req.query("token");
 
 type SseSend = (event: string, data: unknown) => void;
 
@@ -295,7 +286,7 @@ router.post("/api/store/update-all", async (c) => {
 });
 
 router.get("/api/store/update-all/stream", async (c) => {
-  if (!(await gandalf(explicitToken(c))))
+  if (!(await gandalf(canBalrogPass(c))))
     return c.json({ error: "You shall not pass!" }, 401);
   return streamStoreProgress(c.req.raw.signal, async (send) => {
     const result = await updateAllItems((p) => send("item", p));
@@ -304,7 +295,7 @@ router.get("/api/store/update-all/stream", async (c) => {
 });
 
 router.get("/api/store/repos/refresh/stream", async (c) => {
-  if (!(await gandalf(explicitToken(c))))
+  if (!(await gandalf(canBalrogPass(c))))
     return c.json({ error: "You shall not pass!" }, 401);
   return streamStoreProgress(c.req.raw.signal, async (send) => {
     const results = await refreshAllRepos((p) => send("repo", p));
