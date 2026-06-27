@@ -52,10 +52,29 @@ export class PgAdapter implements IndexerAdapter {
 
     await this._sql.begin(async (tx) => initPgSchema(tx, schema));
 
-    await this._sql`
-      CREATE INDEX CONCURRENTLY IF NOT EXISTS ${this._sql(`idx_${schema}_hits_url_id`)}
-      ON ${this._sql(schema)}.query_hits (url_id)
+    const indexName = `idx_${schema}_hits_url_id`;
+
+    const [index] = await this._sql<{ indisvalid: boolean }[]>`
+      SELECT i.indisvalid
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_index i ON i.indexrelid = c.oid
+      WHERE c.relname = ${indexName}
+        AND n.nspname = ${schema}
     `;
+
+    if (index && !index.indisvalid) {
+      await this._sql`
+        DROP INDEX CONCURRENTLY ${this._sql(schema)}.${this._sql(indexName)}
+      `;
+    }
+
+    if (!index || !index.indisvalid) {
+      await this._sql`
+        CREATE INDEX CONCURRENTLY ${this._sql(indexName)}
+        ON ${this._sql(schema)}.query_hits (url_id)
+      `;
+    }
 
     this._types.add(schema);
   }
@@ -364,19 +383,19 @@ export class PgAdapter implements IndexerAdapter {
     const schema = safeSlug(type);
 
     await this._sql.begin(async (tx) => {
+      const deleted = await tx<{ url_id: number }[]>`
+        DELETE FROM ${tx(schema)}.query_hits
+        WHERE id = ANY(${ids})
+        RETURNING url_id
+      `;
+
+      const urlIds = [...new Set(deleted.map((r) => r.url_id))];
+
+      if (urlIds.length === 0) return;
+
       await tx`
-        WITH deleted_hits AS (
-          DELETE FROM ${tx(schema)}.query_hits
-          WHERE id = ANY(${ids})
-          RETURNING url_id
-        ),
-        affected_urls AS (
-          SELECT DISTINCT url_id
-          FROM deleted_hits
-        )
         DELETE FROM ${tx(schema)}.urls u
-        USING affected_urls a
-        WHERE u.id = a.url_id
+        WHERE u.id = ANY(${urlIds})
           AND NOT EXISTS (
             SELECT 1
             FROM ${tx(schema)}.query_hits h
