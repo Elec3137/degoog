@@ -194,10 +194,43 @@ function _initTabs(): void {
   }
 }
 
+function _initSettingsMainOffset(): void {
+  const main = document.querySelector<HTMLElement>(".settings-page-main");
+  const search = document.querySelector<HTMLElement>(".settings-nav-search");
+  if (!main || !search) return;
+
+  const desktop = window.matchMedia("(min-width: 768px)");
+  let frame = 0;
+
+  const sync = (): void => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      main.style.paddingTop = "";
+      if (!desktop.matches) return;
+      const offset = search.getBoundingClientRect().top - main.getBoundingClientRect().top;
+      main.style.paddingTop = `${Math.max(0, offset)}px`;
+    });
+  };
+
+  sync();
+  window.addEventListener("resize", sync);
+  desktop.addEventListener("change", sync);
+  window.addEventListener("load", sync, { once: true });
+  void document.fonts?.ready.then(sync);
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(sync);
+    observer.observe(search);
+    const header = document.querySelector<HTMLElement>(".settings-page-header");
+    if (header) observer.observe(header);
+  }
+}
+
 async function _initSettings(): Promise<void> {
   void initTheme();
   initInstallPrompt();
   _initTabs();
+  _initSettingsMainOffset();
   void initGeneralTab();
   void initServerTab(getStoredToken);
   void initShortcutsTab(getStoredToken);

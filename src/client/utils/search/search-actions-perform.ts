@@ -108,11 +108,13 @@ export async function performSearch(
     ? getNaturalLanguageBangQuery(query, commands)
     : null;
 
+  const streamingConfig = await fetchStreamingConfig();
   if (
     !naturalBangQuery &&
     !state.postMethodEnabled &&
     (!page || page === 1) &&
-    (await fetchStreamingConfig())
+    streamingConfig.enabled &&
+    !streamingConfig.disabledTypes.includes(resolvedType)
   ) {
     abortStreamingSearch();
     return performStreamingSearch(

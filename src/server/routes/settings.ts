@@ -187,6 +187,7 @@ router.get("/api/settings/streaming", async (c) => {
     enabled: asBoolean(settings.streamingEnabled),
     autoRetry: asBoolean(settings.streamingAutoRetry),
     maxRetries: parseInt(asString(settings.streamingMaxRetries) || "2", 10),
+    disabledTypes: asString(settings.streamingDisabledTypes ?? "").split("\n").map(s => s.trim()).filter(Boolean),
   });
 });
 

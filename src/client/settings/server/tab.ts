@@ -1,7 +1,9 @@
 import { copyTextToClipboard } from "../../utils/clipboard";
 import { getBase } from "../../utils/base-url";
+import { escapeHtml } from "../../utils/dom";
+import { getAllSearchTypes } from "../../utils/engines";
 import { authHeaders } from "../../utils/request";
-import { saveBatch } from "../../utils/settings-api";
+import { saveBatch, saveField } from "../../utils/settings-api";
 import type {
   ButtonStateHandler,
   ServerSettingsData,
@@ -42,6 +44,45 @@ const TOGGLE_WRAP_PAIRS = [
   ["domain-replace-enabled", "domain-replace-wrap"],
   ["domain-score-enabled", "domain-score-wrap"],
 ] as const;
+
+async function _initStreamingTypeChecks(
+  disabledTypes: string,
+  getToken: () => string | null,
+): Promise<void> {
+  const container = document.getElementById("settings-streaming-type-checks");
+  if (!container) return;
+  const disabled = new Set(disabledTypes.split("\n").map((s) => s.trim()).filter(Boolean));
+  const types = [...(await getAllSearchTypes())];
+
+  if (types.length <= 1) {
+    container.remove();
+    return;
+  }
+
+  const _save = async (): Promise<void> => {
+    const checks = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    const nowDisabled = [...checks].filter((c) => !c.checked).map((c) => c.value).join("\n");
+    const ok = await saveField("streamingDisabledTypes", nowDisabled, getToken);
+    if (ok) {
+      window.dispatchEvent(new Event("extensions-saved"));
+      flashSuccess(t("settings-page.server.saved"));
+    } else {
+      flashError(t("settings-page.server.save-failed-network"));
+    }
+  };
+
+  container.innerHTML = types.map((type) =>
+    `<label class="settings-toggle-wrap degoog-toggle-wrap">
+      <input type="checkbox" class="settings-toggle" value="${escapeHtml(type)}"${disabled.has(type) ? "" : " checked"} />
+      <span class="toggle-slider degoog-toggle"></span>
+      <span class="settings-toggle-label">${escapeHtml(type)}</span>
+    </label>`,
+  ).join("");
+
+  container.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+    cb.addEventListener("change", () => void _save());
+  });
+}
 
 function _renderApiKey(): void {
   const element = document.getElementById("settings-api-key-value");
@@ -96,6 +137,7 @@ async function _loadServerSettings(
     setToggle("streaming-enabled", data.streamingEnabled);
     setToggle("streaming-auto-retry", data.streamingAutoRetry);
     setVal("streaming-max-retries", data.streamingMaxRetries);
+    void _initStreamingTypeChecks(data.streamingDisabledTypes ?? "", getToken);
 
     setToggle("domain-block-enabled", data.domainBlockEnabled);
     setListVal("domain-block-list", "domainBlockList", data.domainBlockList);
