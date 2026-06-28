@@ -313,7 +313,11 @@ async function _initPublicSettings(): Promise<void> {
     const allExtensions = (await res.json()) as AllExtensions;
     await _renderPublicTabs(allExtensions);
   } catch {
-    await initPublicGeneral();
+    const renderGeneralOnly = async (): Promise<void> => {
+      await initPublicGeneral();
+      bindResetDefaults(SYNC_KEYS, renderGeneralOnly);
+    };
+    await renderGeneralOnly();
     const enginesEl = document.getElementById("engines-content");
     if (enginesEl)
       enginesEl.innerHTML = `<p>${t("settings-page.errors.load-engines")}</p>`;

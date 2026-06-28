@@ -74,4 +74,16 @@ describe("utils/synced-settings", () => {
 
     expect(await readSyncedDefaults()).toEqual({ theme: "dark" });
   });
+
+  test("tab order is server-side and not a synced client key", async () => {
+    await updateInstanceSettings({
+      syncedDefaults: JSON.stringify({
+        engines: { google: true },
+        "tab-order-saved": ["web", "images"],
+      }),
+    });
+    clearServerSettingsCache();
+
+    expect(await readSyncedDefaults()).toEqual({ engines: { google: true } });
+  });
 });

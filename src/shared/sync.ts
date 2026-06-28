@@ -16,7 +16,7 @@ export const GENERAL_SYNC_KEYS = [
   INLINE_GIF_PLAYBACK,
 ] as const;
 
-export const ENGINE_SYNC_KEYS = [ENGINES_KEY, TAB_ORDER_SAVED] as const;
+export const ENGINE_SYNC_KEYS = [ENGINES_KEY] as const;
 
 export const SYNC_KEYS = [...GENERAL_SYNC_KEYS, ...ENGINE_SYNC_KEYS] as const;
 
