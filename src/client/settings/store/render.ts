@@ -206,7 +206,7 @@ export function renderItemCard(
     ? `<span class="ext-configured-badge"></span><button class="btn btn--danger degoog-btn degoog-btn--danger store-btn-delete" type="button" ${deleteBtnAttrs}>Delete</button>`
     : item.installed
       ? item.updateAvailable
-        ? `<span class="ext-configured-badge"></span><button class="store-btn-update store-btn-update-icon" type="button" ${dataAttrs} aria-label="Update"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button><button class="btn btn--secondary degoog-btn degoog-btn--secondary store-btn-uninstall" type="button" ${dataAttrs}>Uninstall</button>`
+        ? `<span class="ext-configured-badge"></span><button class="store-btn-update-icon store-btn-update" type="button" ${dataAttrs} aria-label="Update"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button><button class="btn btn--secondary degoog-btn degoog-btn--secondary store-btn-uninstall" type="button" ${dataAttrs}>Uninstall</button>`
         : `<span class="ext-configured-badge"></span><button class="btn btn--secondary degoog-btn degoog-btn--secondary store-btn-uninstall" type="button" ${dataAttrs}>Uninstall</button>`
       : `<button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-install" type="button" ${dataAttrs}>Install</button>`;
   return `

@@ -208,7 +208,7 @@
   justify-content: space-between;
   gap: $space-3;
   padding: $space-2 $space-3;
-  background: var(--bg-hover);
+  background: transparent;
   border-radius: $radius-md;
 }
 
@@ -478,10 +478,10 @@
   cursor: pointer;
   font-size: $font-size-md;
   padding: $space-2 $space-3;
-  transition: background $transition-fast;
+  transition: opacity $transition-fast;
 
   &:hover {
-    background: var(--bg-hover);
+    opacity: 0.7;
   }
 }
 

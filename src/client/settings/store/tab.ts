@@ -263,7 +263,7 @@ export async function initStoreTab(
                   <span class="store-updates-row-name">${escapeHtml(i.name)}</span>
                   <span class="store-updates-row-meta">${escapeHtml(i.repoName)} · <span class="store-card-version-old">v${escapeHtml(i.installedVersion || "?")}</span> → v${escapeHtml(i.version)}</span>
                 </div>
-                <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-update" type="button" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}">Update</button>
+                <button class="store-btn-update-icon store-btn-update" type="button" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}" aria-label="Update"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button>
               </div>`,
           )
           .join("");
