@@ -468,6 +468,23 @@
   }
 }
 
+.store-btn-update-icon {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  color: $primary;
+  cursor: pointer;
+  font-size: $font-size-md;
+  padding: $space-2 $space-3;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: var(--bg-hover);
+  }
+}
+
 .store-card-thumb-wrap--clickable {
   cursor: pointer;
 

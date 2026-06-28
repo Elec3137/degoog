@@ -96,27 +96,24 @@ export function initLightbox(
     lb?.querySelector(".store-lightbox-close")?.addEventListener(
       "click",
       closeLightbox,
-      {
-        once: true,
-      },
+      { once: true },
     );
     lb?.querySelector(".store-lightbox-backdrop")?.addEventListener(
       "click",
       closeLightbox,
-      {
-        once: true,
-      },
+      { once: true },
     );
-    prevBtn?.addEventListener("click", () => {
-      lightboxIndex =
-        (lightboxIndex - 1 + lightboxUrls.length) % lightboxUrls.length;
-      showSlide();
-    });
-    nextBtn?.addEventListener("click", () => {
-      lightboxIndex = (lightboxIndex + 1) % lightboxUrls.length;
-      showSlide();
-    });
   }
+
+  // Registered once at init — adding these inside openLightbox stacks listeners and causes multi-slide jumps.
+  prevBtn?.addEventListener("click", () => {
+    lightboxIndex = (lightboxIndex - 1 + lightboxUrls.length) % lightboxUrls.length;
+    showSlide();
+  });
+  nextBtn?.addEventListener("click", () => {
+    lightboxIndex = (lightboxIndex + 1) % lightboxUrls.length;
+    showSlide();
+  });
 
   const grid = container.querySelector<HTMLElement>(".store-catalog-grid");
   grid?.addEventListener("click", (e) => {
