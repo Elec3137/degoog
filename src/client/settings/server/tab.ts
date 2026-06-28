@@ -1,5 +1,7 @@
 import { copyTextToClipboard } from "../../utils/clipboard";
 import { getBase } from "../../utils/base-url";
+import { escapeHtml } from "../../utils/dom";
+import { getAllSearchTypes } from "../../utils/engines";
 import { authHeaders } from "../../utils/request";
 import { saveBatch, saveField } from "../../utils/settings-api";
 import type {
@@ -50,21 +52,7 @@ async function _initStreamingTypeChecks(
   const container = document.getElementById("settings-streaming-type-checks");
   if (!container) return;
   const disabled = new Set(disabledTypes.split("\n").map((s) => s.trim()).filter(Boolean));
-  let types: string[] = [];
-  try {
-    const res = await fetch(`${getBase()}/api/engines`);
-    if (res.ok) {
-      const data = (await res.json()) as { engines: { searchTypes: string[]; primaryType: string }[] };
-      const seen = new Set<string>();
-      for (const e of data.engines) {
-        for (const t of (e.searchTypes?.length ? e.searchTypes : [e.primaryType ?? "web"])) {
-          seen.add(t);
-        }
-      }
-      types = [...seen];
-    }
-  } catch { /* fall through */ }
-  if (!types.length) types = ["web", "images", "videos", "news", "files"];
+  const types = [...(await getAllSearchTypes())];
 
   if (types.length <= 1) {
     container.remove();
