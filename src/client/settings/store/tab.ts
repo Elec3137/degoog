@@ -152,8 +152,7 @@ export async function initStoreTab(
       ".store-catalog-grid",
     );
 
-    // Scope counts to selected repo so dropdowns reflect filtered state, not global totals.
-    const scopedItems = selectedRepoUrl ? items.filter((i) => normalizeRepoUrl(i.repoUrl) === normalizeRepoUrl(selectedRepoUrl)) : items;
+    const scopedItems = selectedRepoUrl ? items.filter((i) => normalizeRepoUrl(i.repoUrl) === normalizeRepoUrl(selectedRepoUrl ?? "")) : items;
 
     if (typeSelect) {
       const typeCounts = {

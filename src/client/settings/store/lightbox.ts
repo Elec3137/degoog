@@ -105,7 +105,6 @@ export function initLightbox(
     );
   }
 
-  // Registered once at init — adding these inside openLightbox stacks listeners and causes multi-slide jumps.
   prevBtn?.addEventListener("click", () => {
     lightboxIndex = (lightboxIndex - 1 + lightboxUrls.length) % lightboxUrls.length;
     showSlide();
