@@ -1,5 +1,8 @@
 import { idbGet, idbSet } from "../../utils/db";
 import { SETTINGS_KEY, TAB_ORDER_SAVED } from "../../constants";
+import { resetDefaults } from "../../utils/sync";
+import { ENGINE_SYNC_KEYS } from "../../../shared/sync";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { escapeHtml, getConfigStatus } from "../../utils/dom";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../../types";
@@ -157,6 +160,8 @@ export async function initEnginesTab(
   const savedOrder = await getTabOrder();
   const groups = _sortGroups(rawGroups, savedOrder);
 
+  const resetBtn = `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="reset-default-engines" type="button">${escapeHtml(t("settings-page.extensions.reset-defaults"))}</button>`;
+
   let html = "";
 
   if (allowConfigure) {
@@ -169,6 +174,7 @@ export async function initEnginesTab(
       <div class="settings-page-actions">
         <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="order-engine-tabs" type="button">${escapeHtml(t("settings-page.extensions.order-tabs"))}</button>
         <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="save-default-engines" type="button">${escapeHtml(t("settings-page.extensions.save-defaults"))}</button>
+        ${resetBtn}
       </div>
     </section>`;
   }
@@ -242,6 +248,18 @@ export async function initEnginesTab(
           if (btn)
             btn.textContent = t("settings-page.server.save-failed-network");
         }
+      });
+
+    document
+      .getElementById("reset-default-engines")
+      ?.addEventListener("click", async () => {
+        const confirmed = await confirmModal({
+          title: t("settings-page.extensions.reset-defaults"),
+          message: t("settings-page.extensions.reset-confirm"),
+        });
+        if (!confirmed) return;
+        await resetDefaults(ENGINE_SYNC_KEYS);
+        await initEnginesTab(allExtensions, options);
       });
   }
 

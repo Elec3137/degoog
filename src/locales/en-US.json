@@ -52,7 +52,11 @@
       "heading": "Instance defaults",
       "desc": "Publish this browser's current settings as the defaults for new visitors. Each visitor's own choices always take priority over these defaults.",
       "save-button": "Save current settings as defaults",
-      "saved": "Defaults saved"
+      "saved": "Defaults saved",
+      "reset-button": "Reset to instance defaults",
+      "reset-confirm": "This replaces your saved settings on this browser with the instance defaults. Continue?",
+      "reset-heading": "Reset settings",
+      "reset-desc": "Restore this instance's default settings on this browser. Your local changes will be replaced."
     },
     "install": {
       "heading": "Install app",
@@ -318,6 +322,8 @@
       "group-themes": "Themes",
       "apply-failed": "Failed",
       "save-defaults": "Save as instance defaults",
+      "reset-defaults": "Reset to instance defaults",
+      "reset-confirm": "This replaces your engine choices on this browser with the instance defaults. Continue?",
       "tabs-heading": "Search tabs",
       "tabs-desc": "Set the default enabled engines and customise the order of result tabs.",
       "order-tabs": "Order tabs",

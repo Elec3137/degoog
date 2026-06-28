@@ -1,15 +1,23 @@
-// Single source of truth for which IndexedDB browsing-pref keys the instance
-// owner can publish as defaults. Shared by the client (snapshot/apply) and the
-// server (whitelist on read/write). These are non-secret UI prefs only.
-export const SYNC_KEYS = [
-  "engines",
-  "theme",
-  "open_in_new_tab",
-  "display_engine_performance",
-  "display_search_suggestions",
-  "post_method_enabled",
-  "inline_gif_playback",
-  "tab-order-saved",
+export const ENGINES_KEY = "engines";
+export const THEME_KEY = "theme";
+export const OPEN_IN_NEW_TAB_KEY = "open_in_new_tab";
+export const DISPLAY_ENGINE_PERFORMANCE = "display_engine_performance";
+export const DISPLAY_SEARCH_SUGGESTIONS = "display_search_suggestions";
+export const POST_METHOD_ENABLED = "post_method_enabled";
+export const INLINE_GIF_PLAYBACK = "inline_gif_playback";
+export const TAB_ORDER_SAVED = "tab-order-saved";
+
+export const GENERAL_SYNC_KEYS = [
+  THEME_KEY,
+  OPEN_IN_NEW_TAB_KEY,
+  DISPLAY_ENGINE_PERFORMANCE,
+  DISPLAY_SEARCH_SUGGESTIONS,
+  POST_METHOD_ENABLED,
+  INLINE_GIF_PLAYBACK,
 ] as const;
+
+export const ENGINE_SYNC_KEYS = [ENGINES_KEY, TAB_ORDER_SAVED] as const;
+
+export const SYNC_KEYS = [...GENERAL_SYNC_KEYS, ...ENGINE_SYNC_KEYS] as const;
 
 export type SyncKey = (typeof SYNC_KEYS)[number];

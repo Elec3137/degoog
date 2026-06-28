@@ -473,8 +473,6 @@ router.post("/api/settings/shortcuts", async (c) => {
   return c.json({ ok: true });
 });
 
-// The owner publishes default browsing prefs here. They reach visitors via
-// injection (see pages/render.ts), not a GET on this route.
 router.post("/api/settings/sync", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/sync");
   if (denied) return denied;

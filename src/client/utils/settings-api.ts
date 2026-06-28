@@ -38,7 +38,6 @@ export const saveShortcuts = (
 ): Promise<boolean> =>
   _post("/api/settings/shortcuts", { shortcuts }, getToken);
 
-// Publish the instance owner's default browsing prefs (owner-only; auth-gated).
 export const saveSyncedDefaults = (
   settings: Record<string, unknown>,
   getToken: () => string | null,

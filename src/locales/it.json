@@ -50,7 +50,11 @@
       "heading": "Impostazioni predefinite dell'istanza",
       "desc": "Pubblica le impostazioni attuali di questo browser come predefinite per i nuovi visitatori. Le scelte di ogni visitatore hanno sempre la priorità su queste impostazioni predefinite.",
       "save-button": "Salva le impostazioni attuali come predefinite",
-      "saved": "Impostazioni predefinite salvate"
+      "saved": "Impostazioni predefinite salvate",
+      "reset-button": "Ripristina le impostazioni predefinite dell'istanza",
+      "reset-confirm": "Questo sostituisce le impostazioni salvate su questo browser con quelle predefinite dell'istanza. Continuare?",
+      "reset-heading": "Ripristina impostazioni",
+      "reset-desc": "Ripristina le impostazioni predefinite di questa istanza su questo browser. Le tue modifiche locali verranno sostituite."
     },
     "install": {
       "heading": "Installa app",
@@ -296,6 +300,8 @@
       "group-themes": "Temi",
       "apply-failed": "Operazione non riuscita",
       "save-defaults": "Salva come predefinito dell'istanza",
+      "reset-defaults": "Ripristina le impostazioni predefinite dell'istanza",
+      "reset-confirm": "Questo sostituisce le tue scelte dei motori su questo browser con quelle predefinite dell'istanza. Continuare?",
       "tabs-heading": "Schede di ricerca",
       "tabs-desc": "Imposta i motori abilitati per impostazione predefinita e personalizza l'ordine delle schede dei risultati.",
       "order-tabs": "Ordina schede",

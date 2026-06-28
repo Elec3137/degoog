@@ -222,11 +222,6 @@ export async function applyPagePlaceholders(
   const shortcutsScript = `<script>window.__DEGOOG_SHORTCUTS__=${safeShortcuts}</script>`;
   result = result.replace("</head>", `${shortcutsScript}\n  </head>`);
 
-  // The owner's default browsing prefs, injected so a visitor's first paint
-  // starts from them. These are non-secret UI prefs only (whitelisted
-  // SYNC_KEYS), so they're safe to expose even to anonymous public visitors.
-  // The client applies them only to keys it hasn't set, so a visitor's own
-  // choice always wins.
   const syncedDefaults = await readSyncedDefaults();
   if (Object.keys(syncedDefaults).length > 0) {
     const safeSync = JSON.stringify(syncedDefaults).replace(/<\//g, "<\\/");

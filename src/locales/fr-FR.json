@@ -51,7 +51,11 @@
       "heading": "Paramètres par défaut de l'instance",
       "desc": "Publiez les paramètres actuels de ce navigateur comme valeurs par défaut pour les nouveaux visiteurs. Les choix de chaque visiteur ont toujours priorité sur ces valeurs par défaut.",
       "save-button": "Enregistrer les paramètres actuels comme valeurs par défaut",
-      "saved": "Valeurs par défaut enregistrées"
+      "saved": "Valeurs par défaut enregistrées",
+      "reset-button": "Réinitialiser aux valeurs par défaut de l'instance",
+      "reset-confirm": "Cela remplace les paramètres enregistrés sur ce navigateur par les valeurs par défaut de l'instance. Continuer ?",
+      "reset-heading": "Réinitialiser les paramètres",
+      "reset-desc": "Restaure les paramètres par défaut de cette instance sur ce navigateur. Vos modifications locales seront remplacées."
     },
     "install": {
       "heading": "Installer l'application",
@@ -302,6 +306,8 @@
       "group-themes": "Thèmes",
       "apply-failed": "Échec",
       "save-defaults": "Enregistrer comme valeur par défaut de l'instance",
+      "reset-defaults": "Réinitialiser aux valeurs par défaut de l'instance",
+      "reset-confirm": "Cela remplace vos choix de moteurs sur ce navigateur par les valeurs par défaut de l'instance. Continuer ?",
       "tabs-heading": "Onglets de recherche",
       "tabs-desc": "Définissez les moteurs activés par défaut et personnalisez l'ordre des onglets de résultats.",
       "order-tabs": "Ordonner les onglets",

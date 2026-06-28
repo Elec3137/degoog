@@ -7,14 +7,14 @@ import {
   POST_METHOD_ENABLED,
   THEME_KEY,
 } from "../../constants";
-import { getBase } from "../../utils/base-url";
 import { idbGet, idbSet } from "../../utils/db";
-import { saveDefaults } from "../../utils/sync";
+import { resetDefaults, saveDefaults } from "../../utils/sync";
+import { GENERAL_SYNC_KEYS } from "../../../shared/sync";
 import { requestInstallPrompt } from "../../utils/install-prompt";
 import { applyTheme } from "../../utils/theme";
 import { restartWizard } from "../../modules/wizard/wizard";
 import { escapeHtml } from "../../utils/dom";
-import { getStoredToken } from "../../utils/settings-token";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import type { ToggleOpts } from "../../types/settings-section";
 import { renderSection, renderToggle } from "../shared/section";
 
@@ -57,10 +57,7 @@ const renderAppearanceSection = (): string => {
   const content = `
     <div class="theme-select-wrap degoog-select-wrap degoog-select-wrap--flex">
       <select id="theme-select" class="theme-select">${optHtml}</select>
-    </div>
-    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="save-default-theme" type="button">
-      ${escapeHtml(t("settings-page.appearance.save-defaults"))}
-    </button>`;
+    </div>`;
   return renderSection({
     icon: "fa-solid fa-palette",
     headingKey: "settings-page.appearance.heading",
@@ -83,9 +80,26 @@ const renderSyncSection = (): string =>
     headingKey: "settings-page.sync.heading",
     descKey: "settings-page.sync.desc",
     noFieldset: true,
-    content: `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-save-defaults" type="button">
-      ${escapeHtml(t("settings-page.sync.save-button"))}
-    </button>`,
+    content: `<div class="settings-page-actions">
+      <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-save-defaults" type="button">
+        ${escapeHtml(t("settings-page.sync.save-button"))}
+      </button>
+      ${renderResetBtn()}
+    </div>`,
+  });
+
+const renderResetBtn = (): string =>
+  `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-reset-defaults" type="button">
+    ${escapeHtml(t("settings-page.sync.reset-button"))}
+  </button>`;
+
+const renderResetSection = (): string =>
+  renderSection({
+    icon: "fa-solid fa-rotate",
+    headingKey: "settings-page.sync.reset-heading",
+    descKey: "settings-page.sync.reset-desc",
+    noFieldset: true,
+    content: renderResetBtn(),
   });
 
 const renderWizardSection = (): string =>
@@ -170,7 +184,7 @@ export const renderGeneralContent = (): string =>
   ].join("");
 
 export const renderPublicSettingsTop = (): string =>
-  renderPublicAppearance() + renderPublicSearchOptions();
+  renderResetSection() + renderPublicAppearance() + renderPublicSearchOptions();
 
 async function getNewestRelease(): Promise<string> {
   const tags = await fetch("https://api.github.com/repos/degoog-org/degoog/tags");
@@ -192,9 +206,6 @@ const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: bo
 
 export async function initAppearanceSettings(): Promise<void> {
   const themeSelect = document.getElementById("theme-select") as HTMLSelectElement | null;
-  const saveDefaultBtn = document.getElementById("save-default-theme") as HTMLButtonElement | null;
-
-  if (saveDefaultBtn) saveDefaultBtn.style.display = "none";
 
   if (themeSelect) {
     const saved = await idbGet<string>(THEME_KEY);
@@ -208,33 +219,8 @@ export async function initAppearanceSettings(): Promise<void> {
         console.debug("[settings] theme localStorage sync failed", err);
       }
       applyTheme(value);
-      if (saveDefaultBtn) saveDefaultBtn.style.display = "";
     });
   }
-
-  saveDefaultBtn?.addEventListener("click", async () => {
-    const value =
-      (document.getElementById("theme-select") as HTMLSelectElement | null)?.value ?? "system";
-    try {
-      const token = getStoredToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["x-settings-token"] = token;
-      const res = await fetch(`${getBase()}/api/settings/general`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ defaultTheme: value }),
-      });
-      if (!res.ok) throw new Error("save failed");
-      const prev = saveDefaultBtn.textContent;
-      saveDefaultBtn.textContent = t("settings-page.server.saved");
-      setTimeout(() => {
-        saveDefaultBtn.textContent = prev;
-        saveDefaultBtn.style.display = "none";
-      }, 1200);
-    } catch {
-      saveDefaultBtn.textContent = t("settings-page.server.save-failed-network");
-    }
-  });
 
   for (const pref of PREF_TOGGLES) {
     const el = document.getElementById(pref.id) as HTMLInputElement | null;
@@ -248,22 +234,47 @@ export async function initAppearanceSettings(): Promise<void> {
   }
 }
 
+export const bindResetDefaults = (
+  keys: readonly string[],
+  rerender: () => Promise<void>,
+): void => {
+  const resetBtn = document.getElementById("settings-sync-reset-defaults") as HTMLButtonElement | null;
+  resetBtn?.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.sync.reset-button"),
+      message: t("settings-page.sync.reset-confirm"),
+    });
+    if (!confirmed) return;
+    await resetDefaults(keys);
+    applyTheme((await idbGet<string>(THEME_KEY)) || "system");
+    await rerender();
+  });
+};
+
+export async function initPublicGeneral(): Promise<void> {
+  const host = document.getElementById("public-settings-content");
+  if (host) host.innerHTML = renderPublicSettingsTop();
+  await initAppearanceSettings();
+}
+
 async function initSyncSetting(): Promise<void> {
   const btn = document.getElementById("settings-sync-save-defaults") as HTMLButtonElement | null;
-  if (!btn) return;
-  const label = btn.textContent;
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    // Snapshot this browser's current browsing prefs as the instance defaults.
-    const ok = await saveDefaults();
-    btn.textContent = ok
-      ? t("settings-page.sync.saved")
-      : t("settings-page.server.save-failed-network");
-    setTimeout(() => {
-      btn.textContent = label;
-      btn.disabled = false;
-    }, 1200);
-  });
+  if (btn) {
+    const label = btn.textContent;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const ok = await saveDefaults();
+      btn.textContent = ok
+        ? t("settings-page.sync.saved")
+        : t("settings-page.server.save-failed-network");
+      setTimeout(() => {
+        btn.textContent = label;
+        btn.disabled = false;
+      }, 1200);
+    });
+  }
+
+  bindResetDefaults(GENERAL_SYNC_KEYS, initGeneralTab);
 }
 
 async function initVersionChecker(): Promise<void> {

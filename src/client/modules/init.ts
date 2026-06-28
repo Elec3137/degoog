@@ -43,16 +43,7 @@ type DegoogHistoryState = {
 };
 
 export async function init(): Promise<void> {
-  // Seed the owner's default browsing prefs into IndexedDB (only keys this
-  // browser hasn't set) before initTheme() and the state loads below read them,
-  // so the defaults apply on first paint. Awaited intentionally so seeding
-  // finishes before the render below; an IndexedDB failure is swallowed so it
-  // can't break app init.
-  try {
-    await applyDefaults();
-  } catch {
-    /* defaults are best-effort */
-  }
+  await applyDefaults();
 
   renderPageTemplates();
   void applyUovaStorage();
