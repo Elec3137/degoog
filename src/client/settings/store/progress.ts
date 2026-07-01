@@ -92,14 +92,11 @@ export function setRepoPhase(
 
 function streamStoreOp(
   path: string,
-  getToken: () => string | null,
   event: string,
   onEvent: (e: StoreStreamEvent) => void,
 ): Promise<{ failed: number } | null> {
   return new Promise((resolve) => {
-    const token = getToken();
-    const sep = path.includes("?") ? "&" : "?";
-    const url = `${getBase()}${path}${token ? `${sep}token=${encodeURIComponent(token)}` : ""}`;
+    const url = `${getBase()}${path}`;
     const source = new EventSource(url);
     let failed = 0;
 
@@ -136,11 +133,9 @@ function streamStoreOp(
 
 export function streamUpdateAll(
   container: HTMLElement,
-  getToken: () => string | null,
 ): Promise<{ failed: number } | null> {
   return streamStoreOp(
     "/api/store/update-all/stream",
-    getToken,
     "item",
     (e) => {
       if (!e.repoUrl || !e.itemPath || !e.type) return;
@@ -157,11 +152,9 @@ export function streamUpdateAll(
 
 export function streamRefreshAll(
   container: HTMLElement,
-  getToken: () => string | null,
 ): Promise<{ failed: number } | null> {
   return streamStoreOp(
     "/api/store/repos/refresh/stream",
-    getToken,
     "repo",
     (e) => {
       if (!e.url) return;

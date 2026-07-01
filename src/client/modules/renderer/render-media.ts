@@ -1,5 +1,5 @@
 import { state } from "../../state";
-import { cleanHostname } from "../../utils/dom";
+import { cleanHostname, linkHref } from "../../utils/dom";
 import { openMediaPreview, registerAppendMediaCards } from "../media/media";
 import { renderTemplate } from "../../utils/template";
 import type { ScoredResult } from "../../types";
@@ -60,7 +60,7 @@ const _imageCardUrl = (r: ScoredResult): string => {
 
 const _buildMediaContext = (r: ScoredResult): Record<string, unknown> => ({
   title: r.title,
-  url: r.url,
+  url: linkHref(r.url),
   thumbnail_url: _imageCardUrl(r),
   fallback_url: r.thumbnail || "",
   hostname: cleanHostname(r.url),

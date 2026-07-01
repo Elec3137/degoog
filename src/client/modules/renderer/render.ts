@@ -1,7 +1,7 @@
 import { MAX_PAGE } from "../../constants";
 import { state } from "../../state";
 import type { ScoredResult } from "../../types";
-import { cleanUrl } from "../../utils/dom";
+import { cleanUrl, linkHref } from "../../utils/dom";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
@@ -45,7 +45,7 @@ export const buildResultContext = (
   return {
     index,
     title: r.title,
-    url: r.url,
+    url: linkHref(r.url),
     cite_url: cleanUrl(r.url),
     snippet: r.snippet,
     favicon_url: faviconUrl(r.url),

@@ -147,11 +147,6 @@ export function canBalrogPass(c: Context): string | undefined {
     logger.debug("settings-auth", "token source: x-settings-token header");
     return fromHeader;
   }
-  const fromQuery = c.req.query("token");
-  if (fromQuery) {
-    logger.debug("settings-auth", "token source: query param");
-    return fromQuery;
-  }
   return getTokenFromCookie(c);
 }
 

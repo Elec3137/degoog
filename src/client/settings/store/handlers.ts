@@ -244,7 +244,6 @@ export async function handleUpdate(
 
 export async function handleUpdateAll(
   container: HTMLElement,
-  getToken: () => string | null,
   loadItems: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
@@ -253,7 +252,7 @@ export async function handleUpdateAll(
   );
   if (btn) btn.disabled = true;
   try {
-    const result = await streamUpdateAll(container, getToken);
+    const result = await streamUpdateAll(container);
     if (!result) return;
     await loadItems();
     render();
@@ -265,7 +264,6 @@ export async function handleUpdateAll(
 
 export async function handleRefreshAll(
   container: HTMLElement,
-  getToken: () => string | null,
   refreshAndRender: () => Promise<void>,
   loadReposStatus: () => Promise<void>,
   render: () => void,
@@ -275,7 +273,7 @@ export async function handleRefreshAll(
   );
   if (btn) btn.disabled = true;
   try {
-    const result = await streamRefreshAll(container, getToken);
+    const result = await streamRefreshAll(container);
     if (!result) return;
     await refreshAndRender();
     void loadReposStatus().then(() => render());

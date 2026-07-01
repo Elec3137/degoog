@@ -134,12 +134,10 @@ describe("store progress streaming auth (CSRF)", () => {
     expect(text).toContain("event: done");
   });
 
-  test("accepts an explicit query token", async () => {
+  test("rejects a token supplied via query param (no credential in URL)", async () => {
     const res = await storeRouter.request(
       `http://localhost/api/store/update-all/stream?token=${validToken}`,
     );
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain("event: done");
+    expect(res.status).toBe(401);
   });
 });

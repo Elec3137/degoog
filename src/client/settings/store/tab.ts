@@ -91,7 +91,7 @@ export async function initStoreTab(
     );
     const nodes = filtered.map((item) => {
       const tmp = document.createElement("div");
-      tmp.innerHTML = renderItemCard(item, getToken);
+      tmp.innerHTML = renderItemCard(item);
       const newCard = tmp.firstElementChild as HTMLElement;
       const existing = oldByKey.get(key(newCard));
       return existing && existing.outerHTML === newCard.outerHTML ? existing : newCard;
@@ -109,7 +109,6 @@ export async function initStoreTab(
     if (listEl) {
       listEl.innerHTML = renderRepoList(
         repos,
-        getToken,
         repoStatusByUrl,
         selectedRepoUrl,
       );
@@ -285,7 +284,7 @@ export async function initStoreTab(
           .querySelector<HTMLButtonElement>(".store-btn-update-all")
           ?.addEventListener(
             "click",
-            () => void handleUpdateAll(container, getToken, loadItems, render),
+            () => void handleUpdateAll(container, loadItems, render),
           );
         updatesPanel
           .querySelectorAll<HTMLButtonElement>(".store-btn-update")
@@ -318,7 +317,7 @@ export async function initStoreTab(
     }
   });
 
-  initLightbox(container, getToken);
+  initLightbox(container);
 
   const addWrap = container.querySelector<HTMLElement>(".store-add-repo-wrap");
   const addBtn = container.querySelector<HTMLButtonElement>(".store-btn-add");
@@ -352,7 +351,6 @@ export async function initStoreTab(
     ?.addEventListener("click", async () => {
       await handleRefreshAll(
         container,
-        getToken,
         refreshAndRender,
         loadReposStatus,
         render,

@@ -5,16 +5,11 @@ export const screenshotUrl = (
   type: string,
   itemSlug: string,
   filename: string,
-  token: string | null,
 ): string => {
-  const q = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${getBase()}/api/store/screenshots/${encodeURIComponent(repoSlug)}/${encodeURIComponent(type)}/${encodeURIComponent(itemSlug)}/${encodeURIComponent(filename)}${q}`;
+  return `${getBase()}/api/store/screenshots/${encodeURIComponent(repoSlug)}/${encodeURIComponent(type)}/${encodeURIComponent(itemSlug)}/${encodeURIComponent(filename)}`;
 };
 
-export const buildScreenshotUrls = (
-  wrap: HTMLElement,
-  getToken: () => string | null,
-): string[] => {
+export const buildScreenshotUrls = (wrap: HTMLElement): string[] => {
   const rawFiles = wrap.dataset.screenshotFiles;
   if (rawFiles && rawFiles.trim()) {
     const files = rawFiles
@@ -25,10 +20,7 @@ export const buildScreenshotUrls = (
       const repoSlug = wrap.dataset.repoSlug ?? "";
       const type = wrap.dataset.itemType ?? "";
       const itemSlug = wrap.dataset.itemSlug ?? "";
-      const token = getToken();
-      return files.map((f) =>
-        screenshotUrl(repoSlug, type, itemSlug, f, token),
-      );
+      return files.map((f) => screenshotUrl(repoSlug, type, itemSlug, f));
     }
   }
   if (wrap.dataset.firstScreenshotUrl) {
@@ -37,10 +29,7 @@ export const buildScreenshotUrls = (
   return [];
 };
 
-export function initLightbox(
-  container: HTMLElement,
-  getToken: () => string | null,
-): void {
+export function initLightbox(container: HTMLElement): void {
   let lightboxUrls: string[] = [];
   let lightboxIndex = 0;
 
@@ -85,7 +74,7 @@ export function initLightbox(
   }
 
   function openLightbox(wrap: HTMLElement): void {
-    const urls = buildScreenshotUrls(wrap, getToken);
+    const urls = buildScreenshotUrls(wrap);
     if (!urls.length) return;
     lightboxUrls = urls;
     lightboxIndex = 0;
