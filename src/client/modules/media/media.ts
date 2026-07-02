@@ -181,12 +181,22 @@ export function openMediaPreview(
   imgWrap?.querySelector(".media-preview-embed")?.remove();
 
   if (img) {
+    const fallbackSrc = previewSrc === item.thumbnail ? item.imageUrl || "" : item.thumbnail || "";
+    img.dataset.triedFallback = "";
     img.style.display = "";
     img.src = previewSrc || "";
     img.style.cursor = "zoom-in";
     img.onclick = () => {
       const src = img.src;
       if (src) openLightbox(src);
+    };
+    img.onerror = () => {
+      if (!img.dataset.triedFallback && fallbackSrc && fallbackSrc !== img.src) {
+        img.dataset.triedFallback = "1";
+        img.src = fallbackSrc;
+      } else {
+        img.style.display = "none";
+      }
     };
   }
 
@@ -254,11 +264,31 @@ const _setPreviewSource = (item: ScoredResult): void => {
   attachFaviconFallback(favicon);
 };
 
-const _pickOtherMedia = (excludeIdx: number, count: number): number[] => {
+const _isMediaLoaded = (idx: number, cardSelector: string): boolean => {
+  const card = document.querySelector<HTMLElement>(
+    `${cardSelector}[data-idx="${idx}"]`,
+  );
+  if (!card || card.style.display === "none") return false;
+
+  const thumbSelector =
+    cardSelector === ".video-card" ? ".video-thumb" : ".image-thumb";
+  const thumb = card.querySelector<HTMLImageElement>(thumbSelector);
+  if (!thumb || thumb.style.display === "none") return false;
+
+  return thumb.complete && thumb.naturalWidth > 0;
+};
+
+const _pickOtherMedia = (
+  excludeIdx: number,
+  count: number,
+  cardSelector: string,
+): number[] => {
   const pool: number[] = [];
   state.currentResults.forEach((r, i) => {
     if (i === excludeIdx) return;
-    if (r.thumbnail || r.imageUrl) pool.push(i);
+    if (!(r.thumbnail || r.imageUrl)) return;
+    if (!_isMediaLoaded(i, cardSelector)) return;
+    pool.push(i);
   });
 
   for (let i = pool.length - 1; i > 0; i--) {
@@ -273,7 +303,7 @@ const _renderMoreMedia = (excludeIdx: number, cardSelector: string): void => {
   const container = document.getElementById("media-preview-more");
   if (!container) return;
 
-  const picks = _pickOtherMedia(excludeIdx, MORE_IMAGES_COUNT);
+  const picks = _pickOtherMedia(excludeIdx, MORE_IMAGES_COUNT, cardSelector);
   container.innerHTML = "";
   if (picks.length === 0) return;
 
@@ -291,6 +321,14 @@ const _renderMoreMedia = (excludeIdx: number, cardSelector: string): void => {
     thumb.loading = "lazy";
     thumb.src = r.thumbnail || r.imageUrl || "";
     thumb.alt = r.title || "";
+    thumb.onerror = () => {
+      if (!thumb.dataset.triedFallback && r.imageUrl && r.imageUrl !== thumb.src) {
+        thumb.dataset.triedFallback = "1";
+        thumb.src = r.imageUrl;
+      } else {
+        cell.style.display = "none";
+      }
+    };
     cell.appendChild(thumb);
 
     cell.addEventListener("click", () => {

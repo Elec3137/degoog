@@ -114,7 +114,7 @@
 }
 
 #media-preview-panel {
-  background: var(--bg);
+  background: var(--bg-light);
   border-left: none;
   border-radius: $space-4 $space-4 0 0;
   border-top: 1px solid var(--border);
@@ -161,9 +161,9 @@
     &.open {
       box-shadow: none;
       margin-inline-start: $space-7;
-      min-width: 35rem;
+      min-width: 33%;
       transform: none;
-      width: 35rem;
+      width: 33%;
     }
   }
 }
@@ -177,7 +177,7 @@
   justify-content: space-between;
   gap: $space-3;
   padding: clamp($space-3, 3vw, $space-4) clamp($space-4, 4vw, $space-5);
-  background: var(--bg);
+  background: var(--bg-light);
 }
 
 .media-preview-source {
@@ -246,7 +246,7 @@
   max-height: clamp(40vh, 30vh + 15vw, 60vh);
   object-fit: contain;
   background: var(--bg-light);
-  padding: clamp($space-3, 3vw, $space-5);
+  background: url('../../../public/images/checkered.png') center center;
 }
 
 .media-preview-info {
