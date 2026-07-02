@@ -320,9 +320,8 @@ export async function getPluginExtensionMeta(
       baseSchema.some((f) => f.key === "useAsSettingsGate")
     ) {
       const slug = folderFromExtID(entry.id, "command");
-      if (
-        asString(middlewareSettings.settingsGate).trim() === `plugin:${slug}`
-      ) {
+      const middlewareId = makeExtID(slug, "middleware");
+      if (asString(middlewareSettings.settingsGate).trim() === `plugin:${middlewareId}`) {
         rawSettings = { ...rawSettings, useAsSettingsGate: "true" };
       }
     }

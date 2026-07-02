@@ -1,6 +1,6 @@
 import { state } from "../../state";
 import { cleanHostname, linkHref } from "../../utils/dom";
-import { openMediaPreview, registerAppendMediaCards } from "../media/media";
+import { toggleMediaPreview, registerAppendMediaCards } from "../media/media";
 import { renderTemplate } from "../../utils/template";
 import type { ScoredResult } from "../../types";
 
@@ -92,7 +92,7 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        openMediaPreview(state.currentResults[idx], idx, selector);
+        toggleMediaPreview(state.currentResults[idx], idx, selector);
       });
       _shortestColumn(columns).appendChild(card);
     });
@@ -110,7 +110,7 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        openMediaPreview(state.currentResults[idx], idx, selector);
+        toggleMediaPreview(state.currentResults[idx], idx, selector);
       });
       fragment.appendChild(card);
     });

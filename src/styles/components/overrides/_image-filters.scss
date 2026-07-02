@@ -26,7 +26,6 @@
     align-self: flex-start;
     max-height: calc(100vh - #{$space-6});
     overflow: hidden;
-    scrollbar-width: thin;
     background: none;
     transform: none;
     box-shadow: none;
@@ -138,7 +137,6 @@
   max-height: 14rem;
   overflow-y: auto;
   padding: $space-1 $space-2 $space-2;
-  scrollbar-width: thin;
 }
 
 .degoog-img-filter-option {

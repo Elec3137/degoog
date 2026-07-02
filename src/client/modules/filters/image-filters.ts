@@ -96,7 +96,7 @@ const groupHtml = (
         <span class="degoog-img-filter-head">${escapeHtml(title)}${suffix}</span>
         ${CHEVRON_SVG}
       </button>
-      <div class="degoog-accordion-body degoog-img-filter-options" role="radiogroup" aria-label="${escapeAttribute(title)}">${options}</div>
+      <div class="degoog-accordion-body degoog-img-filter-options degoog-scrollbar" role="radiogroup" aria-label="${escapeAttribute(title)}">${options}</div>
     </div>`;
 };
 

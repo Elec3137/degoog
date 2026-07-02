@@ -147,6 +147,22 @@ body.has-results #app {
   border-radius: $radius-sm;
 }
 
+.degoog-scrollbar {
+  &::-webkit-scrollbar {
+    width: $space-1;
+    height: $space-1;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $primary;
+    border-radius: $radius-sm;
+  }
+}
+
 #home-footer {
   flex-shrink: 0;
   text-align: center;
