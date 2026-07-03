@@ -52,29 +52,47 @@ async function _initStreamingTypeChecks(
   const container = document.getElementById("settings-streaming-type-checks");
   if (!container) return;
   const disabled = new Set(disabledTypes.split("\n").map((s) => s.trim()).filter(Boolean));
-  const types = [...(await getAllSearchTypes())];
+  let types: string[];
+  try {
+    types = [...(await getAllSearchTypes())];
+  } catch (err) {
+    console.warn("[settings] could not load search types for streaming controls", err);
+    return;
+  }
 
   if (types.length <= 1) {
     container.remove();
     return;
   }
 
+  let _saving = false;
+  let _saveAgain = false;
+
   const _save = async (): Promise<void> => {
-    const checks = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
-    const nowDisabled = [...checks].filter((c) => !c.checked).map((c) => c.value).join("\n");
-    const ok = await saveField("streamingDisabledTypes", nowDisabled, getToken);
-    if (ok) {
-      window.dispatchEvent(new Event("extensions-saved"));
-      flashSuccess(t("settings-page.server.saved"));
-    } else {
-      flashError(t("settings-page.server.save-failed-network"));
+    if (_saving) {
+      _saveAgain = true;
+      return;
     }
+    _saving = true;
+    do {
+      _saveAgain = false;
+      const checks = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+      const nowDisabled = [...checks].filter((c) => !c.checked).map((c) => c.value).join("\n");
+      const ok = await saveField("streamingDisabledTypes", nowDisabled, getToken);
+      if (ok) {
+        window.dispatchEvent(new Event("extensions-saved"));
+        flashSuccess(t("settings-page.server.saved"));
+      } else {
+        flashError(t("settings-page.server.save-failed-network"));
+      }
+    } while (_saveAgain);
+    _saving = false;
   };
 
   container.innerHTML = types.map((type) =>
-    `<label class="settings-toggle-wrap degoog-toggle-wrap">
+    `<label class="degoog-checkbox-wrap">
       <input type="checkbox" class="settings-toggle" value="${escapeHtml(type)}"${disabled.has(type) ? "" : " checked"} />
-      <span class="toggle-slider degoog-toggle"></span>
+      <span class="degoog-checkbox"></span>
       <span class="settings-toggle-label">${escapeHtml(type)}</span>
     </label>`,
   ).join("");

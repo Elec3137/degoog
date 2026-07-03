@@ -169,9 +169,6 @@ export async function init(): Promise<void> {
   void idbGet<boolean>(DISPLAY_SEARCH_SUGGESTIONS).then((v) => {
     if (v !== null) state.displaySearchSuggestions = v;
   });
-  void idbGet<boolean>(POST_METHOD_ENABLED).then((v) => {
-    if (v !== null) state.postMethodEnabled = v;
-  });
   void idbGet<boolean>(INLINE_GIF_PLAYBACK).then((v) => {
     if (v !== null) state.inlineGifPlayback = v;
   });
@@ -198,6 +195,9 @@ export async function init(): Promise<void> {
       if (ok) done();
     });
   });
+
+  const postMethodEnabled = await idbGet<boolean>(POST_METHOD_ENABLED);
+  if (postMethodEnabled !== null) state.postMethodEnabled = postMethodEnabled;
 
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");

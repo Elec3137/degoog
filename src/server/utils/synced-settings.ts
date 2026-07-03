@@ -1,6 +1,6 @@
 import { getInstanceSettings, updateInstanceSettings } from "./server-settings";
 import { logger } from "./logger";
-import { SYNC_KEYS } from "../../shared/sync";
+import { SYNC_KEYS, isValidSyncValue } from "../../shared/sync";
 
 export type SyncedDefaults = Record<string, unknown>;
 
@@ -9,7 +9,7 @@ const DEFAULTS_KEY = "syncedDefaults";
 const _whitelist = (raw: SyncedDefaults): SyncedDefaults => {
   const out: SyncedDefaults = {};
   for (const key of SYNC_KEYS) {
-    if (key in raw && raw[key] !== undefined && raw[key] !== null) {
+    if (key in raw && isValidSyncValue(key, raw[key])) {
       out[key] = raw[key];
     }
   }

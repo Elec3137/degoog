@@ -20,7 +20,12 @@ export const isStoreEvent = (v: unknown): v is StoreStreamEvent => {
   const e = v as Record<string, unknown>;
   return (
     isPhase(e.phase) &&
+    typeof e.total === "number" &&
+    Number.isInteger(e.total) &&
+    e.total > 0 &&
     typeof e.i === "number" &&
-    typeof e.total === "number"
+    Number.isInteger(e.i) &&
+    e.i >= 0 &&
+    e.i <= e.total
   );
 };

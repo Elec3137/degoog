@@ -10,14 +10,14 @@ import {
 } from "../../constants";
 import { idbGet, idbSet } from "../../utils/db";
 import { resetDefaults, saveDefaults } from "../../utils/sync";
-import { GENERAL_SYNC_KEYS } from "../../../shared/sync";
+import { SYNC_KEYS } from "../../../shared/sync";
 import { requestInstallPrompt } from "../../utils/install-prompt";
 import { applyTheme } from "../../utils/theme";
 import { restartWizard } from "../../modules/wizard/wizard";
 import { escapeHtml } from "../../utils/dom";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import type { ToggleOpts } from "../../types/settings-section";
-import { renderSection, renderToggle } from "../shared/section";
+import { renderCheckbox, renderSection } from "../shared/section";
 
 const t = window.scopedT("core");
 
@@ -77,7 +77,8 @@ const renderSearchOptionsSection = (): string =>
   renderSection({
     icon: "fa-solid fa-magnifying-glass",
     headingKey: "settings-page.search-options.heading",
-    content: SEARCH_OPTION_TOGGLES.map(renderToggle).join(""),
+    fieldsetClass: "settings-toggle-grid",
+    content: SEARCH_OPTION_TOGGLES.map(renderCheckbox).join(""),
   });
 
 const renderSyncSection = (): string =>
@@ -176,7 +177,8 @@ const renderPublicAppearance = (): string => {
 const renderPublicSearchOptions = (): string =>
   renderSection({
     headingKey: "settings-page.search-options.heading",
-    content: SEARCH_OPTION_TOGGLES.map(renderToggle).join(""),
+    fieldsetClass: "settings-toggle-grid",
+    content: SEARCH_OPTION_TOGGLES.map(renderCheckbox).join(""),
   });
 
 export const renderGeneralContent = (): string =>
@@ -281,7 +283,7 @@ async function initSyncSetting(): Promise<void> {
     });
   }
 
-  bindResetDefaults(GENERAL_SYNC_KEYS, initGeneralTab);
+  bindResetDefaults(SYNC_KEYS, initGeneralTab);
 }
 
 async function initVersionChecker(): Promise<void> {

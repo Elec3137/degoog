@@ -518,10 +518,28 @@ html:has(.settings-page-body) {
   border-radius: $radius-md;
   padding: $space-2;
 
-  .degoog-toggle-wrap {
-    background: transparent;
-    border-radius: 0;
+  .degoog-checkbox-wrap {
+    border-radius: $radius-sm;
     padding: $space-2 $space-3;
+
+    &:hover {
+      background: var(--bg-light);
+    }
+  }
+}
+
+.settings-toggle-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+
+  .degoog-checkbox-wrap {
+    border-radius: $radius-sm;
+    padding: $space-2 0;
+
+    &:hover {
+      background: var(--bg-light);
+    }
   }
 }
 

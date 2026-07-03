@@ -16,6 +16,8 @@ import { openTabOrderModal } from "../shared/tab-order-modal";
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
 
+let _orderSavedHandler: (() => void) | null = null;
+
 const _typeLabel = (type: string): string => {
   const translated = themeT(`search-templates.tabs.${type}`);
   return translated !== `search-templates.tabs.${type}`
@@ -271,9 +273,14 @@ export async function initEnginesTab(
       void openTabOrderModal(allTypes, token);
     });
 
+  if (_orderSavedHandler) {
+    window.removeEventListener(TAB_ORDER_SAVED, _orderSavedHandler);
+  }
   const onOrderSaved = (): void => {
     window.removeEventListener(TAB_ORDER_SAVED, onOrderSaved);
+    _orderSavedHandler = null;
     void initEnginesTab(allExtensions, options);
   };
+  _orderSavedHandler = onOrderSaved;
   window.addEventListener(TAB_ORDER_SAVED, onOrderSaved);
 }
