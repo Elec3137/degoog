@@ -1,4 +1,5 @@
 import {
+  ENGINE_TIMEOUT_MS,
   getEngineDefaultTransport,
   getEngineIdByInstance,
   getEngineMap,
@@ -35,24 +36,27 @@ import { buildSignedProxyUrl } from "./utils/proxy-sign";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 
 const MAX_PAGE = 10;
-const ENGINE_TIMEOUT_MS = 10_000;
 
-const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
 
-const _getEngineTimeout = async (
+export const getEngineTimeout = async (
   engineSettingsId: string | undefined,
 ): Promise<number> => {
   if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
-  let raw =
-    asString((await getSettings(engineSettingsId)).outgoingTransport) ||
-    undefined;
+  const stored = await getSettings(engineSettingsId);
+  const configured = parseInt(asString(stored.timeoutMs), 10);
+  const base =
+    Number.isFinite(configured) && configured > 0
+      ? configured
+      : ENGINE_TIMEOUT_MS;
+  let raw = asString(stored.outgoingTransport) || undefined;
   if (!raw) raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
   const transportName = parseOutgoingTransport(raw);
   const transport = resolveTransport(transportName);
-  if (transport.timeoutMs && transport.timeoutMs > ENGINE_TIMEOUT_MS) {
+  if (transport.timeoutMs && transport.timeoutMs > base) {
     return transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS;
   }
-  return ENGINE_TIMEOUT_MS;
+  return base;
 };
 
 const _mergeIntoMap = (
@@ -292,7 +296,7 @@ export const searchSingleEngine = async (
     searchType,
   );
   try {
-    const timeout = await _getEngineTimeout(engineSettingsId);
+    const timeout = await getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
       timeout,
@@ -354,7 +358,7 @@ export const search = async (
         ac.signal,
         type,
       );
-      const timeout = await _getEngineTimeout(id);
+      const timeout = await getEngineTimeout(id);
       const results = await _withTimeout(
         instance.executeSearch(query, p, timeFilter, ctx),
         timeout,
@@ -385,8 +389,7 @@ export const search = async (
       const classified = _classifyReject(result.reason);
       logger.warn(
         "search",
-        `engine="${engineName}" status=${classified.status}${
-          classified.httpStatus ? ` http=${classified.httpStatus}` : ""
+        `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
         } reason="${classified.reason}"`,
       );
       engineTimings.push({
