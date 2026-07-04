@@ -61,8 +61,8 @@ export const requestRestart = (reason: string): void => {
     _serverHandle?.stop(true);
     const child = spawnReplacementProcess();
     stopQueue()
-      .finally(() => {
-        closeAllDbs();
+      .finally(async () => {
+        await closeAllDbs();
         if (child && hasControllingTerminal()) {
           becomeSignalForwarder(child);
         } else {
