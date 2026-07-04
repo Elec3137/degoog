@@ -359,12 +359,18 @@ export const search = async (
         type,
       );
       const timeout = await getEngineTimeout(id);
-      const results = await _withTimeout(
-        instance.executeSearch(query, p, timeFilter, ctx),
-        timeout,
-        () => ac.abort(),
-      );
-      return { results, elapsed: Math.round(performance.now() - t0) };
+      try {
+        const results = await _withTimeout(
+          instance.executeSearch(query, p, timeFilter, ctx),
+          timeout,
+          () => ac.abort(),
+        );
+        return { results, elapsed: Math.round(performance.now() - t0) };
+      } catch (err) {
+        const elapsed = Math.round(performance.now() - t0);
+        const wrapped = err instanceof Error ? err : new Error(String(err));
+        throw Object.assign(wrapped, { elapsed });
+      }
     }),
   );
 
@@ -387,6 +393,10 @@ export const search = async (
       });
     } else {
       const classified = _classifyReject(result.reason);
+      const reasonElapsed = (result.reason as { elapsed?: unknown } | null)
+        ?.elapsed;
+      const elapsed =
+        typeof reasonElapsed === "number" ? reasonElapsed : ENGINE_TIMEOUT_MS;
       logger.warn(
         "search",
         `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
@@ -394,7 +404,7 @@ export const search = async (
       );
       engineTimings.push({
         name: engineName,
-        time: ENGINE_TIMEOUT_MS,
+        time: elapsed,
         resultCount: 0,
         status: classified.status,
         errorReason: classified.reason,
