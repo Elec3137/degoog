@@ -21,6 +21,13 @@ let appendMediaCardsRef:
   | null = null;
 let currentMediaIdx = -1;
 let currentCardSelector = "";
+let imageGridPanelSyncRef: ((isOpen: boolean) => void) | null = null;
+
+export function registerImageGridPanelSync(
+  fn: (isOpen: boolean) => void,
+): void {
+  imageGridPanelSyncRef = fn;
+}
 
 const syncFilters = (open: boolean): void => {
   void import("../filters/image-filters").then((m) => {
@@ -236,15 +243,16 @@ export function openMediaPreview(
 
   _renderMoreMedia(idx, cardSelector);
 
-  panel?.classList.add("open");
-  syncFilters(false);
-
   document
     .querySelectorAll<HTMLElement>(cardSelector)
     .forEach((c) => c.classList.remove("selected"));
   document
     .querySelector<HTMLElement>(`${cardSelector}[data-idx="${idx}"]`)
     ?.classList.add("selected");
+
+  panel?.classList.add("open");
+  if (!isVideo) imageGridPanelSyncRef?.(true);
+  syncFilters(false);
 
   _updateNavButtons();
 }
@@ -461,6 +469,7 @@ export const syncMediaPreviewPanel = (isMediaType: boolean): void => {
 
 export function closeMediaPreview(): void {
   document.getElementById("media-preview-panel")?.classList.remove("open");
+  if (currentCardSelector !== ".video-card") imageGridPanelSyncRef?.(false);
   syncFilters(true);
   document.querySelector(".media-preview-embed")?.remove();
   const img = document.getElementById(

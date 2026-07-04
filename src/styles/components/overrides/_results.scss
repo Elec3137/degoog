@@ -54,6 +54,13 @@
     background: var(--border-light);
     width: 2px;
   }
+
+  @media (max-width: 767px) {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 1;
+    background: var(--bg);
+  }
 }
 
 .tools-toggle {
@@ -83,6 +90,14 @@
 
   &.active.is-open {
     color: $primary;
+  }
+
+  @media (max-width: 767px) {
+    padding: $space-3;
+
+    > span {
+      display: none;
+    }
   }
 }
 
