@@ -31,6 +31,7 @@ import { runMigrations } from "./migrations";
 import { closeAllDbs } from "./indexer/db";
 import { startQueue, stopQueue } from "./indexer/queue";
 import { logger } from "./utils/logger";
+import { registerServerHandle } from "./utils/server-lifecycle";
 import { getTransportWsHandlers } from "./extensions/transports/ws-registry";
 
 const BASE_PATH = getBasePath();
@@ -94,6 +95,21 @@ const bindUnixSocket = async (path: string, serve: () => void): Promise<void> =>
     logger.warn(`[startup] removing stale unix socket at ${path}`);
     unlinkSync(path);
     serve();
+  }
+};
+
+const PORT_BIND_RETRY_ATTEMPTS = 10;
+const PORT_BIND_RETRY_DELAY_MS = 300;
+
+const bindPort = async (serve: () => void): Promise<void> => {
+  for (let attempt = 1; attempt <= PORT_BIND_RETRY_ATTEMPTS; attempt++) {
+    try {
+      serve();
+      return;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EADDRINUSE" || attempt === PORT_BIND_RETRY_ATTEMPTS) throw err;
+      await new Promise((resolve) => setTimeout(resolve, PORT_BIND_RETRY_DELAY_MS));
+    }
   }
 };
 
@@ -200,10 +216,12 @@ Promise.all([initServerKey(), initExtensionRegistries()])
 
     if (unixSocket) {
       await bindUnixSocket(unixSocket, () =>
-        Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket }),
+        registerServerHandle(Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket })),
       );
     } else {
-      Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
+      await bindPort(() =>
+        registerServerHandle(Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 })),
+      );
     }
     markReady();
 

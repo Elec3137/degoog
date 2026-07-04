@@ -195,4 +195,50 @@ describe("getEngineTimeout", () => {
       expect(await getEngineTimeout(id!)).toBe(20000 + ENGINE_TIMEOUT_BUFFER_MS);
     });
   });
+
+  test("clamps a stored timeout above the max down to the max", async () => {
+    await withTempTimeoutEnv(async () => {
+      const { initEngines, listEngineIds } = await import(
+        "../../src/server/extensions/engines/registry"
+      );
+      const { setSettings } = await import(
+        "../../src/server/utils/plugin-settings"
+      );
+      const { getEngineTimeout, ENGINE_TIMEOUT_MAX_MS } = await import(
+        "../../src/server/search"
+      );
+
+      writeEngine(process.env.DEGOOG_ENGINES_DIR!, "delta-web", "Delta");
+      await initEngines(true);
+      const id = listEngineIds().find((i) => i.includes("delta-web"));
+      expect(id).toBeTruthy();
+
+      await setSettings(id!, { timeoutMs: String(ENGINE_TIMEOUT_MAX_MS * 10) });
+
+      expect(await getEngineTimeout(id!)).toBe(ENGINE_TIMEOUT_MAX_MS);
+    });
+  });
+
+  test("clamps a stored timeout below the min up to the min", async () => {
+    await withTempTimeoutEnv(async () => {
+      const { initEngines, listEngineIds } = await import(
+        "../../src/server/extensions/engines/registry"
+      );
+      const { setSettings } = await import(
+        "../../src/server/utils/plugin-settings"
+      );
+      const { getEngineTimeout, ENGINE_TIMEOUT_MIN_MS } = await import(
+        "../../src/server/search"
+      );
+
+      writeEngine(process.env.DEGOOG_ENGINES_DIR!, "epsilon-web", "Epsilon");
+      await initEngines(true);
+      const id = listEngineIds().find((i) => i.includes("epsilon-web"));
+      expect(id).toBeTruthy();
+
+      await setSettings(id!, { timeoutMs: "1" });
+
+      expect(await getEngineTimeout(id!)).toBe(ENGINE_TIMEOUT_MIN_MS);
+    });
+  });
 });

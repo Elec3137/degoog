@@ -11,6 +11,7 @@ import {
   writeReposData,
   getRepoByUrl,
 } from "./persistence";
+import { clearItemCachesForRepo } from "./item-ops";
 
 const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
@@ -394,6 +395,7 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
       repo.error = reset.error || `Git reset failed for ${branch}`;
       return;
     }
+    clearItemCachesForRepo(repoPath);
     repo.error = null;
     repo.lastFetched = new Date().toISOString();
     const pkgPath = join(repoPath, "package.json");

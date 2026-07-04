@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
 import { closeAllDbs } from "../indexer/db";
 import { stopQueue } from "../indexer/queue";
@@ -6,38 +8,66 @@ import { envTruthy } from "../routes/settings-auth";
 
 const RESTART_EXIT_DELAY_MS = 250;
 
+let _serverHandle: Server | undefined;
+
+export const registerServerHandle = (server: Server): void => {
+  _serverHandle = server;
+};
+
+export const isDockerRuntime = (): boolean =>
+  envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
+
+const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
+
 /**
- * @fccview here - bare `bun run`/`bun develop` processes have no supervisor to bring 
- * them back up after `process.exit`, so gotta spawn our own replacement before
- * exiting. Under Docker (PID 1, no init), this child dies alongside the
- * container, however I much rather lock it behind a flag so it only runs
- * when I want it to.
+ * @fccview here hack time!
+ * Restarting in docker is piss easy, you just kill the app and pray the user has a restart policy set up.
+ *
+ * On native runs, proxmox or whatever shit you all run this stuff on, I'm gonna spawn a new process to replace the
+ * current one as you exit to give the illusion it's restarting.
  */
-const spawnReplacementProcess = (): void => {
-  if (!envTruthy("DEGOOG_DEV_MODE")) return;
+const spawnReplacementProcess = (): Subprocess | undefined => {
+  if (isDockerRuntime()) return undefined;
 
   try {
-    Bun.spawn({
+    const child = Bun.spawn({
       cmd: [...process.argv],
       cwd: process.cwd(),
       env: process.env,
       stdio: ["inherit", "inherit", "inherit"],
-      detached: true,
-    }).unref();
+      detached: !hasControllingTerminal(),
+    });
+
+    if (!hasControllingTerminal()) child.unref();
+    return child;
   } catch (err) {
     logger.warn("server", "failed to spawn replacement process for restart", err);
+    return undefined;
   }
+};
+
+const becomeSignalForwarder = (child: Subprocess): void => {
+  process.removeAllListeners("SIGINT");
+  process.removeAllListeners("SIGTERM");
+  process.once("SIGINT", () => child.kill("SIGINT"));
+  process.once("SIGTERM", () => child.kill("SIGTERM"));
+  child.exited.then((code) => process.exit(code ?? 0));
 };
 
 export const requestRestart = (reason: string): void => {
   logger.info("server", `restart requested: ${reason}`);
   clearRestartPending();
   setTimeout(() => {
-    spawnReplacementProcess();
+    _serverHandle?.stop(true);
+    const child = spawnReplacementProcess();
     stopQueue()
       .finally(() => {
         closeAllDbs();
-        process.exit(0);
+        if (child && hasControllingTerminal()) {
+          becomeSignalForwarder(child);
+        } else {
+          process.exit(0);
+        }
       });
   }, RESTART_EXIT_DELAY_MS);
 };

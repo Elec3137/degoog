@@ -226,13 +226,16 @@ const catalogPrimaryType = (types: string[]): string =>
 const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
 const needsAppRestartCache = new Map<string, boolean>();
 
+const stripComments = (src: string): string =>
+  src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+
 export const readNeedsAppRestart = async (dir: string): Promise<boolean> => {
   if (needsAppRestartCache.has(dir)) return needsAppRestartCache.get(dir)!;
   let result = false;
   for (const file of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
     try {
       const src = await readFile(join(dir, file), "utf-8");
-      result = NEEDS_APP_RESTART_RE.test(src);
+      result = NEEDS_APP_RESTART_RE.test(stripComments(src));
       if (result) break;
     } catch {
       continue;
@@ -309,6 +312,15 @@ const readEngineTypes = async (dir: string): Promise<string[] | null> => {
   engineTypesCache.set(dir, result);
   return result;
 };
+
+export function clearItemCachesForRepo(repoPath: string): void {
+  const prefix = repoPath.endsWith("/") ? repoPath : `${repoPath}/`;
+  for (const cache of [needsAppRestartCache, engineTypesCache, shortcutMetaCache]) {
+    for (const key of cache.keys()) {
+      if (key === repoPath || key.startsWith(prefix)) cache.delete(key);
+    }
+  }
+}
 
 export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
   const data = await readReposData();

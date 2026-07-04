@@ -38,11 +38,16 @@ import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 const MAX_PAGE = 10;
 
 export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_MIN_MS = 10;
+export const ENGINE_TIMEOUT_MAX_MS = 10 * 60 * 1000;
+
+const clampTimeout = (ms: number): number =>
+  Math.min(Math.max(ms, ENGINE_TIMEOUT_MIN_MS), ENGINE_TIMEOUT_MAX_MS);
 
 export const getEngineTimeout = async (
   engineSettingsId: string | undefined,
 ): Promise<number> => {
-  if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
+  if (!engineSettingsId) return clampTimeout(ENGINE_TIMEOUT_MS);
   const stored = await getSettings(engineSettingsId);
   const configured = parseInt(asString(stored.timeoutMs), 10);
   const base =
@@ -54,9 +59,9 @@ export const getEngineTimeout = async (
   const transportName = parseOutgoingTransport(raw);
   const transport = resolveTransport(transportName);
   if (transport.timeoutMs && transport.timeoutMs > base) {
-    return transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS;
+    return clampTimeout(transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS);
   }
-  return base;
+  return clampTimeout(base);
 };
 
 const _mergeIntoMap = (
