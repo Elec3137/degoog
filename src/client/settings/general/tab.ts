@@ -388,10 +388,14 @@ async function initRestartBanner(
     if (!confirmed) return;
     btn.disabled = true;
     try {
-      await fetch(`${getBase()}/api/settings/restart`, {
+      const res = await fetch(`${getBase()}/api/settings/restart`, {
         method: "POST",
         headers: authHeaders(getToken),
       });
+      if (!res.ok) {
+        btn.disabled = false;
+        return;
+      }
       btn.textContent = t("settings-page.restart.restarting");
     } catch (err) {
       console.debug("[settings] restart trigger failed", err);
