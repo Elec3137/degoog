@@ -37,9 +37,9 @@ import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 
 const MAX_PAGE = 10;
 
-const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
 
-const _getEngineTimeout = async (
+export const getEngineTimeout = async (
   engineSettingsId: string | undefined,
 ): Promise<number> => {
   if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
@@ -296,7 +296,7 @@ export const searchSingleEngine = async (
     searchType,
   );
   try {
-    const timeout = await _getEngineTimeout(engineSettingsId);
+    const timeout = await getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
       timeout,
@@ -358,7 +358,7 @@ export const search = async (
         ac.signal,
         type,
       );
-      const timeout = await _getEngineTimeout(id);
+      const timeout = await getEngineTimeout(id);
       const results = await _withTimeout(
         instance.executeSearch(query, p, timeFilter, ctx),
         timeout,
@@ -389,8 +389,7 @@ export const search = async (
       const classified = _classifyReject(result.reason);
       logger.warn(
         "search",
-        `engine="${engineName}" status=${classified.status}${
-          classified.httpStatus ? ` http=${classified.httpStatus}` : ""
+        `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
         } reason="${classified.reason}"`,
       );
       engineTimings.push({
