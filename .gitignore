@@ -13,3 +13,5 @@ dist
 mcp
 degoog-cli
 .DS_Store
+
+.direnv
